@@ -312,12 +312,40 @@ feature the model does not have and now says `|default('')`.
 *Done when* generated output calls no API Joomla 6 has removed or deprecated, every
 generated PHP file parses, and no template in the set is unreachable.
 
-**1.9 The reference-field rework.** The model is emitted once as JSON into the page;
-reference fields become custom elements reading one in-memory model. The roughly 300
-deprecated lines in `admin-project.js` go, along with the dead `editChildConceptList` and
-`editConceptFieldsList` call sites in the form XML.
+**1.9 The reference-field rework.** `ReferenceIndex` turns a stored project into
+everything that can be pointed at, the edit view puts it in the page once, and
+`<extengen-reference>` decides the choices from it plus what the form holds right now.
+Three field classes became one, `type="Reference" objecttype="Entity"`, and it queries
+nothing: a form with twenty reference dropdowns ran twenty queries for one project, and
+options baked into `<option>` tags at render time can only describe the database, which is
+where must-save-first came from.
+
+`admin-project.js` is gone entirely, all 708 lines, not only the 300 marked deprecated.
+Every inline `onchange` in the form XML went with it. Four of the functions those
+attributes named - `editChildConceptList`, `editConceptFieldsList`, `backupClassifierKey`,
+`backupID` - had no definition anywhere, so those fields threw on every change; events are
+delegated from the document now, which also means a repeating row added after load behaves
+like one that was there.
+
+The `<select>` stays a real form control and the server still renders the held value as a
+selected option, so a page whose script does not arrive submits what it was given rather
+than an empty reference.
+
+Fourteen classes could not load at all: nine field classes and three models called
+`ProjectRepository` or `ProjectFormRepository` with no import, which arrived in 1.3 and
+made every edit form a fatal. `ResolvableNamesTest` is the rule that catches it.
+
+Not done here: the six LIonCore_M3 reference fields keep their own classes. Their model
+has no fixture, and the field classes disagree about its shape - three are byte-identical,
+`DataTypeReferenceField` uses a different key scheme, `LanguageReferenceField` reads an
+undefined variable. Converting them would mean inventing a projection for a model this
+repository cannot check. That is what 3.1 is for.
+
 *Done when* adding an entity and referencing it works without saving first, with a Cypress
-spec proving it.
+spec proving it. **The spec is not written**: Cypress arrives in 1.11 and needs a running
+Joomla 6. What is proven here is `ReferenceIndex` against the three stored models, the
+markup contract, and every rule in `referenceOptions` under Node's test runner - 22 cases,
+no dependencies. The browser wiring itself is unverified until 1.11.
 
 **1.10 Custom code.** Model-side slots as the primary mechanism, with
 `ProtectedRegionMerger` as a safety net for edits made in generated output. Designed so
@@ -379,7 +407,12 @@ judgement call.
 ## Stage 3 — Meta-gen
 
 **3.1 Repair or rebuild the LionWeb model.** The concept forms work; the field classes and
-namespace prefixes around them do not (see 1.5).
+namespace prefixes around them do not (see 1.5). 1.9 left those six reference fields on
+their own mechanism and removed the inline handlers they called, three of which had no
+definition anywhere - so those dropdowns render their options from the database and no
+longer refresh as the form is edited. Adopting `<extengen-reference>` needs object types
+for `languageEntities` in `ReferenceIndex`, and a stored projectForm to check them
+against.
 
 **3.2 The forms generator.** Concept model to form XML, reference field elements, and the
 JavaScript the 1.9 mechanism needs.

@@ -1,0 +1,9 @@
+{
+  "name": "exten-gen",
+  "private": true,
+  "type": "module",
+  "description": "Test runner for the component's browser JavaScript. No dependencies: Node's own test runner is enough, and a Joomla extension has no build step.",
+  "scripts": {
+    "test": "node --test tests/js/"
+  }
+}

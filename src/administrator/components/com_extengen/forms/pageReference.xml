@@ -6,16 +6,12 @@
 	>
 		<field
 			name="page_reference"
-			type="PageReference"
+			type="Reference"
+			objecttype="Page"
 			label=""
 			id="page_reference"
-			class="custom-select-color-state PageRef"
-			size="1"
-			onchange="backupConceptID(event)"
-			><!--
-			<option value="0">-&#45;&#45; choose page -&#45;&#45;</option>
-			<option value="999999">create pages-list</option>-->
-		</field>
+			class="custom-select-color-state"
+		/>
 
 		<field
 			name="page_reference_id"

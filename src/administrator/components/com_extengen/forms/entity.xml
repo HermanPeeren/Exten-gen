@@ -9,7 +9,6 @@
 			type="text"
 			label="Entity name"
 			size="40"
-			onchange="updateConceptReferencesList('Entity');"
 			class="entityName"
 		 />
 		<!--required="true"-->

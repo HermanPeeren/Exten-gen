@@ -39,6 +39,7 @@ use Joomla\CMS\Workflow\Workflow;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
+use Yepr\Component\Extengen\Administrator\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
@@ -99,6 +100,51 @@ class ProjectModel extends AdminModel
 
 		return $form;
 	}
+
+	/**
+	 * Everything in this project that a reference field can point at.
+	 *
+	 * The edit view puts this in the page once. Before 1.9 each reference
+	 * dropdown loaded the project itself and rendered its own <option>
+	 * tags, which meant one query per dropdown and, worse, choices that
+	 * could only describe what was already in the database - so an entity
+	 * added a minute ago could not be referred to until the project was
+	 * saved.
+	 *
+	 * It is the model's job rather than the view's because it reads the
+	 * stored model, and reading the stored model happens here or in the
+	 * repository and nowhere else.
+	 *
+	 * @return  array  index and types, as <extengen-reference> expects them.
+	 */
+	public function getReferenceIndex(): array
+	{
+		$item  = $this->getItem();
+		$index = new ReferenceIndex();
+
+		$stored = null;
+
+		if (!empty($item->form_data))
+		{
+			try
+			{
+				$stored = Project::fromJson((string) $item->form_data)->raw();
+			}
+			catch (\JsonException | \InvalidArgumentException $e)
+			{
+				// A model that will not decode is reported by loadFormData(),
+				// which runs for the same request. Saying it twice would put
+				// the same warning on screen twice.
+				$stored = null;
+			}
+		}
+
+		return [
+			'index' => $index->forProject($stored),
+			'types' => $index->clientTypes(),
+		];
+	}
+
 	/**
 	 * Method to get the data that should be injected in the form.
 	 *

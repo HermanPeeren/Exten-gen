@@ -163,6 +163,40 @@ Linux CI never sees this, so it will not be caught for you. The flattening in 1.
 took fourteen characters off every one of these paths, which helps and does not
 solve it.
 
+## How a reference field works
+
+```
+src/Reference/ReferenceIndex.php     what a stored project offers to point at
+src/Reference/ReferenceMarkup.php    the markup, which is the contract with the script
+src/Field/ReferenceField.php         the Joomla adapter, four lines of it
+media/js/reference-options.js        the rules, as a function over plain data
+media/js/admin-extengen-reference.js <extengen-reference>, which reads and writes the DOM
+```
+
+A reference in the model is a uuid. The edit view asks the model for
+`getReferenceIndex()` and puts it in the page with `addScriptOptions`, once.
+`<extengen-reference>` merges that with what the form holds right now - entities
+somebody added and has not saved - and fills its `<select>`. Live wins, which is
+the whole of "you should not have to save before you can refer to something".
+
+**One description of an object type.** `ReferenceIndex::TYPES` says both where a
+type lives in the stored model and how the browser finds its rows: the class on
+the name input, and how that input's element id relates to the hidden id beside
+it. The client half is handed over in the same payload. Two descriptions, one in
+PHP and one in a hand-written script, is what drifts - and in stage 3 Meta-gen
+generates this table from a concept model, which it could not do if half of it
+lived in JavaScript.
+
+**The select is a real form control.** The server renders the held value as a
+selected option before any script runs. A reference is a uuid nobody can retype,
+so a form that posts an empty one because a module failed to load has destroyed
+something.
+
+**Testing it.** `referenceOptions()` is a function over plain objects for one
+reason: `composer test-js` runs it under `node --test` with no dependencies and
+no browser. What is left in the element is reading and writing the DOM, and that
+waits for the Cypress spec in 1.11.
+
 ## How generation works
 
 ```

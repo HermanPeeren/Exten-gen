@@ -10,7 +10,6 @@
 				type="ClassifierReference"
 				label="COM_EXTENGEN_PROJECTFORM_LINK_FIELD_TYPE_LABEL"
 				id="type"
-				onchange="backupClassifierKey(event)"
 		/>
 
 		<field

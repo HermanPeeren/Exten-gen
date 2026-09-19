@@ -12,7 +12,6 @@
 			id="name"
 			size="20"
 			required="true"
-			onchange="editConceptFieldsList(this);"
 			class="conceptFieldName"
 		 />
 

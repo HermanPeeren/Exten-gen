@@ -10,7 +10,6 @@
 			type="DataTypeReference"
 			label="COM_EXTENGEN_PROJECTFORM_PROPERTY_FIELD_TYPE_LABEL"
 			id="type"
-			onchange="backupDataTypeKey(event)"
 			/>
 
 		<field

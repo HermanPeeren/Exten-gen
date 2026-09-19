@@ -13,7 +13,6 @@
 				id="conceptInterface"
 				class="custom-select-color-state ConceptInterfaceRef"
 				size="1"
-				onchange="backupID(event)"
 		/><!--TODO:backupID(event): store the ID of the selected ConceptInterface -->
 
 	</fieldset>

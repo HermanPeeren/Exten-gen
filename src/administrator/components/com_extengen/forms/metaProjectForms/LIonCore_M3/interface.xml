@@ -9,7 +9,6 @@
 				type="text"
 				label="Interface name"
 				size="40"
-				onchange="updateConceptReferencesList('Concept');"
 				class="conceptName"
 		/>
 

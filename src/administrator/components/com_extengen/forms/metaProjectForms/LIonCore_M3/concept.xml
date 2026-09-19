@@ -25,7 +25,6 @@
 				id="extends"
 				class="custom-select-color-state QualifierRef"
 				size="1"
-				onchange="backupClassifierKey(event)"
 		/><!--Todo: backupClassifierKey(event)-->
 
 		<field

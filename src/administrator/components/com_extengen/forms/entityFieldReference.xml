@@ -6,29 +6,22 @@
 	>
 		<field
 			name="entity_reference"
-			type="EntityReference"
+			type="Reference"
+			objecttype="Entity"
 			label=""
 			id="entity_reference"
-			class="custom-select-color-state EntityRef"
-			size="1"
-			onchange="backupConceptID(event)"
-			><!--
-			<option value="0">-&#45;&#45; choose entity -&#45;&#45;</option>
-			<option value="999999">create entities-list</option>-->
-		</field>
+			class="custom-select-color-state"
+		/>
 
 		<field
 			name="field_reference"
-			type="list"
+			type="Reference"
+			objecttype="Field"
 			label=""
 			id="field_reference"
-			class="custom-select-color-state FieldRef"
-			size="1"
-			onchange="backupChildConceptID(event)"
-			>
-			<option value="0">--- first choose entity ---</option><!--
-			<option value="999999">create fields-list</option-->>
-		</field>
+			class="custom-select-color-state"
+			scope="entity_reference_id"
+		/>
 
 		<field
 			name="entity_reference_id"
