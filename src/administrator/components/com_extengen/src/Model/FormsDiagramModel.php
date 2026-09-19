@@ -39,7 +39,6 @@ use Joomla\CMS\Versioning\VersionableModelTrait;
 use Joomla\CMS\Workflow\Workflow;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
-use Joomla\Database\ParameterType;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 
@@ -75,15 +74,21 @@ class FormsDiagramModel extends AdminModel
 	 */
 	public function getAST(): object
 	{
-		$db = $this->getDatabase();
-		$getASTquery = $db->getQuery(true)
-			->select($db->quoteName('form_data'))
-			->from($db->quoteName('#__extengen_projectforms'))
-			->where($db->quoteName('id') . ' = :id')
-			->bind(':id', $this->projectFormId, ParameterType::INTEGER);
-		$db->setQuery($getASTquery);
+		// The id is set on this model by the controller, not taken from the
+		// request: the model is told which record it is working on.
+		$id = (int) $this->projectFormId;
 
-		return json_decode($db->loadResult());
+		$model = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+
+		if ($model === null)
+		{
+			// The declared return type is not nullable, so without this a
+			// missing or unreadable record arrives as a TypeError with
+			// nothing in it to act on.
+			throw new \RuntimeException(sprintf('Cannot read project form %d.', $id));
+		}
+
+		return $model;
 	}
 
 	/**

@@ -17,7 +17,6 @@ use Joomla\CMS\MVC\Model\AdminModel;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Object\CMSObject; // TODO!!!
-use Joomla\Database\ParameterType;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Model\Generator\ProjectForms;
@@ -152,15 +151,21 @@ class GenerateProjectFormModel extends AdminModel
 	 */
 	private function initiateAST(): object
 	{
-		$db = $this->getDatabase();
-		$getASTquery = $db->getQuery(true)
-			->select($db->quoteName('form_data'))
-			->from($db->quoteName('#__extengen_projectforms'))
-			->where($db->quoteName('id') . ' = :id')
-			->bind(':id', $this->projectFormId, ParameterType::INTEGER);
-		$db->setQuery($getASTquery);
+		// The id is set on this model by the controller, not taken from the
+		// request: the model is told which record it is working on.
+		$id = (int) $this->projectFormId;
 
-		return json_decode($db->loadResult());
+		$model = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+
+		if ($model === null)
+		{
+			// The declared return type is not nullable, so without this a
+			// missing or unreadable record arrives as a TypeError with
+			// nothing in it to act on.
+			throw new \RuntimeException(sprintf('Cannot read project form %d.', $id));
+		}
+
+		return $model;
 	}
 
 	/**

@@ -69,6 +69,40 @@ Composer resolves it straight from its repository, since it is not on Packagist:
 for Twig, loaded by a `require_once` in the generator. It stays until step 1.4
 moves generation onto the shared core, and then goes.
 
+## The model layer
+
+A stored project is a type, not a decoded stdClass passed around by hand:
+
+```
+src/Generator/Model/Project.php           one project, as the component stores it
+src/Generator/Model/ProjectValidator.php  what it must contain before generating
+src/Repository/ProjectRepository.php      the one place that knows where it lives
+src/Repository/ProjectFormRepository.php  the same, for project forms
+```
+
+There were **thirteen** copies of "load a project": the same five-line query and
+a `json_decode`, in five field classes and four MVC models — and two of the
+thirteen had drifted to a different method name for it, which is how a
+duplicated fragment announces that nobody can see all its copies at once.
+
+The cost was never the typing. It was that a question like *what format is this
+model stored in* had nowhere to be asked.
+
+`Project::modelVersion()` answers it now. Models saved before this carry no
+version and read as `1.0`, which is what they are rather than a guess;
+`ProjectModel::save()` stamps it from here on, and `ProjectValidator` refuses a
+version it has never heard of rather than reading it hopefully.
+
+`Project::raw()` is transitional. The generators still walk the decoded object
+themselves, and making them consume the type is step 1.4 — doing it here would
+have changed generated output in the same commit that introduced the model,
+which is the one thing the golden baseline exists to prevent.
+
+`ModelLayerBoundaryTest` keeps the count at one. It does *not* forbid naming the
+storage tables: the modal project picker, the associations helper and the
+administrator HTML service all query `#__extengen_projects` for a name or an id,
+which is an ordinary query and not a second copy of how a model is loaded.
+
 ## Quality gates
 
 ```

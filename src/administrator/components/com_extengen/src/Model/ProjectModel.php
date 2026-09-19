@@ -41,6 +41,7 @@ use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
+use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 
 /**
  * Item Model for a project.
@@ -105,18 +106,30 @@ class ProjectModel extends AdminModel
 	 */
 	protected function loadFormData()
 	{
-		$app = Factory::getApplication();
-
 		$item = $this->getItem();
 
-		//$this->preprocessData('com_extengen.project', $data);
+		// A project that has never been saved has nothing stored yet, and the
+		// form renders from its own defaults.
+		if (empty($item->form_data))
+		{
+			return new \stdClass();
+		}
 
-        // deserialise all data
-        $data = json_decode($item->form_data);
+		// Through the model type rather than a bare json_decode, so that every
+		// read of a stored project goes through one place. The form wants the
+		// values as stored, which is what raw() is.
+		try
+		{
+			return Project::fromJson((string) $item->form_data)->raw();
+		}
+		catch (\JsonException | \InvalidArgumentException $e)
+		{
+			// A model that cannot be read must not take down the page somebody
+			// needs in order to fix it.
+			$this->setError($e->getMessage());
 
-		//if (($item->id) == 0) $data = ['id' => 0, 'datamodel' => null, 'pages' => null, 'extensions' => null];
-
-		return $data;
+			return new \stdClass();
+		}
 	}
 
 	/**
@@ -212,6 +225,12 @@ class ProjectModel extends AdminModel
      */
     public function save($data)
     {
+        // Stamp the format the model is being written in. Projects saved before
+        // this carry no version and read as 1.0, which is what they are; from
+        // here on a stored model says so itself, so a later change to the shape
+        // can be made without guessing what an older one meant.
+        $data['modelVersion'] = Project::CURRENT_VERSION;
+
         $form_data = json_encode($data);
         $data['form_data'] = $form_data;
 

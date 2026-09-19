@@ -16,7 +16,6 @@ defined('_JEXEC') or die('Restricted access');
 use Joomla\CMS\Form\Field\ListField;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Factory;
-use Joomla\Database\ParameterType;
 
 
 // The class name must always be the same as the filename (in camel case)
@@ -68,28 +67,11 @@ class EntityReferenceField extends ListField
 	 */
 	private function initiateAST(): ?object
 	{
-		// Which project?
-		// todo: better use a hidden variable in the form, but do you need to set it in every subform?
-		//$projectId    = $this->form->getValue('id'); // or "project_id", if you have to put it in all subforms
+		// The id of the record being edited comes from the request: a reference
+		// field is rendered inside that record's own form.
+		$id = (int) Factory::getApplication()->getInput()->getInt('id');
 
-		// Get project_id from get-query string input
-		$input = Factory::getApplication()->input;
-		$projectId = $input->getInt('id');
-
-		if ($projectId)
-		{
-			$db = $this->getDatabase();
-			$getASTquery = $db->getQuery(true)
-				->select($db->quoteName('form_data'))
-				->from($db->quoteName('#__extengen_projects'))
-				->where($db->quoteName('id') . ' = :id')
-				->bind(':id', $projectId, ParameterType::INTEGER);
-			$db->setQuery($getASTquery);
-
-			return json_decode($db->loadResult());
-		}
-
-		return null;
+		return (new ProjectRepository($this->getDatabase()))->find($id)?->raw();
 	}
 
 }
