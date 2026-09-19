@@ -37,8 +37,13 @@ parameters:
         # here it had not surfaced yet, which is not the same as not being
         # there. Composer's copy is what the tests run against, so it is the
         # one that counts.
+        # A glob, not the directory: PHPStan errors on an excludePath that
+        # does not exist, and on CI it does not - a freshly fetched Joomla has
+        # no extensions installed in it. A wildcard that matches nothing is
+        # fine. That cost one red build, which is one more than reading the
+        # documentation would have.
         analyseAndScan:
-            - joomla/libraries/yepr_gen
+            - joomla/libraries/yepr_gen/*
 
         analyse:
             # Golden fixtures are generated output, kept to diff against. What
