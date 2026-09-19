@@ -16,7 +16,6 @@ defined('_JEXEC') or die;
 use Joomla\CMS\MVC\Model\AdminModel;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Object\CMSObject; // TODO!!!
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Generator\ProjectForms;
@@ -201,9 +200,9 @@ class GenerateProjectFormModel extends AdminModel
 				}
 			}
 
-			// Convert to the CMSObject before adding other data.
-			$properties = $table->getProperties(1);
-			$item = ArrayHelper::toObject($properties, CMSObject::class);
+			// Convert to \stdClass before adding other data.
+			$properties = get_object_vars($table);
+			$item = ArrayHelper::toObject($properties);
 
 			if (property_exists($item, 'params')) {
 				$registry = new Registry($item->params);

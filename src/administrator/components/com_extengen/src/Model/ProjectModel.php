@@ -125,8 +125,10 @@ class ProjectModel extends AdminModel
 		catch (\JsonException | \InvalidArgumentException $e)
 		{
 			// A model that cannot be read must not take down the page somebody
-			// needs in order to fix it.
-			$this->setError($e->getMessage());
+			// needs in order to fix it. Enqueued rather than setError(), which
+			// nothing reads on this path: the form would come back empty with
+			// no word of why.
+			Factory::getApplication()->enqueueMessage($e->getMessage(), 'warning');
 
 			return new \stdClass();
 		}

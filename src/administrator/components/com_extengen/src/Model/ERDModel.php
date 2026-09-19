@@ -29,7 +29,6 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\MVC\Model\WorkflowBehaviorTrait;
 use Joomla\CMS\MVC\Model\WorkflowModelInterface;
-use Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\String\PunycodeHelper;
 use Joomla\CMS\Table\TableInterface;
@@ -124,9 +123,9 @@ class ERDModel extends AdminModel
 				}
 			}
 
-			// Convert to the CMSObject before adding other data.
-			$properties = $table->getProperties(1);
-			$item = ArrayHelper::toObject($properties, CMSObject::class);
+			// Convert to \stdClass before adding other data.
+			$properties = get_object_vars($table);
+			$item = ArrayHelper::toObject($properties);
 
 			if (property_exists($item, 'params')) {
 				$registry = new Registry($item->params);

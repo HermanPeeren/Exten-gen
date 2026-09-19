@@ -64,7 +64,7 @@ class ProjectField extends FormField
 
 			if (!isset($scriptSelect[$this->id]))
 			{
-				Factory::getDocument()->addScriptDeclaration("
+				Factory::getApplication()->getDocument()->addScriptDeclaration("
 				function jSelectProject_" . $this->id . "(id, title, object) {
 					window.processModalSelect('Project', '" . $this->id . "', id, title, '', object);
 				}

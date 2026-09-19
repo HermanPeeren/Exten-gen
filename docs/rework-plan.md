@@ -261,10 +261,29 @@ downloadable zip rather than files written under `generated/`.
 *Done when* a generated component installs on a clean Joomla 6 from the zip Exten-gen
 produces.
 
-**1.7 Joomla 6 sweep — Exten-gen itself.** `JHtmlSidebar` (6 files), `Factory::getUser`
-(7 files), `CMSObject` (4 files), `getError()` / `setError()` (6 files).
+**1.7 Joomla 6 sweep — Exten-gen itself.** `JHtmlSidebar` (7 sites), `Factory::getUser`
+(9), `CMSObject` with `getProperties()` (4 files), `Factory::getDbo` (2), `Table::$_db` (2),
+`Factory::getDocument` (1), `User::get('id')` (1). `JHtmlSidebar` is the only one that was
+broken rather than merely deprecated: it is not a class in Joomla 6 but an alias registered
+by the `behaviour - compat6` plugin, so every list view fatals on a site that does not run
+that plugin. One of its call sites was in `View/ProjectForms/HtmlViewOLD.php`, a copy of the
+view beside it that nothing references; deleted rather than swept.
 
-**1.8 Joomla 6 sweep — the generated output.** Templates to current APIs. Bound
+`getError()` / `setError()` stay. They are not a call the component makes on its own:
+`AdminModel::save()` invokes `check()` on a table and reads `getError()` off it, and every
+core Joomla 6 table still answers that way. Dropping them changes a contract with code
+that is not Exten-gen's, and nothing in the suite runs far enough to see whether it held.
+It waits for 1.11, where a Cypress run can drive a real site.
+
+`tests/Unit/JoomlaApiTest.php` holds the removed calls out. It is a grep over the source
+and says so: it proves the old calls are gone, not that the new ones behave.
+*Done when* the component's own tree is free of them and the guard test fails when one
+returns.
+
+**1.8 Joomla 6 sweep — the generated output.** Templates to current APIs: the calls
+1.7 removed are still in `generator_templates/` — `JHtmlSidebar` (4), `Factory::getUser`
+(4), `CMSObject` (3), `Factory::getDbo` (1) — so every component Exten-gen writes today
+needs the `behaviour - compat6` plugin in order to run. Bound
 parameters in generated list-model queries, which currently interpolate with
 `$db->quote()`. Removal of the commented-out Akeeba ATS blocks, and of the roughly 130
 unreferenced files under `generator_templates/` (akeeba layouts, plugin skeletons, an

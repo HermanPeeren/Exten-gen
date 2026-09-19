@@ -13,6 +13,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Helper\ContentHelper;
+use Joomla\CMS\HTML\Helpers\Sidebar;
 use Joomla\CMS\Language\Text;
 
 /**
@@ -31,12 +32,12 @@ class ExtengenHelper extends ContentHelper
 	{
 		if (ComponentHelper::isEnabled('com_fields') && ComponentHelper::getParams('com_extengen')->get('custom_fields_enable', '1'))
 		{
-			\JHtmlSidebar::addEntry(
+			Sidebar::addEntry(
 				Text::_('JGLOBAL_FIELDS'),
 				'index.php?option=com_fields&context=com_extengen.extengen',
 				$vName == 'fields.fields'
 			);
-			\JHtmlSidebar::addEntry(
+			Sidebar::addEntry(
 				Text::_('JGLOBAL_FIELD_GROUPS'),
 				'index.php?option=com_fields&view=groups&context=com_extengen.extengen',
 				$vName == 'fields.groups'

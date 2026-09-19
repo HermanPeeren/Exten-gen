@@ -13,8 +13,8 @@ namespace Yepr\Component\Extengen\Administrator\View\Generators;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
+use Joomla\CMS\HTML\Helpers\Sidebar;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
@@ -44,7 +44,7 @@ class HtmlView extends BaseHtmlView
 
 		ExtengenHelper::addSubmenu('generators');
 		$this->addToolbar();
-		$this->sidebar = \JHtmlSidebar::render();
+		$this->sidebar = Sidebar::render();
 
 		echo "<h2>Generators will be listed here</h2>";
 		echo '<p>TODO! Generators can be copied and adjusted. New generators can be defined and... generated.</p>';
@@ -79,7 +79,7 @@ class HtmlView extends BaseHtmlView
 	{
 		//$canDo = ContentHelper::getActions('com_extengen', 'category', $this->state->get('filter.category_id'));
 
-		$user  = Factory::getUser();
+		$user  = $this->getCurrentUser();
 
 		// Get the toolbar object instance
 		$toolbar = Toolbar::getInstance('toolbar');

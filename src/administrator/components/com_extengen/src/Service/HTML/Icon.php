@@ -22,6 +22,8 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\User\UserFactoryInterface;
+use Joomla\Database\DatabaseInterface;
 use Yepr\Component\Extengen\Site\Helper\RouteHelper;
 use Joomla\Registry\Registry;
 
@@ -93,7 +95,7 @@ class Icon
      */
     public static function edit($project, $params, $attribs = [], $legacy = false)
     {
-        $user = Factory::getUser();
+        $user = Factory::getApplication()->getIdentity();
         $uri  = Uri::getInstance();
 
         // Ignore if in a popup window.
@@ -113,8 +115,9 @@ class Icon
         if (property_exists($project, 'checked_out')
             && property_exists($project, 'checked_out_time')
             && $project->checked_out > 0
-            && $project->checked_out != $user->get('id')) {
-            $checkoutUser = Factory::getUser($project->checked_out);
+            && $project->checked_out != $user->id) {
+            $checkoutUser = Factory::getContainer()->get(UserFactoryInterface::class)
+                ->loadUserById((int) $project->checked_out);
             $date         = HTMLHelper::_('date', $project->checked_out_time);
             $tooltip      = Text::_('JLIB_HTML_CHECKED_OUT') . ' :: ' . Text::sprintf('COM_EXTENGEN_CHECKED_OUT_BY', $checkoutUser->name)
                 . ' <br /> ' . $date;
@@ -148,7 +151,9 @@ class Icon
         if (!isset($created_by_alias) && !isset($project->created_by)) {
             $author = '';
         } else {
-            $author = $project->created_by_alias ?: Factory::getUser($project->created_by)->name;
+            $author = $project->created_by_alias
+                ?: Factory::getContainer()->get(UserFactoryInterface::class)
+                    ->loadUserById((int) $project->created_by)->name;
         }
 
         $overlib .= '&lt;br /&gt;';
@@ -159,7 +164,7 @@ class Icon
         $icon = $project->published ? 'edit' : 'eye-slash';
 
         if (strtotime($project->publish_up) > strtotime(Factory::getDate())
-            || ((strtotime($project->publish_down) < strtotime(Factory::getDate())) && $project->publish_down != Factory::getDbo()->getNullDate())) {
+            || ((strtotime($project->publish_down) < strtotime(Factory::getDate())) && $project->publish_down != Factory::getContainer()->get(DatabaseInterface::class)->getNullDate())) {
             $icon = 'eye-slash';
         }
 
