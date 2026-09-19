@@ -189,18 +189,35 @@ php tools/seed-project.php conference
 ```
 
 **Releasing.** The version lives in `src/extengen.xml` and nowhere else.
-Bump it there, then:
+Bump it there, run `composer build` to regenerate `updates.xml`, commit both,
+and push a tag:
 
 ```
-composer build     # regenerates updates.xml, then builds the package
+git tag v1.1.0 && git push origin v1.1.0
 ```
+
+That is the whole procedure. `.github/workflows/release.yml` listens for `v*`,
+and PhpStorm can create and push a tag from its Git menu, so releasing needs no
+terminal. The workflow refuses a tag that disagrees with the manifest, refuses
+an `updates.xml` that regenerating would change, runs every gate, builds, checks
+what the package contains, and publishes it.
+
+It builds *with* the library. There is no sibling checkout on a runner, so
+`build.php` fetches the library release `script.php` insists on - which means
+what ships is the artefact that was published and verified, and a release
+needing a library nobody released fails on the runner rather than on somebody's
+site.
 
 `updates.xml` is the update server: it repeats the element, the version and the
 platform beside the URL a site downloads from, and it is generated from the
 manifest and `script.php` so it cannot promise a Joomla or a PHP the install
-script will refuse. Commit it, tag `v<version>`, and attach
-`build/com_extengen-<version>.zip` to the GitHub release - that is the URL the
-generated file points at. `UpdateServerTest` fails if any of those disagree.
+script will refuse. It names a release asset by file name, which is why the
+workflow checks it: a stale one either hides the release or offers a download
+that 404s, and no test on your own machine can see either.
+
+1.0.0 was tagged and pushed before any of this existed, and nothing happened at
+all - no release, no failure, no mail. A tag is only a release procedure once
+something is listening for it.
 
 **Driving a whole generated component.** The last spec leaves Exten-gen: it
 generates a component, installs it, and visits its front end.

@@ -423,6 +423,21 @@ lives; `composer build` regenerates `updates.xml` from it. The update server poi
 repository. The installed extension keeps the element name `com_extengen`, so a site
 running the old one updates in place.
 
+**The tag did nothing, and said nothing.** `v1.0.0` was pushed and no release appeared:
+this repository had no workflow listening for tags. generator-core got one in stage 0 and
+this one never did, and neither 1.6, which built the package, nor 1.12, which tagged it,
+noticed that the tag had nothing to trigger. A tag is only a release procedure once
+something is listening for it, and a missing listener is silent - no failure, no mail,
+nothing on the Actions tab at all.
+
+`.github/workflows/release.yml` closes it. It refuses a tag that disagrees with the
+manifest, refuses an `updates.xml` that regenerating would change, runs every gate, builds
+*with* the library bundled - a runner has no sibling checkout, so `build.php` fetches the
+library release `script.php` insists on, and a release needing a library nobody published
+fails there rather than on somebody's site - asserts what the package contains, and
+publishes it. `v1.0.0` was re-pointed at the commit that carries the workflow, and the
+release it produced advertises exactly the URL `updates.xml` promises.
+
 **The front end is in 1.0**, and getting there was not a flag. The generators already
 produced site controllers, models, views, layouts and language files with the right
 namespaces - and none of it had ever run. Five things were wrong, each hidden behind the
