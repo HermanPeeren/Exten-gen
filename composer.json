@@ -40,12 +40,16 @@
         "cs": "phpcs",
         "cs-fix": "php-cs-fixer fix",
         "cs-fix-dry": "php-cs-fixer fix --dry-run --diff",
-        "build": "php build/build.php",
+        "build": [
+            "@update-xml",
+            "php build/build.php"
+        ],
         "install-local": [
             "@build",
-            "php joomla/cli/joomla.php extension:install --path=build/com_extengen-0.8.0.zip"
+            "php tools/install-local.php"
         ],
-        "cypress": "npx cypress run"
+        "cypress": "npx cypress run",
+        "update-xml": "php build/update-xml.php"
     },
     "config": {
         "sort-packages": true

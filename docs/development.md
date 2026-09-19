@@ -188,6 +188,20 @@ have a project to open:
 php tools/seed-project.php conference
 ```
 
+**Releasing.** The version lives in `src/extengen.xml` and nowhere else.
+Bump it there, then:
+
+```
+composer build     # regenerates updates.xml, then builds the package
+```
+
+`updates.xml` is the update server: it repeats the element, the version and the
+platform beside the URL a site downloads from, and it is generated from the
+manifest and `script.php` so it cannot promise a Joomla or a PHP the install
+script will refuse. Commit it, tag `v<version>`, and attach
+`build/com_extengen-<version>.zip` to the GitHub release - that is the URL the
+generated file points at. `UpdateServerTest` fails if any of those disagree.
+
 **What each gate can and cannot see.** Everything above `npm run cypress` reads
 source or runs generation with two constants standing in for Joomla. None of it
 boots the framework, and for five steps that was enough to miss a component
