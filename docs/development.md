@@ -131,6 +131,52 @@ Linux CI never sees this, so it will not be caught for you. The flattening in 1.
 took fourteen characters off every one of these paths, which helps and does not
 solve it.
 
+## Golden files
+
+What the generators produce today, pinned byte for byte:
+
+```
+tests/Fixtures/golden/models/balloonplanning.json     the input
+tests/Fixtures/golden/expected/balloonplanning/...    the 64 files it must produce
+php tools/capture-golden.php                          accept a change, after reading the diff
+```
+
+The comparison comes from the shared library's `GoldenTestCase`, so
+`GoldenOutputTest` is two methods: where the fixtures are, and how to turn one
+into files.
+
+**It is a baseline, not an endorsement.** The approved output was captured with
+the current bugs in it, on purpose, so that the port at step 1.4 can be done as a
+diff: anything that changes is either an improvement somebody can see, or a
+regression that would otherwise have shipped.
+
+The models are real, taken from the development database rather than written for
+the occasion. Fidelity was checked rather than assumed: for `balloonplanning` the
+harness reproduces, byte for byte, all 64 files the component generated through
+its own interface.
+
+`tests/Support/LegacyGeneratorRunner` is scaffolding. It runs today's generators
+into a scratch directory and reads the result back, because they write to disk;
+at 1.4 they write into a `FileCollection` and it goes. The set and order of
+generators, and the language-file loop, are transcribed from
+`GenerateModel::generate()` — that class extends Joomla's `AdminModel`, so using
+it directly would mean bootstrapping the CMS to test a transformation that turns
+out not to need one.
+
+The generated fixtures are excluded from PHPStan, phpcs and php-cs-fixer. They
+are generated Joomla code: analysing them says whether the *generator* is right,
+which the golden comparison already answers, and reformatting them would break
+the very thing they pin.
+
+### A model that cannot be pinned
+
+`tests/Fixtures/known-breakage/conference.json` has a details page in its
+front-end section, and generation throws: `SiteMVC` renders
+`tmpl/details/edit.php.twig`, which exists for the administrator and not for the
+site. A golden file cannot record a generator that produces nothing, so
+`KnownBreakageTest` records it instead. Fixing it turns that test red, which is
+the reminder to capture the newly working output and delete it. Step 1.5.
+
 ## Building
 
 ```

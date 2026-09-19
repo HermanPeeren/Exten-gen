@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonPlanning\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonPlanning\Administrator\Field">
+    <field name="number_of_passengers" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_TICKET_FIELD_NUMBER_OF_PASSENGERS_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_NUMBER_OF_PASSENGERS_DESC"/>
+    <field name="ticket_number" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_TICKET_FIELD_TICKET_NUMBER_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_TICKET_NUMBER_DESC"/>
+    <field name="contact_person" type="sql" query="SELECT id, `passenger_name` FROM `#__balloonplanning_passenger`" header="&amp;nbsp;" key_field="id" value_field="passenger_name" label="COM_BALLOONPLANNING_TICKET_FIELD_CONTACT_PERSON_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_CONTACT_PERSON_DESC"/>
+    <field name="ticket_type" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_TICKET_FIELD_TICKET_TYPE_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_TICKET_TYPE_DESC"/>
+    <field name="number_of_kids" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_TICKET_FIELD_NUMBER_OF_KIDS_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_NUMBER_OF_KIDS_DESC"/>
+    <field name="total_weight" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_TICKET_FIELD_TOTAL_WEIGHT_LABEL" description="COM_BALLOONPLANNING_TICKET_FIELD_TOTAL_WEIGHT_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

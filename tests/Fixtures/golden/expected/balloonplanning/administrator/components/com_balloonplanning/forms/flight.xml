@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonPlanning\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonPlanning\Administrator\Field">
+    <field name="balloon" type="sql" query="SELECT id, `call-sign` FROM `#__balloonplanning_balloon`" header="&amp;nbsp;" key_field="id" value_field="call-sign" label="COM_BALLOONPLANNING_FLIGHT_FIELD_BALLOON_LABEL" description="COM_BALLOONPLANNING_FLIGHT_FIELD_BALLOON_DESC"/>
+    <field name="date" type="calendar" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_FLIGHT_FIELD_DATE_LABEL" description="COM_BALLOONPLANNING_FLIGHT_FIELD_DATE_DESC"/>
+    <field name="morning_evening" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_FLIGHT_FIELD_MORNING_EVENING_LABEL" description="COM_BALLOONPLANNING_FLIGHT_FIELD_MORNING_EVENING_DESC"/>
+    <field name="flight_number" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_FLIGHT_FIELD_FLIGHT_NUMBER_LABEL" description="COM_BALLOONPLANNING_FLIGHT_FIELD_FLIGHT_NUMBER_DESC"/>
+    <field name="departureplace" type="sql" query="SELECT id, `place_name` FROM `#__balloonplanning_departureplace`" header="&amp;nbsp;" key_field="id" value_field="place_name" label="COM_BALLOONPLANNING_FLIGHT_FIELD_DEPARTUREPLACE_LABEL" description="COM_BALLOONPLANNING_FLIGHT_FIELD_DEPARTUREPLACE_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

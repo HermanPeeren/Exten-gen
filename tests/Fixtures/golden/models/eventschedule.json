@@ -1,0 +1,686 @@
+{
+    "id": "8",
+    "name": "EventSchedule",
+    "datamodel": {
+        "datamodel0": {
+            "entity_name": "DaySchedule",
+            "field": {
+                "field0": {
+                    "field_name": "name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "isunique": "1",
+                        "isprimary": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "558ee985-3bc9-48a1-837b-e4542347f25e",
+                    "entity_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+                }
+            },
+            "entity_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+        },
+        "datamodel1": {
+            "entity_name": "Track",
+            "field": {
+                "field0": {
+                    "field_name": "name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "isunique": "1",
+                        "isprimary": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "f5a068ff-bbc4-4f35-837e-24f6e0583aac",
+                    "entity_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+                },
+                "field1": {
+                    "field_name": "daySchedules",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                        "ismultiple": "1",
+                        "reference_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+                    },
+                    "field_id": "73a02a96-4ff0-4f5b-ac2e-0d4ba4863fb8",
+                    "entity_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+                }
+            },
+            "entity_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+        },
+        "datamodel2": {
+            "entity_name": "Speaker",
+            "field": {
+                "field0": {
+                    "field_name": "name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "67509f10-b74a-4f43-8d6b-8acc79c1ae2d",
+                    "entity_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+                },
+                "field1": {
+                    "field_name": "biography",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "d1bcde26-9ff2-40bf-bb86-afe84861ac3c",
+                    "entity_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+                },
+                "field2": {
+                    "field_name": "presentations",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "ismultiple": "1",
+                        "reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                    },
+                    "field_id": "16f22623-6b1b-411b-8b72-d71ac6c43388",
+                    "entity_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+                }
+            },
+            "entity_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+        },
+        "datamodel3": {
+            "entity_name": "Presentation",
+            "field": {
+                "field0": {
+                    "field_name": "presentation_name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "ad443100-0ea7-42e1-815c-3829fbb718c6",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                },
+                "field1": {
+                    "field_name": "short_description",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "13370add-dc3f-43cd-976f-82480d182668",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                },
+                "field2": {
+                    "field_name": "long_description",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c53fcde7-ab37-4514-890f-61c2935cfe0b",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                },
+                "field3": {
+                    "field_name": "duration",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "a7fb086b-cb17-45d7-aa35-311922cc205f",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                },
+                "field4": {
+                    "field_name": "locators",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "000ba1ae-4266-4d56-82b9-77f9ceb15c35",
+                        "ismultiple": "1",
+                        "reference_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                    },
+                    "field_id": "d6c39bc7-5d01-40a9-9019-d95f8ee2520f",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                },
+                "field5": {
+                    "field_name": "presentation_type",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a",
+                        "reference_id": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a"
+                    },
+                    "field_id": "f3d066ae-40a3-4815-97d5-d62eba195e58",
+                    "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                }
+            },
+            "entity_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+        },
+        "datamodel4": {
+            "entity_name": "Presentation_type",
+            "field": {
+                "field0": {
+                    "field_name": "presentation_type_name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text",
+                        "isunique": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "9ba25089-869a-49be-af3e-561f33f09982",
+                    "entity_id": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a"
+                },
+                "field1": {
+                    "field_name": "css_class",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "eda89954-3a5e-4e53-abb5-ef7a879ae962",
+                    "entity_id": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a"
+                },
+                "field2": {
+                    "field_name": "background_color",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c49595e8-5568-432a-8cef-1a40f7896132",
+                    "entity_id": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a"
+                }
+            },
+            "entity_id": "7d7fb4d9-3033-47e4-a15e-63a1cbd8d86a"
+        },
+        "datamodel5": {
+            "entity_name": "Locator",
+            "isvalueobject": "1",
+            "field": {
+                "field0": {
+                    "field_name": "starttime",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Time"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "dcf5cf9b-b82c-4beb-8be4-84ee9853daf3",
+                    "entity_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                },
+                "field1": {
+                    "field_name": "endtime",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Time"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "5d1fac12-e4a0-45e7-8612-ae0d34e8cca9",
+                    "entity_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                },
+                "field2": {
+                    "field_name": "track",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "6808220a-c5d4-45e1-9c03-8189af545eb7",
+                        "reference_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+                    },
+                    "field_id": "61ad9aec-8bf4-400c-94d9-96da2750c64d",
+                    "entity_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                },
+                "field3": {
+                    "field_name": "daySchedule",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                        "reference_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+                    },
+                    "field_id": "4139929b-8fc0-47e7-8c36-0f3cc56cb23b",
+                    "entity_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                }
+            },
+            "entity_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+        }
+    },
+    "pages": {
+        "pages0": {
+            "page_name": "Presentations",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                    "reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Event",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "496f4751-5d8e-4b01-a282-48b8e11dc8fd",
+                        "page_reference_id": "496f4751-5d8e-4b01-a282-48b8e11dc8fd"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "entity_reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "46cbbee3-f4ed-431d-a87e-03a34d15e81e"
+        },
+        "pages1": {
+            "page_name": "Presentation",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                    "reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": {
+                "editfields0": {
+                    "attribute": {
+                        "entity_reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "field_reference": "d6c39bc7-5d01-40a9-9019-d95f8ee2520f",
+                        "entity_reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "field_reference_id": "d6c39bc7-5d01-40a9-9019-d95f8ee2520f"
+                    },
+                    "htmltype": "subform",
+                    "parameters": {
+                        "parameters0": {
+                            "key": "multiple",
+                            "value": "true"
+                        },
+                        "parameters1": {
+                            "key": "min",
+                            "value": "0"
+                        },
+                        "parameters2": {
+                            "key": "layout",
+                            "value": "joomla.form.field.subform.repeatable"
+                        }
+                    }
+                }
+            },
+            "links": {
+                "links0": {
+                    "link_name": "Events",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "46cbbee3-f4ed-431d-a87e-03a34d15e81e",
+                        "page_reference_id": "46cbbee3-f4ed-431d-a87e-03a34d15e81e"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "496f4751-5d8e-4b01-a282-48b8e11dc8fd"
+        },
+        "pages2": {
+            "page_name": "Speakers",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "56861ce2-0da3-483d-af65-b6fe867e909a",
+                    "reference_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Actor",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "6e7d9585-ee54-4d9b-8045-0db4ce4e440d",
+                        "page_reference_id": "6e7d9585-ee54-4d9b-8045-0db4ce4e440d"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "56861ce2-0da3-483d-af65-b6fe867e909a",
+                        "entity_reference_id": "56861ce2-0da3-483d-af65-b6fe867e909a",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "afa66c21-e122-414e-b119-d9050ca8dae1"
+        },
+        "pages3": {
+            "page_name": "Speaker",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "56861ce2-0da3-483d-af65-b6fe867e909a",
+                    "reference_id": "56861ce2-0da3-483d-af65-b6fe867e909a"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Actors",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "afa66c21-e122-414e-b119-d9050ca8dae1",
+                        "page_reference_id": "afa66c21-e122-414e-b119-d9050ca8dae1"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "6e7d9585-ee54-4d9b-8045-0db4ce4e440d"
+        },
+        "pages4": {
+            "page_name": "DaySchedules",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                    "reference_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Container",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "bb5bdfb0-b95e-4dda-9f3d-43b183f74aac",
+                        "page_reference_id": "bb5bdfb0-b95e-4dda-9f3d-43b183f74aac"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                        "entity_reference_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "931c7032-02ee-4caa-86e1-12c085e9a104"
+        },
+        "pages5": {
+            "page_name": "DaySchedule",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "bf4c82cc-8e79-4346-9918-2f8b77a3d143",
+                    "reference_id": "bf4c82cc-8e79-4346-9918-2f8b77a3d143"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Containers",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "931c7032-02ee-4caa-86e1-12c085e9a104",
+                        "page_reference_id": "931c7032-02ee-4caa-86e1-12c085e9a104"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "bb5bdfb0-b95e-4dda-9f3d-43b183f74aac"
+        },
+        "pages6": {
+            "page_name": "Tracks",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "6808220a-c5d4-45e1-9c03-8189af545eb7",
+                    "reference_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Section",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "4a899913-b04d-4ff2-8586-8be8639c6bce",
+                        "page_reference_id": "4a899913-b04d-4ff2-8586-8be8639c6bce"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "6808220a-c5d4-45e1-9c03-8189af545eb7",
+                        "entity_reference_id": "6808220a-c5d4-45e1-9c03-8189af545eb7",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071"
+        },
+        "pages7": {
+            "page_name": "Track",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "6808220a-c5d4-45e1-9c03-8189af545eb7",
+                    "reference_id": "6808220a-c5d4-45e1-9c03-8189af545eb7"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Sections",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071",
+                        "page_reference_id": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "4a899913-b04d-4ff2-8586-8be8639c6bce"
+        },
+        "pages8": {
+            "page_name": "Schedulemaker",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "000ba1ae-4266-4d56-82b9-77f9ceb15c35",
+                    "reference_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                },
+                "entity_ref1": {
+                    "reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                    "reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Event",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "496f4751-5d8e-4b01-a282-48b8e11dc8fd",
+                        "page_reference_id": "496f4751-5d8e-4b01-a282-48b8e11dc8fd"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "entity_reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "138a0ca2-82d9-4901-b486-91d15f3ef28b"
+        },
+        "pages9": {
+            "page_name": "Schedule",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b",
+                    "reference_id": "49c1a9f6-5b04-49d7-8fb0-da5e11a9391b"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": [],
+            "page_id": "deeebf0a-3aa9-43c0-a709-88e9b1ad771c"
+        },
+        "pages10": {
+            "page_name": "Locator",
+            "page_type": "subform",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "000ba1ae-4266-4d56-82b9-77f9ceb15c35",
+                    "reference_id": "000ba1ae-4266-4d56-82b9-77f9ceb15c35"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": [],
+            "page_id": "c3086fde-af5d-43f7-a302-394fa6777471"
+        }
+    },
+    "extensions": {
+        "component": {
+            "component_name": "eventschedule",
+            "component_description": "",
+            "Sections": {
+                "frontendsection": {
+                    "frontendsection0": {
+                        "page_reference": "deeebf0a-3aa9-43c0-a709-88e9b1ad771c",
+                        "page_reference_id": "deeebf0a-3aa9-43c0-a709-88e9b1ad771c"
+                    }
+                },
+                "frontenddefaultpage": {
+                    "page_reference": "deeebf0a-3aa9-43c0-a709-88e9b1ad771c",
+                    "page_reference_id": "deeebf0a-3aa9-43c0-a709-88e9b1ad771c"
+                },
+                "backendsection": {
+                    "backendsection0": {
+                        "page_reference": "46cbbee3-f4ed-431d-a87e-03a34d15e81e",
+                        "page_reference_id": "46cbbee3-f4ed-431d-a87e-03a34d15e81e"
+                    },
+                    "backendsection1": {
+                        "page_reference": "496f4751-5d8e-4b01-a282-48b8e11dc8fd",
+                        "page_reference_id": "496f4751-5d8e-4b01-a282-48b8e11dc8fd"
+                    },
+                    "backendsection2": {
+                        "page_reference": "afa66c21-e122-414e-b119-d9050ca8dae1",
+                        "page_reference_id": "afa66c21-e122-414e-b119-d9050ca8dae1"
+                    },
+                    "backendsection3": {
+                        "page_reference": "6e7d9585-ee54-4d9b-8045-0db4ce4e440d",
+                        "page_reference_id": "6e7d9585-ee54-4d9b-8045-0db4ce4e440d"
+                    },
+                    "backendsection4": {
+                        "page_reference": "931c7032-02ee-4caa-86e1-12c085e9a104",
+                        "page_reference_id": "931c7032-02ee-4caa-86e1-12c085e9a104"
+                    },
+                    "backendsection5": {
+                        "page_reference": "bb5bdfb0-b95e-4dda-9f3d-43b183f74aac",
+                        "page_reference_id": "bb5bdfb0-b95e-4dda-9f3d-43b183f74aac"
+                    },
+                    "backendsection6": {
+                        "page_reference": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071",
+                        "page_reference_id": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071"
+                    },
+                    "backendsection7": {
+                        "page_reference": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071",
+                        "page_reference_id": "ce0fadcc-3c64-4ea3-82c7-9f8d8f839071"
+                    },
+                    "backendsection8": {
+                        "page_reference": "138a0ca2-82d9-4901-b486-91d15f3ef28b",
+                        "page_reference_id": "138a0ca2-82d9-4901-b486-91d15f3ef28b"
+                    }
+                },
+                "backenddefaultpage": {
+                    "page_reference": "138a0ca2-82d9-4901-b486-91d15f3ef28b",
+                    "page_reference_id": "138a0ca2-82d9-4901-b486-91d15f3ef28b"
+                }
+            },
+            "manifest": {
+                "copyright": "Herman Peeren, Yepr",
+                "license": "GPL vs3+",
+                "link": "",
+                "version": "1.0.1",
+                "author_name": "Herman Peeren",
+                "author_email": "herman@yepr.nl",
+                "author_url": "https://yepr.nl",
+                "creation_date": "2025-10-03",
+                "company_namespace": "Yepr"
+            },
+            "languages": {
+                "languages0": {
+                    "language_code": "en",
+                    "country_code": "GB",
+                    "key_value_pairs": []
+                }
+            }
+        }
+    },
+    "tags": []
+}

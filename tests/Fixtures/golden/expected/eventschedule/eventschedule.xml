@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" version="4.3" method="upgrade">
+	<name>com_eventschedule</name>
+	<creationDate>2025-10-03</creationDate>
+	<author>Herman Peeren</author>
+	<authorEmail>herman@yepr.nl</authorEmail>
+	<authorUrl>https://yepr.nl</authorUrl>
+	<copyright>Herman Peeren, Yepr</copyright>
+	<license>GPL vs3+</license>
+	<version>1.0.1</version>
+	<description>COM_EVENTSCHEDULE_DESCRIPTION</description>
+	<namespace path="src">Yepr\Component\Eventschedule</namespace>
+
+	<!-- Scripts to run on installation -->
+	<scriptfile>script.php</scriptfile>
+
+	<!-- Runs on install -->
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<!-- Runs on uninstall -->
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<!-- Runs on update -->
+	<update>
+		<schemas>
+			<!--todo: <schemapath type="mysql">sql/updates/mysql</schemapath>-->
+		</schemas>
+	</update>
+
+	<!-- Media files -->
+	<media folder="media/com_eventschedule" destination="com_eventschedule">
+
+		<!--<folder>attachments</folder>
+		<folder>css</folder>
+		<folder>fonts</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+
+		<filename>joomla.asset.json</filename>-->
+	</media>
+
+	<!-- Front-end files -->
+	<!--<files folder="components/com_eventschedule">-->
+		<!--<folder>language</folder>-->
+		<!--<folder>forms</folder>
+		<folder>layouts</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>-->
+	<!--</files>-->
+
+	<!-- Back-end files -->
+	<administration>
+		<!-- Menu entries --><!--todo: sys-language-string?  , '', 'Administrator', true-->
+		<menu view="schedulemaker">COM_EVENTSCHEDULE_MENUNAME</menu>
+		<submenu>
+			<!-- all backend index pages as submenu item -->
+			
+			<menu link="option=com_eventschedule&amp;view=presentations">COM_EVENTSCHEDULE_SUBMENUNAME_PRESENTATIONS
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_PRESENTATIONS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=presentations</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_eventschedule&amp;view=speakers">COM_EVENTSCHEDULE_SUBMENUNAME_SPEAKERS
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_SPEAKERS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=speakers</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_eventschedule&amp;view=dayschedules">COM_EVENTSCHEDULE_SUBMENUNAME_DAYSCHEDULES
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_DAYSCHEDULES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=dayschedules</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_eventschedule&amp;view=tracks">COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=tracks</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_eventschedule&amp;view=tracks">COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=tracks</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_eventschedule&amp;view=schedulemaker">COM_EVENTSCHEDULE_SUBMENUNAME_SCHEDULEMAKER
+			<params>
+				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_SCHEDULEMAKER</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_eventschedule&amp;view=schedulemaker</menu-quicktask>
+			</params>
+			</menu>
+					</submenu>
+
+		<!-- Core files -->
+		<files folder="administrator/components/com_eventschedule">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<!--<filename>version.php</filename>-->
+			<filename>LICENSE.txt</filename>
+
+			<folder>forms</folder>
+			<folder>language</folder>
+			<!--<folder>layouts</folder>-->
+			<folder>services</folder>
+			<folder>sql</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+		</files>
+	</administration>
+
+	<!-- Update servers -->
+	<!--<updateservers>
+		<server type="extension" priority="1" name="EventSchedule">/eventschedule</server>
+	</updateservers>-->
+</extension>

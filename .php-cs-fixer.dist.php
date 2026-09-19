@@ -19,6 +19,9 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in([__DIR__ . '/tests', __DIR__ . '/build'])
+    // Generated output, compared byte for byte by the golden tests.
+    // Reformatting it would break the very thing it pins.
+    ->exclude(['Fixtures/golden/expected'])
     ->name('*.php')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);

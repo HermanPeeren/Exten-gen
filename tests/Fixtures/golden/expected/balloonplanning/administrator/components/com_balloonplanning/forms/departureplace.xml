@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonPlanning\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonPlanning\Administrator\Field">
+    <field name="place_name" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_PLACE_NAME_LABEL" description="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_PLACE_NAME_DESC"/>
+    <field name="exact_address" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_EXACT_ADDRESS_LABEL" description="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_EXACT_ADDRESS_DESC"/>
+    <field name="route" type="textarea" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_ROUTE_LABEL" description="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_ROUTE_DESC"/>
+    <field name="geo-location" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_GEO-LOCATION_LABEL" description="COM_BALLOONPLANNING_DEPARTUREPLACE_FIELD_GEO-LOCATION_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

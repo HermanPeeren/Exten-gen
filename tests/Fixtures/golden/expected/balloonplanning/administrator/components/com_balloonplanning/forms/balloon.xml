@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonPlanning\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonPlanning\Administrator\Field">
+    <field name="call-sign" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_BALLOON_FIELD_CALL-SIGN_LABEL" description="COM_BALLOONPLANNING_BALLOON_FIELD_CALL-SIGN_DESC"/>
+    <field name="capacity" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_BALLOON_FIELD_CAPACITY_LABEL" description="COM_BALLOONPLANNING_BALLOON_FIELD_CAPACITY_DESC"/>
+    <field name="license" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_BALLOON_FIELD_LICENSE_LABEL" description="COM_BALLOONPLANNING_BALLOON_FIELD_LICENSE_DESC"/>
+    <field name="planning_color" type="number" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_BALLOON_FIELD_PLANNING_COLOR_LABEL" description="COM_BALLOONPLANNING_BALLOON_FIELD_PLANNING_COLOR_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" version="4.3" method="upgrade">
+	<name>com_balloonplanning</name>
+	<creationDate>2023-06-26</creationDate>
+	<author>Herman Peeren</author>
+	<authorEmail>herman@yepr.nl</authorEmail>
+	<authorUrl>https://hermanpeeren.nl</authorUrl>
+	<copyright>Yepr, Herman Peeren</copyright>
+	<license>GPL3</license>
+	<version>6.0.0 alpha</version>
+	<description>COM_BALLOONPLANNING_DESCRIPTION</description>
+	<namespace path="src">Yepr\Component\BalloonPlanning</namespace>
+
+	<!-- Scripts to run on installation -->
+	<scriptfile>script.php</scriptfile>
+
+	<!-- Runs on install -->
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<!-- Runs on uninstall -->
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<!-- Runs on update -->
+	<update>
+		<schemas>
+			<!--todo: <schemapath type="mysql">sql/updates/mysql</schemapath>-->
+		</schemas>
+	</update>
+
+	<!-- Media files -->
+	<media folder="media/com_balloonplanning" destination="com_balloonplanning">
+
+		<!--<folder>attachments</folder>
+		<folder>css</folder>
+		<folder>fonts</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+
+		<filename>joomla.asset.json</filename>-->
+	</media>
+
+	<!-- Front-end files -->
+	<!--<files folder="components/com_balloonplanning">-->
+		<!--<folder>language</folder>-->
+		<!--<folder>forms</folder>
+		<folder>layouts</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>-->
+	<!--</files>-->
+
+	<!-- Back-end files -->
+	<administration>
+		<!-- Menu entries --><!--todo: sys-language-string?  , '', 'Administrator', true-->
+		<menu view="flights">COM_BALLOONPLANNING_MENUNAME</menu>
+		<submenu>
+			<!-- all backend index pages as submenu item -->
+			
+			<menu link="option=com_balloonplanning&amp;view=flights">COM_BALLOONPLANNING_SUBMENUNAME_FLIGHTS
+			<params>
+				<menu-quicktask-title>COM_BALLOONPLANNING_SUBMENUNAME_FLIGHTS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonplanning&amp;view=flights</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonplanning&amp;view=tickets">COM_BALLOONPLANNING_SUBMENUNAME_TICKETS
+			<params>
+				<menu-quicktask-title>COM_BALLOONPLANNING_SUBMENUNAME_TICKETS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonplanning&amp;view=tickets</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonplanning&amp;view=balloons">COM_BALLOONPLANNING_SUBMENUNAME_BALLOONS
+			<params>
+				<menu-quicktask-title>COM_BALLOONPLANNING_SUBMENUNAME_BALLOONS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonplanning&amp;view=balloons</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonplanning&amp;view=departureplaces">COM_BALLOONPLANNING_SUBMENUNAME_DEPARTUREPLACES
+			<params>
+				<menu-quicktask-title>COM_BALLOONPLANNING_SUBMENUNAME_DEPARTUREPLACES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonplanning&amp;view=departureplaces</menu-quicktask>
+			</params>
+			</menu>
+					</submenu>
+
+		<!-- Core files -->
+		<files folder="administrator/components/com_balloonplanning">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<!--<filename>version.php</filename>-->
+			<filename>LICENSE.txt</filename>
+
+			<folder>forms</folder>
+			<folder>language</folder>
+			<!--<folder>layouts</folder>-->
+			<folder>services</folder>
+			<folder>sql</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+		</files>
+	</administration>
+
+	<!-- Update servers -->
+	<!--<updateservers>
+		<server type="extension" priority="1" name="BalloonPlanning">/balloonplanning</server>
+	</updateservers>-->
+</extension>

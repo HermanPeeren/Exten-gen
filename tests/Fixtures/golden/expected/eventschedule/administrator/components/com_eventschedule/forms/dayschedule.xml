@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\eventschedule\Administrator\Rule" addfieldprefix="Yepr\Component\eventschedule\Administrator\Field">
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_EVENTSCHEDULE_DAYSCHEDULE_FIELD_NAME_LABEL" description="COM_EVENTSCHEDULE_DAYSCHEDULE_FIELD_NAME_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

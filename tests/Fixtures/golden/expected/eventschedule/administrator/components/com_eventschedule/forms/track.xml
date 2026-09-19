@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\eventschedule\Administrator\Rule" addfieldprefix="Yepr\Component\eventschedule\Administrator\Field">
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_EVENTSCHEDULE_TRACK_FIELD_NAME_LABEL" description="COM_EVENTSCHEDULE_TRACK_FIELD_NAME_DESC"/>
+    <field name="daySchedules" type="sql" query="SELECT id, `name` FROM `#__eventschedule_dayschedule`" header="&amp;nbsp;" key_field="id" value_field="name" label="COM_EVENTSCHEDULE_TRACK_FIELD_DAYSCHEDULES_LABEL" description="COM_EVENTSCHEDULE_TRACK_FIELD_DAYSCHEDULES_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

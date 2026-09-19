@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonPlanning\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonPlanning\Administrator\Field">
+    <field name="passenger_name" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_PASSENGER_NAME_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_PASSENGER_NAME_DESC"/>
+    <field name="address" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_ADDRESS_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_ADDRESS_DESC"/>
+    <field name="postal_code" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_POSTAL_CODE_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_POSTAL_CODE_DESC"/>
+    <field name="place" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_PLACE_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_PLACE_DESC"/>
+    <field name="telephone" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_TELEPHONE_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_TELEPHONE_DESC"/>
+    <field name="telephone2" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_TELEPHONE2_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_TELEPHONE2_DESC"/>
+    <field name="email" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONPLANNING_PASSENGER_FIELD_EMAIL_LABEL" description="COM_BALLOONPLANNING_PASSENGER_FIELD_EMAIL_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

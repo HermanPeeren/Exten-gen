@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\eventschedule\Administrator\Rule" addfieldprefix="Yepr\Component\eventschedule\Administrator\Field">
+    <field name="starttime" type="calendar" format="%Y-%m-%d %H:%M" label="COM_EVENTSCHEDULE_LOCATOR_FIELD_STARTTIME_LABEL" description="COM_EVENTSCHEDULE_LOCATOR_FIELD_STARTTIME_DESC"/>
+    <field name="endtime" type="calendar" format="%Y-%m-%d %H:%M" label="COM_EVENTSCHEDULE_LOCATOR_FIELD_ENDTIME_LABEL" description="COM_EVENTSCHEDULE_LOCATOR_FIELD_ENDTIME_DESC"/>
+    <field name="track" type="sql" query="SELECT id, `name` FROM `#__eventschedule_track`" header="&amp;nbsp;" key_field="id" value_field="name" label="COM_EVENTSCHEDULE_LOCATOR_FIELD_TRACK_LABEL" description="COM_EVENTSCHEDULE_LOCATOR_FIELD_TRACK_DESC"/>
+    <field name="daySchedule" type="sql" query="SELECT id, `name` FROM `#__eventschedule_dayschedule`" header="&amp;nbsp;" key_field="id" value_field="name" label="COM_EVENTSCHEDULE_LOCATOR_FIELD_DAYSCHEDULE_LABEL" description="COM_EVENTSCHEDULE_LOCATOR_FIELD_DAYSCHEDULE_DESC"/>
+  </fieldset>
+</form>

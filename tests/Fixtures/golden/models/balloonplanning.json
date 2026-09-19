@@ -1,0 +1,782 @@
+{
+    "id": "3",
+    "name": "BalloonPlanning",
+    "datamodel": {
+        "datamodel0": {
+            "entity_name": "Balloon",
+            "field": {
+                "field0": {
+                    "field_name": "call-sign",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "isunique": "1",
+                        "isprimary": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "20533f38-9d6d-4057-beda-0c0d20fc3c89",
+                    "entity_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                },
+                "field1": {
+                    "field_name": "capacity",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "14baa872-0824-4367-9caa-471976650672",
+                    "entity_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                },
+                "field2": {
+                    "field_name": "license",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c8a06b95-e6fd-4688-81ca-591508ace260",
+                    "entity_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                },
+                "field3": {
+                    "field_name": "planning_color",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "7d6220ec-7b5b-41e0-8b2f-3a75e6b5d936",
+                    "entity_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                }
+            },
+            "entity_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+        },
+        "datamodel1": {
+            "entity_name": "PlannedFlight",
+            "field": {
+                "field0": {
+                    "field_name": "balloon",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "6c49358a-b837-4525-9a1a-887184bf41dd",
+                        "isrequired": "1",
+                        "reference_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                    },
+                    "field_id": "51439b51-4094-443f-bc13-938f529af3f0",
+                    "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                },
+                "field1": {
+                    "field_name": "date",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Date"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "8694d904-5af6-471b-add1-b8b4ed0876d4",
+                    "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                },
+                "field2": {
+                    "field_name": "morning_evening",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "1043d443-60d9-43e0-9cd8-d77cb0aabcfc",
+                    "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                },
+                "field3": {
+                    "field_name": "flight_number",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer",
+                        "isunique": "1",
+                        "isprimary": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "4bb96994-6ad4-4c7e-9ab6-1a66ab58a3f9",
+                    "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                },
+                "field4": {
+                    "field_name": "departureplace",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "71a98cc3-5d18-4458-b07c-fe7c1e23059f",
+                        "reference_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                    },
+                    "field_id": "cba312f2-7cfd-473d-aafa-a7598ebcb66c",
+                    "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                }
+            },
+            "entity_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+        },
+        "datamodel2": {
+            "entity_name": "Passenger",
+            "field": {
+                "field0": {
+                    "field_name": "passenger_name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "4072966d-6239-4842-9a18-658f6b4931d3",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field1": {
+                    "field_name": "address",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "abc3a7e5-46f8-4690-b0f9-f892d591ea29",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field2": {
+                    "field_name": "postal_code",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "10b5fbdd-7f0b-4f35-978f-4208f75a6362",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field3": {
+                    "field_name": "place",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "24d99352-e607-4376-9681-410616599882",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field4": {
+                    "field_name": "telephone",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "5794f249-4c50-46a0-a0bb-6893c222a80a",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field5": {
+                    "field_name": "telephone2",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "f1234bb2-f7c4-45e4-9e7d-7569716a2393",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                },
+                "field6": {
+                    "field_name": "email",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "343e1a47-f11a-4479-bfee-d257f1691440",
+                    "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                }
+            },
+            "entity_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+        },
+        "datamodel3": {
+            "entity_name": "DeparturePlace",
+            "field": {
+                "field0": {
+                    "field_name": "place_name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "1a3f4dc5-beb4-40c8-aa40-accd513505b2",
+                    "entity_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                },
+                "field1": {
+                    "field_name": "exact_address",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "66f7e824-5d66-4f6e-ad7f-52ad69853c12",
+                    "entity_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                },
+                "field2": {
+                    "field_name": "route",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "777b5bfe-32b1-4e4e-aa12-64e1b74a0c76",
+                    "entity_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                },
+                "field3": {
+                    "field_name": "geo-location",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "6ccd880c-a807-4513-acc0-d464c0bd87ba",
+                    "entity_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                }
+            },
+            "entity_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+        },
+        "datamodel4": {
+            "entity_name": "Ticket",
+            "field": {
+                "field0": {
+                    "field_name": "number_of_passengers",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "b34db922-c409-459d-b057-dd40538f938a",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "field1": {
+                    "field_name": "ticket_number",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer",
+                        "isunique": "1",
+                        "isprimary": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "647acd80-d5d7-4b4c-9e05-ebf74914b087",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "field2": {
+                    "field_name": "contact_person",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42",
+                        "reference_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                    },
+                    "field_id": "d2ca1a27-f88b-4599-acf6-3d818dd43a65",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "field3": {
+                    "field_name": "ticket_type",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "6a0a49d0-4487-43b2-80a1-6659c78fc9ff",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "field4": {
+                    "field_name": "number_of_kids",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "898342a6-f499-4e9e-bf45-c78f83fc1a6d",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "field5": {
+                    "field_name": "total_weight",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "19bf6e40-c44f-47ad-81a2-261edbf491d3",
+                    "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                }
+            },
+            "entity_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+        },
+        "datamodel5": {
+            "entity_name": "Reservation",
+            "field": {
+                "field0": {
+                    "field_name": "reservation_number",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer",
+                        "isunique": "1",
+                        "isprimary": "1",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "4d0a5bd4-828d-4596-90cc-48e2fa2e3b8f",
+                    "entity_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+                },
+                "field1": {
+                    "field_name": "actual",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Boolean"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "57b81280-eaa5-4340-a1ab-3c37db03b44b",
+                    "entity_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+                },
+                "field2": {
+                    "field_name": "ticket",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                        "isrequired": "1",
+                        "reference_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                    },
+                    "field_id": "7fcf3eb3-6536-4282-b00b-6969cbaf30ad",
+                    "entity_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+                },
+                "field3": {
+                    "field_name": "flight",
+                    "field_type": "reference",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                        "isrequired": "1",
+                        "reference_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                    },
+                    "field_id": "04aff2c4-f4fc-42ed-99e9-f77339871ae7",
+                    "entity_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+                }
+            },
+            "entity_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+        }
+    },
+    "pages": {
+        "pages0": {
+            "page_name": "Flights",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                    "reference_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Flight details",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "87290974-9b4f-460e-8dee-f8121b856809",
+                        "page_reference_id": "87290974-9b4f-460e-8dee-f8121b856809"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                        "field_reference": "4bb96994-6ad4-4c7e-9ab6-1a66ab58a3f9",
+                        "entity_reference_id": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                        "field_reference_id": "4bb96994-6ad4-4c7e-9ab6-1a66ab58a3f9"
+                    }
+                }
+            },
+            "page_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+        },
+        "pages1": {
+            "page_name": "Flight",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                    "reference_id": "2a8efe6b-095f-44ea-958a-178c2741b347"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "List of flights",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+                        "page_reference_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                        "entity_reference_id": "2a8efe6b-095f-44ea-958a-178c2741b347",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "87290974-9b4f-460e-8dee-f8121b856809"
+        },
+        "pages2": {
+            "page_name": "Tickets",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                    "reference_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Ticket details",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "cd12ac8f-b03f-4733-9944-26b63862eed9",
+                        "page_reference_id": "cd12ac8f-b03f-4733-9944-26b63862eed9"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                        "field_reference": "647acd80-d5d7-4b4c-9e05-ebf74914b087",
+                        "entity_reference_id": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                        "field_reference_id": "647acd80-d5d7-4b4c-9e05-ebf74914b087"
+                    }
+                }
+            },
+            "page_id": "ec5c42ab-15f9-4945-a6f1-9e7a4d047eb5"
+        },
+        "pages3": {
+            "page_name": "Ticket",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                    "reference_id": "4147cb05-6a2b-4985-9281-e0654cb3923e"
+                },
+                "entity_ref1": {
+                    "reference": "79880a88-503c-47d2-b7cc-394d8a804faf",
+                    "reference_id": "79880a88-503c-47d2-b7cc-394d8a804faf"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": {
+                "editfields0": {
+                    "attribute": {
+                        "entity_reference": "79880a88-503c-47d2-b7cc-394d8a804faf",
+                        "field_reference": "04aff2c4-f4fc-42ed-99e9-f77339871ae7",
+                        "entity_reference_id": "79880a88-503c-47d2-b7cc-394d8a804faf",
+                        "field_reference_id": "04aff2c4-f4fc-42ed-99e9-f77339871ae7"
+                    },
+                    "htmltype": "list",
+                    "parameters": []
+                }
+            },
+            "links": {
+                "links0": {
+                    "link_name": "Tickets",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "ec5c42ab-15f9-4945-a6f1-9e7a4d047eb5",
+                        "page_reference_id": "ec5c42ab-15f9-4945-a6f1-9e7a4d047eb5"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "cd12ac8f-b03f-4733-9944-26b63862eed9"
+        },
+        "pages4": {
+            "page_name": "Balloons",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "6c49358a-b837-4525-9a1a-887184bf41dd",
+                    "reference_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Balloon detail",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "da7582d8-5284-40f5-b9fe-eb0facc96fbc",
+                        "page_reference_id": "da7582d8-5284-40f5-b9fe-eb0facc96fbc"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "6c49358a-b837-4525-9a1a-887184bf41dd",
+                        "field_reference": "20533f38-9d6d-4057-beda-0c0d20fc3c89",
+                        "entity_reference_id": "6c49358a-b837-4525-9a1a-887184bf41dd",
+                        "field_reference_id": "20533f38-9d6d-4057-beda-0c0d20fc3c89"
+                    }
+                }
+            },
+            "page_id": "0df3ed4b-c931-40a3-a25e-0b4347097d6a"
+        },
+        "pages5": {
+            "page_name": "Balloon",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "6c49358a-b837-4525-9a1a-887184bf41dd",
+                    "reference_id": "6c49358a-b837-4525-9a1a-887184bf41dd"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "Balloons",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "0df3ed4b-c931-40a3-a25e-0b4347097d6a",
+                        "page_reference_id": "0df3ed4b-c931-40a3-a25e-0b4347097d6a"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "da7582d8-5284-40f5-b9fe-eb0facc96fbc"
+        },
+        "pages6": {
+            "page_name": "DeparturePlaces",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "71a98cc3-5d18-4458-b07c-fe7c1e23059f",
+                    "reference_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "DeparturePlace detail",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "6b1de0bf-d824-4ea8-8b69-576ade51a376",
+                        "page_reference_id": "6b1de0bf-d824-4ea8-8b69-576ade51a376"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "71a98cc3-5d18-4458-b07c-fe7c1e23059f",
+                        "field_reference": "1a3f4dc5-beb4-40c8-aa40-accd513505b2",
+                        "entity_reference_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f",
+                        "field_reference_id": "1a3f4dc5-beb4-40c8-aa40-accd513505b2"
+                    }
+                }
+            },
+            "page_id": "45457654-702c-4a20-8dfb-22858fa98e0b"
+        },
+        "pages7": {
+            "page_name": "DeparturePlace",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "71a98cc3-5d18-4458-b07c-fe7c1e23059f",
+                    "reference_id": "71a98cc3-5d18-4458-b07c-fe7c1e23059f"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "DeparturePlaces",
+                    "link_type": "Index",
+                    "target_page": {
+                        "page_reference": "45457654-702c-4a20-8dfb-22858fa98e0b",
+                        "page_reference_id": "45457654-702c-4a20-8dfb-22858fa98e0b"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference_id": "",
+                        "field_reference_id": ""
+                    }
+                }
+            },
+            "page_id": "6b1de0bf-d824-4ea8-8b69-576ade51a376"
+        },
+        "pages8": {
+            "page_name": "Passenger",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42",
+                    "reference_id": "b7f9dab5-6798-4edc-a0ba-c96a851e4c42"
+                }
+            },
+            "filters": [],
+            "presentationcolumns": [],
+            "editfields": [],
+            "links": {
+                "links0": {
+                    "link_name": "contact person",
+                    "link_type": "Details",
+                    "target_page": {
+                        "page_reference": "cd12ac8f-b03f-4733-9944-26b63862eed9",
+                        "page_reference_id": "cd12ac8f-b03f-4733-9944-26b63862eed9"
+                    },
+                    "entity_field_reference": {
+                        "entity_reference": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                        "field_reference": "647acd80-d5d7-4b4c-9e05-ebf74914b087",
+                        "entity_reference_id": "4147cb05-6a2b-4985-9281-e0654cb3923e",
+                        "field_reference_id": "647acd80-d5d7-4b4c-9e05-ebf74914b087"
+                    }
+                }
+            },
+            "page_id": "3f5b23b1-6a33-4c19-9bce-48e79fe05024"
+        }
+    },
+    "extensions": {
+        "component": {
+            "component_name": "BalloonPlanning",
+            "component_description": "Planning of flights and available places for hot air balloons.",
+            "Sections": {
+                "frontendsection": {
+                    "frontendsection0": {
+                        "page_reference": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+                        "page_reference_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+                    }
+                },
+                "frontenddefaultpage": {
+                    "page_reference": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+                    "page_reference_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+                },
+                "backendsection": {
+                    "backendsection0": {
+                        "page_reference": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+                        "page_reference_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+                    },
+                    "backendsection1": {
+                        "page_reference": "87290974-9b4f-460e-8dee-f8121b856809",
+                        "page_reference_id": "87290974-9b4f-460e-8dee-f8121b856809"
+                    },
+                    "backendsection2": {
+                        "page_reference": "ec5c42ab-15f9-4945-a6f1-9e7a4d047eb5",
+                        "page_reference_id": "ec5c42ab-15f9-4945-a6f1-9e7a4d047eb5"
+                    },
+                    "backendsection3": {
+                        "page_reference": "cd12ac8f-b03f-4733-9944-26b63862eed9",
+                        "page_reference_id": "cd12ac8f-b03f-4733-9944-26b63862eed9"
+                    },
+                    "backendsection4": {
+                        "page_reference": "0df3ed4b-c931-40a3-a25e-0b4347097d6a",
+                        "page_reference_id": "0df3ed4b-c931-40a3-a25e-0b4347097d6a"
+                    },
+                    "backendsection5": {
+                        "page_reference": "da7582d8-5284-40f5-b9fe-eb0facc96fbc",
+                        "page_reference_id": "da7582d8-5284-40f5-b9fe-eb0facc96fbc"
+                    },
+                    "backendsection6": {
+                        "page_reference": "45457654-702c-4a20-8dfb-22858fa98e0b",
+                        "page_reference_id": "45457654-702c-4a20-8dfb-22858fa98e0b"
+                    },
+                    "backendsection7": {
+                        "page_reference": "6b1de0bf-d824-4ea8-8b69-576ade51a376",
+                        "page_reference_id": "6b1de0bf-d824-4ea8-8b69-576ade51a376"
+                    },
+                    "backendsection8": {
+                        "page_reference": "3f5b23b1-6a33-4c19-9bce-48e79fe05024",
+                        "page_reference_id": "3f5b23b1-6a33-4c19-9bce-48e79fe05024"
+                    }
+                },
+                "backenddefaultpage": {
+                    "page_reference": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+                    "page_reference_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+                }
+            },
+            "manifest": {
+                "copyright": "Yepr, Herman Peeren",
+                "license": "GPL3",
+                "link": "",
+                "version": "6.0.0 alpha",
+                "author_name": "Herman Peeren",
+                "author_email": "herman@yepr.nl",
+                "author_url": "https://hermanpeeren.nl",
+                "creation_date": "2023-06-26",
+                "company_namespace": "Yepr"
+            },
+            "languages": {
+                "languages0": {
+                    "language_code": "en",
+                    "country_code": "GB",
+                    "key_value_pairs": []
+                }
+            }
+        }
+    },
+    "tags": []
+}

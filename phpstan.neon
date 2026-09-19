@@ -18,4 +18,13 @@ parameters:
     # paths above, at 1.11. Listing a directory that nobody has unpacked only
     # fails the build for a reason unrelated to the code.
 
+    excludePaths:
+        analyse:
+            # Golden fixtures are generated output, kept to diff against. They
+            # are Joomla code, so analysing them without Joomla present reports
+            # two thousand unknown classes - and even with it, what they say is
+            # whether the *generator* is right, which the golden comparison
+            # already answers. They are syntax-checked by the suite instead.
+            - tests/Fixtures/golden/expected/*
+
     treatPhpDocTypesAsCertain: false
