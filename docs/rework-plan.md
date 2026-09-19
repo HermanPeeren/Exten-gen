@@ -580,11 +580,22 @@ raises nothing - the subform renders empty, which looks like a feature nobody fi
 and a field type it cannot resolve falls back to a plain text box, silently turning a
 closed list into a place to type anything at all.
 
-One defect found and fixed in passing, in both repositories: PHPStan was scanning the
-shared library twice, once from composer and once from the copy installed into the
-development site, and analysing against whichever resolved first. It surfaced here as
-"undefined constant `Binding::KINDS`" against a constant that very much exists; in
-Exten-gen it had not surfaced yet, which is not the same as not being there.
+Three defects, two of them found by CI on the first push and invisible on this machine:
+
+- **A field type that only resolves on Windows.** `FormHelper::loadClass()` builds the
+  class name as `ucfirst(ucwords($type))`, and `ucwords` only touches letters after
+  whitespace - so `type="ruleselector"` asks for `RuleselectorField`, one letter from the
+  class and, on a case-insensitive filesystem, no letters at all. On the Linux server this
+  will run on, the class is not found and the closed list degrades into a text box: the
+  exact failure the test beside it described and was too case-insensitive to catch. The
+  types are spelled `RuleSelector` now, and the test resolves them the way Joomla does.
+- **PHPStan scanning the shared library twice**, once from composer and once from the copy
+  installed into the development site, analysing against whichever resolved first. It
+  surfaced in Gen-gen as "undefined constant `Binding::KINDS`" against a constant that very
+  much exists; here it had not surfaced yet, which is not the same as not being there.
+- And the fix for that broke both builds, because PHPStan errors on an `excludePath` that
+  does not exist and a freshly fetched Joomla has no extensions installed in it. A wildcard
+  matching nothing is accepted.
 
 *Not in 2.2, deliberately:* the component's MVC, its manifest, its package and its release
 workflow. That is 2.4, and 2.3 comes first.
