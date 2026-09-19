@@ -7,7 +7,7 @@ namespace Yepr\Component\Extengen\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
-use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla4Target;
+use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
 use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Component\Extengen\Tests\Support\RecordingRenderer;
 use Yepr\Gen\Core\Output\FileCollection;
@@ -85,7 +85,7 @@ final class TemplateReachabilityTest extends TestCase
             JSON_THROW_ON_ERROR
         ));
 
-        $target             = new Joomla4Target($this->templateRoot());
+        $target             = new Joomla6Target($this->templateRoot());
         $languageStringUtil = new LanguageStringUtil();
 
         $inner = TwigRenderer::forDirectories($target->templateSetRoot());
@@ -96,8 +96,8 @@ final class TemplateReachabilityTest extends TestCase
         // The generator list comes from the target, so this cannot drift out of
         // step with what the component actually runs.
         $generators = array_map(
-            static fn (string $class): object => new $class('Joomla4', $recorder, $languageStringUtil),
-            Joomla4Target::GENERATORS
+            static fn (string $class): object => new $class($recorder, $languageStringUtil),
+            Joomla6Target::GENERATORS
         );
 
         foreach ($this->models() as $model) {
@@ -130,7 +130,7 @@ final class TemplateReachabilityTest extends TestCase
     /** @return string[] */
     private function onDisk(): array
     {
-        $root  = $this->templateRoot() . '/Joomla4';
+        $root  = $this->templateRoot() . '/Joomla6';
         $files = [];
 
         $iterator = new \RecursiveIteratorIterator(

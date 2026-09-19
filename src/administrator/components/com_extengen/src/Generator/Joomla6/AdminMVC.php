@@ -1,14 +1,14 @@
 <?php
 /**
  * @package     Extension Generator
- * @subpackage  Joomla4 Generator
+ * @subpackage  Joomla6 Generator
  * @version     0.8.0
  *
  * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
@@ -35,8 +35,6 @@ class AdminMVC extends Generator
 		// The name of the component (without 'com_' prefix and possibly with capitals)
 		$componentName = $this->componentName;
 
-		// What kind of output do you want to generate? For instance: 'Joomla4'
-		$outputType = $this->outputType;
 
 		$templateFilePathRoot = 'component/administrator/components/com_componentname/';
 		$generatedFilePathRoot = 'administrator/components/com_'.strtolower($componentName).'/';

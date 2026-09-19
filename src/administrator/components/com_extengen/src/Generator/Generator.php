@@ -71,13 +71,6 @@ abstract class Generator implements GeneratorInterface
     protected string $componentName;
 
     /**
-     * The kind of output, naming both the template set and the generator folder.
-     *
-     * @since  0.9.0
-     */
-    protected string $outputType;
-
-    /**
      * What this generator produced, in the words shown to the user.
      *
      * @var string[]
@@ -85,19 +78,6 @@ abstract class Generator implements GeneratorInterface
      * @since  0.9.0
      */
     protected array $log = [];
-
-    /**
-     * Path to the administrator side of com_extengen.
-     *
-     * Vestigial. The generators each still compute an absolute output path from
-     * it and then never use it, because the file set is in memory now. Removing
-     * those lines is a change to seven files that the golden baseline cannot
-     * check for me, so it waits for 1.8 where those files are being edited
-     * anyway.
-     *
-     * @since  0.9.0
-     */
-    protected string $extengenAdminPath;
 
     /**
      * Paths this generator wrote more than once.
@@ -111,18 +91,15 @@ abstract class Generator implements GeneratorInterface
     /**
      * Constructor.
      *
-     * @param  string               $outputType          For instance "Joomla4".
      * @param  RendererInterface    $renderer            Renders the template set.
      * @param  LanguageStringUtil   $languageStringUtil  Collects language strings while templates render.
      *
      * @since  0.9.0
      */
     public function __construct(
-        string $outputType,
         protected readonly RendererInterface $renderer,
         protected readonly LanguageStringUtil $languageStringUtil
     ) {
-        $this->outputType = $outputType;
     }
 
     /**
@@ -150,9 +127,6 @@ abstract class Generator implements GeneratorInterface
         $this->AST               = $model->raw();
         $this->files             = $files;
         $this->componentName     = $model->componentName();
-        $this->extengenAdminPath = \defined('JPATH_ROOT')
-            ? JPATH_ROOT . '/administrator/components/com_extengen/'
-            : '';
 
         // Whichever generator runs first starts the language tree; the rest
         // find it already started. See LanguageStringUtil::useProject().

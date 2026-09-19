@@ -43,7 +43,7 @@ use Joomla\Utilities\ArrayHelper;
 
 use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
-use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla4Target;
+use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
 use Yepr\Gen\Core\Model\ValidationException;
 use Yepr\Gen\Core\Output\FileCollection;
@@ -72,13 +72,13 @@ class GenerateModel extends AdminModel
 	protected int $projectId;
 
 	/**
-	 * The type of output we generate files for, for instance "Joomla4".
+	 * The type of output we generate files for, for instance "Joomla6".
 	 * There must be a subdirectory with this name with the concrete generators.
 	 * When templates are used, they must be in a subdirectory under /generator_templates with that same name. todo: templates in db
 	 *
 	 * @var   string
 	 */
-	protected array $outputTypes = ['Joomla4']; //todo: set other output types
+	protected array $outputTypes = ['Joomla6']; //todo: set other output types
 
 	/**
 	 * Set the project id.
@@ -103,7 +103,7 @@ class GenerateModel extends AdminModel
 	public function generate()
 	{
 		$project = $this->loadProject();
-		$target  = new Joomla4Target(
+		$target  = new Joomla6Target(
 			JPATH_ROOT . '/administrator/components/com_extengen/generator_templates',
 			JPATH_ROOT . '/administrator/components/com_extengen/compilation_cache'
 		);
@@ -149,7 +149,7 @@ class GenerateModel extends AdminModel
 	{
 		$componentName = $project->componentName();
 		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/' . $componentName;
-		$root          = $generated . '/Joomla4/com_' . strtolower($componentName);
+		$root          = $generated . '/Joomla6/com_' . strtolower($componentName);
 
 		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root))
 		{

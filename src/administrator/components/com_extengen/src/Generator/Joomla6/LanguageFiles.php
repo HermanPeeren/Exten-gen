@@ -8,7 +8,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 

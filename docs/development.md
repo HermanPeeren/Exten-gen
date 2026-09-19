@@ -20,7 +20,7 @@ src/
     extengen.xml                            a second copy, installed with the component
     forms/                                  the model language, as Joomla form XML
     forms/metaProjectForms/LIonCore_M3/     the LionWeb meta-model
-    generator_templates/Joomla4/            Twig templates for the generated extension
+    generator_templates/Joomla6/            Twig templates for the generated extension
     src/                                    the component's PHP
     tmpl/ language/ services/ sql/
   media/com_extengen/js/
@@ -142,7 +142,7 @@ runner checks out.
 Clone into a short directory. The deepest file here is 169 characters:
 
 ```
-src/administrator/components/com_extengen/generator_templates/Joomla4/component/
+src/administrator/components/com_extengen/generator_templates/Joomla6/component/
 administrator/components/com_componentname/src/Controller/AdminDetailsController.php.twig
 ```
 
@@ -168,9 +168,9 @@ solve it.
 ```
 src/Generator/
   Model/Project.php              one project, as stored
-  Target/Joomla4Target.php       which generators run, in what order
+  Target/Joomla6Target.php       which generators run, in what order
   Generator.php                  what every generator shares
-  Joomla4/*.php                  seven generators, one concern each
+  Joomla6/*.php                  seven generators, one concern each
 ```
 
 A generator contributes files to a `FileCollection` held in memory and never
@@ -313,7 +313,7 @@ A run writes two things next to each other:
 
 ```
 generated/<Name>/com_<name>-<version>.zip    the installable package
-generated/<Name>/Joomla4/com_<name>/...      the same files, unpacked
+generated/<Name>/Joomla6/com_<name>/...      the same files, unpacked
 ```
 
 The archive is the deliverable — it is the only form in which the output is one

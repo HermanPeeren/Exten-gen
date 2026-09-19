@@ -1,14 +1,14 @@
 <?php
 /**
  * @package     Extension Generator
- * @subpackage  Joomla4 Generator
+ * @subpackage  Joomla6 Generator
  * @version     0.8.0
  *
  * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
@@ -16,7 +16,7 @@ use Yepr\Component\Extengen\Administrator\Generator\Generator;
  * A concrete generator to create the entity-related files of a J4-component administrator-side
  * generated files: sql/install.mysql.utf8 (SQL to create the db-tables) and the Table files
  *
- * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla4
+ * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla6
  */
 class AdminEntities extends Generator
 {
@@ -35,15 +35,7 @@ class AdminEntities extends Generator
 		// The name of the component (without 'com_' prefix and possibly with capitals)
 		$componentName = ucfirst($this->componentName);
 
-		// What kind of output do you want to generate? For instance: 'Joomla4'
-		$outputType = $this->outputType;
 
-		// Path to administrator-side of com_extengen
-		$extengenAdminPath = $this->extengenAdminPath;
-
-		// Path to generated files of component
-		$generatedFilesPathComponent = $extengenAdminPath . '/generated/' . $componentName .'/'
-			. $outputType . '/com_'.strtolower($componentName) . '/';
 
 		// Path of generated file IN the directory for generated files of component
 		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
@@ -56,7 +48,7 @@ class AdminEntities extends Generator
 		$logAppend(['generated install.mysql.utf8.sql sql-file']);
 		$logAppend(['generated uninstall.mysql.utf8.sql sql-file']);
 
-		// Table class template within the Joomla4 templates
+		// Table class template within the Joomla6 templates
 		$templateFilePath = 'component/administrator/components/com_componentname/src/Table/';
 
 		// Path to generated Table-files in component

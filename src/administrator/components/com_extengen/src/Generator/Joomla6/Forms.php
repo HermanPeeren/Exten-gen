@@ -1,14 +1,14 @@
 <?php
 /**
  * @package     Extension Generator
- * @subpackage  Joomla4 Generator
+ * @subpackage  Joomla6 Generator
  * @version     0.8.0
  *
  * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use DOMDocument;
@@ -17,7 +17,7 @@ use DOMDocument;
  * A concrete generator to create the form files of  J4 pages
  * generated files: form xml-files todo: also filters
  *
- * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla4
+ * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla6
  *
  * @since       version 1.0
  */
@@ -84,15 +84,7 @@ class Forms extends Generator
 		// The name of the component (without 'com_' prefix and possibly with capitals)
 		$componentName = ucfirst($this->componentName);
 
-		// What kind of output do you want to generate? For instance: 'Joomla4'
-		$outputType = $this->outputType;
 
-		// Path to administrator-side of com_extengen
-		$extengenAdminPath = $this->extengenAdminPath;
-
-		// Path to generated files of component
-		$generatedFilesPathComponent = $extengenAdminPath . '/generated/' . $componentName .'/'
-			. $outputType . '/com_'.strtolower($componentName) . '/';
 
 		// Path of generated file IN the directory for generated files of component
 		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';

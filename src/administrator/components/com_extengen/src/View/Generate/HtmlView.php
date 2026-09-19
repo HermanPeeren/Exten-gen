@@ -49,7 +49,7 @@ class HtmlView extends BaseHtmlView
 		$projectId = Factory::getApplication()->getInput()->getInt('project_id');
 		$model->setProjectId($projectId);
 
-		// Todo: also get the output-type (now fixed on 'Joomla4' in GenerateModel)
+		// Todo: also get the output-type (now fixed on 'Joomla6' in GenerateModel)
 		$model->generate();
 		$log = $model->log;
 		$text = implode("<br />\n", $log);

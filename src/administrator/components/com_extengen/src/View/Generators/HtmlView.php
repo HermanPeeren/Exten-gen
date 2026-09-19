@@ -50,7 +50,7 @@ class HtmlView extends BaseHtmlView
 		echo '<p>TODO! Generators can be copied and adjusted. New generators can be defined and... generated.</p>';
 		echo '<p>Planned for version 0.9</p>';
 		echo '<p>&nbsp</p>';
-		echo '<p>At the moment, version 0.8, only one generator: <b>Joomla4</b>.</p>';
+		echo '<p>At the moment, version 0.8, only one generator: <b>Joomla6</b>.</p>';
 		echo '<p>This template is not yet easily adjustable.</p>';
 		echo '<p>&nbsp</p>';
 		echo '<p>To migrate from the current static generator to dynamic generators, the following steps will be taken:

@@ -249,7 +249,7 @@ the golden files are unchanged.
   `addfieldprefix="...\Administrator\Fieldclassifier.xml"` (3 occurrences), and
   `Yepr\\Component\\Extengen\\\Administrator\\MetaProjectForm\\...` in `projectForm.xml`,
   pointing at an empty directory tree.
-- Site-side templates under `generator_templates/Joomla4/component/components/` emit
+- Site-side templates under `generator_templates/Joomla6/component/components/` emit
   `Administrator\View` and `Administrator\Model` namespaces; generated front-end views
   cannot autoload.
 - Dead `test.json` reads in `View/ERD/HtmlView.php:48` and

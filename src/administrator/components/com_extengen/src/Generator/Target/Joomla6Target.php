@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Target;
 
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\AdminEntities;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\AdminGeneral;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\AdminMVC;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\ComponentGeneral;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\Forms;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\LanguageFiles;
-use Yepr\Component\Extengen\Administrator\Generator\Joomla4\SiteMVC;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\AdminEntities;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\AdminGeneral;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\AdminMVC;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\ComponentGeneral;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\Forms;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\LanguageFiles;
+use Yepr\Component\Extengen\Administrator\Generator\Joomla6\SiteMVC;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\ProjectValidator;
 use Yepr\Gen\Core\GeneratorInterface;
@@ -27,12 +27,14 @@ use Yepr\Gen\Core\Target\TargetInterface;
 use Yepr\Gen\Core\Template\TwigRenderer;
 
 /**
- * A Joomla component, as the generators write one today.
+ * A Joomla 6 component.
  *
- * Named for the template set it uses - `generator_templates/Joomla4` - rather
- * than for where the project is going. Step 1.8 sweeps that output for Joomla 6
- * and renames this with it; calling it `joomla6` now would be a claim about
- * output that has not been made yet.
+ * This was `Joomla4Target` until 1.8, named for the template set rather than
+ * for where the project was going, because calling it six would have been a
+ * claim about output nobody had made. 1.8 made it: the generated code calls
+ * Joomla 6 APIs and none of the ones Joomla 6 keeps only for the
+ * `behaviour - compat6` plugin, so the name is a statement now rather than a
+ * hope.
  *
  * **The order is the definition.** `LanguageFiles` runs last because every other
  * generator adds language strings while its templates render, so the set is only
@@ -41,10 +43,10 @@ use Yepr\Gen\Core\Template\TwigRenderer;
  *
  * @since  0.9.0
  */
-final class Joomla4Target implements TargetInterface
+final class Joomla6Target implements TargetInterface
 {
     /**
-     * @param  string   $templateRoot    Directory holding generator_templates/Joomla4.
+     * @param  string   $templateRoot    Directory holding generator_templates/Joomla6.
      * @param  ?string  $cacheDirectory  Where Twig may cache compiled templates.
      *
      * @since  0.9.0
@@ -62,7 +64,7 @@ final class Joomla4Target implements TargetInterface
      */
     public function id(): string
     {
-        return 'joomla4';
+        return 'joomla6';
     }
 
     /**
@@ -131,7 +133,7 @@ final class Joomla4Target implements TargetInterface
 
         return array_map(
             static fn (string $class): GeneratorInterface
-                => new $class('Joomla4', $renderer, $languageStringUtil),
+                => new $class($renderer, $languageStringUtil),
             self::GENERATORS
         );
     }
@@ -143,6 +145,6 @@ final class Joomla4Target implements TargetInterface
      */
     public function templateSetRoot(): string
     {
-        return rtrim($this->templateRoot, '/\\') . '/Joomla4';
+        return rtrim($this->templateRoot, '/\\') . '/Joomla6';
     }
 }

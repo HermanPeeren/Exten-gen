@@ -6,7 +6,7 @@ namespace Yepr\Component\Extengen\Tests\Support;
 
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
-use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla4Target;
+use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
 use Yepr\Gen\Core\Output\FileCollection;
 use Yepr\Gen\Core\Pipeline;
 use Yepr\Gen\Core\Target\Target;
@@ -36,7 +36,7 @@ final class GenerationHarness
     {
         self::bootstrap();
 
-        $target = new Joomla4Target(self::componentRoot() . '/generator_templates');
+        $target = new Joomla6Target(self::componentRoot() . '/generator_templates');
 
         return (new Pipeline())->run(
             Project::fromObject($ast),
@@ -49,7 +49,7 @@ final class GenerationHarness
     {
         self::bootstrap();
 
-        $target = new Joomla4Target(self::componentRoot() . '/generator_templates');
+        $target = new Joomla6Target(self::componentRoot() . '/generator_templates');
 
         return (new Pipeline())->run(
             Project::fromJson($json),
@@ -71,7 +71,7 @@ final class GenerationHarness
         self::bootstrap();
 
         $project    = Project::fromObject($ast);
-        $target     = new Joomla4Target(self::componentRoot() . '/generator_templates');
+        $target     = new Joomla6Target(self::componentRoot() . '/generator_templates');
         $files      = new FileCollection();
         $collisions = [];
 
