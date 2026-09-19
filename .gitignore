@@ -1,8 +1,21 @@
-.idea
-.iml
+/vendor/
+/node_modules/
+/build/*.zip
+/build/tmp/
+/.phpunit.cache/
+/.phpunit.result.cache
+/.php-cs-fixer.cache
+/composer.lock
+/.idea/
+/.vscode/
+/.iml
 
-/xdiv
+# Joomla, unpacked as reference material for static analysis. See docs/development.md.
+/joomla/
 
-/src/com_extengen/administrator/components/com_extengen/generated
-/src/com_extengen/administrator/components/com_extengen/compilation_cache
+# Generation output and the Twig compilation cache are products, not sources.
+/src/administrator/components/com_extengen/generated/
+/src/administrator/components/com_extengen/compilation_cache/
 
+# Scratch: model dumps, notes, anything personal kept beside the repo.
+/xdiv/

@@ -1,0 +1,21 @@
+includes:
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+
+parameters:
+    level: 6
+
+    # Only the new code, for now. The component's own tree is 18k lines written
+    # against Joomla 4 and is analysed from step 1.11, once the Joomla 6 sweep
+    # has happened and there is Joomla reference material to resolve its base
+    # classes against. Pointing the analyser at it today would produce a wall of
+    # findings nobody reads, which is worse than not running it.
+    paths:
+        - tests
+        - build
+
+    # No scanDirectories yet. Joomla is reference material - it supplies the base
+    # classes the component extends - and it is needed the moment src joins the
+    # paths above, at 1.11. Listing a directory that nobody has unpacked only
+    # fails the build for a reason unrelated to the code.
+
+    treatPhpDocTypesAsCertain: false

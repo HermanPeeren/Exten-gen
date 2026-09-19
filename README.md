@@ -1,48 +1,84 @@
-# Extengen
-Extension generator as Joomla extension, model based on eJSL (JooMDD), with projectional editor. 
+# Exten-gen
 
-First the JooMDD model was ported to Jetbrain's MPS (eJSL-MPS) and based on that structure this was turned into a Joomla extension, with HTML forms as input of the AST.
+Exten-gen is a Joomla component that models CMS extensions and generates them. A
+model here is what Model Driven Engineering means by the word: a complete
+description of the thing you want — its data model, its pages, and what kind of
+extension it is — stated in the vocabulary of the domain rather than in PHP, and
+precise enough that the implementation can be derived from it.
 
-# Information about the Extension Generator project
-19-4-2025
+The model is collected through Joomla forms and stored as JSON. Generators turn
+that JSON into a complete, installable extension.
 
-At the moment mainly working on getting the meta-level complete, using forms:
+Note the collision with Joomla's own vocabulary: this is not a Model in the MVC
+sense, the class that fetches data for a view. That is one layer of one
+extension, while a model here describes an entire extension.
 
-* generator-generator: define and adjust generators
-* project forms generator: define and adjust project forms
+Models are called **projects**, and a project is in three parts:
 
-Still in the phase to get the first official release out. So be warned: the Extension Generator is still not production-ready.
+- the **data model** — entities, their fields, and the relations between them;
+- the **pages** that interact with those data;
+- the **extension** — what kind it is, which pages appear in the front end and
+  the back end, and the manifest information. Only this part is Joomla-specific.
 
-### version 0.9.0
-If the model and the generator can both be created/edited, using forms, then the model and generator will be much easier
-to adjust. That's why I postponed all kinds of changes in model and generator until after this version.
+## Where this came from
 
+Exten-gen succeeds [Extengen](https://github.com/HermanPeeren/Extengen), whose
+history it carries. Before that the same ideas were an XText language, eJSL, in
+[JooMDD](https://github.com/HermanPeeren/JooMDD), and then a port to JetBrains
+MPS in [eJSL-MPS](https://github.com/HermanPeeren/eJSL-MPS).
 
-### version 1.0.0
-With this version basic Joomla components will be easy to make.
+It is one of a family:
 
-Features of model and generator, that will be added via the meta-level:
+| | |
+|---|---|
+| [generator-core](https://github.com/HermanPeeren/generator-core) | the shared generation engine, `Yepr\Gen` |
+| **Exten-gen** | models extensions and generates them |
+| Gen-gen | models the generators themselves |
+| Meta-gen | models the model language, and generates the forms that collect it |
+| [Plug-gen](https://github.com/HermanPeeren/plug-gen) | plugin types, developed separately first |
 
-* toggle Joomla core features in generated extension: categories, tags, versioning, workflow, pagination, custom fields, ordering, access control, language associations, routing/alias, action logs, finder
-* automatic junction table for n:n relations
-* submenu for this component
-* toggle translations and choose translation service; override translations
-* add dashboard page type
-* update-site for extengen; update from github
+## Status
 
-### future version features
-* import & export projects
-* migrate older version projects
-* save versions of the model and generator on Git(hub)
-* add page-type detail with indices (for the multiple files)
-* update extengen info page(s) from github instead of shipping with component
-* generate Joomla modules
-* generate Joomla plugins
-* Joomla CLI and API applications
-* Initial WordPress generator
-* Joomla + Doctrine generator
-* possibility to use Event Sourcing in projects
-* Joomla + Prooph Event Sourcing generator
+Under construction, and not production ready. The rework it is going through is
+written down step by step in [docs/rework-plan.md](docs/rework-plan.md); this
+repository is the result of step 1.1.
 
+The 2025 status note that used to be this README is kept as
+[docs/extengen-status-2025.md](docs/extengen-status-2025.md), because it records
+what was planned at the time and why.
 
- 
+## Layout
+
+`src/` is the installable package: every file sits at the path it will occupy on
+a Joomla site.
+
+```
+src/
+  extengen.xml                                the manifest the installer reads
+  script.php                                  the install script
+  administrator/components/com_extengen/      the component
+  media/com_extengen/                         js
+  libraries/yepr/                             Twig, until the shared library replaces it
+tests/                                        the suite
+build/build.php                               assembles the installable zip
+docs/                                         how to work on it, and the plan
+```
+
+## Development
+
+```
+composer install
+composer test           # phpunit
+composer analyse        # phpstan
+composer cs             # phpcs
+php build/build.php     # -> build/com_extengen-<version>.zip
+```
+
+Requires PHP 8.3 or later, which is Joomla 6's minimum.
+
+How the component is put together and how to work on it:
+[docs/development.md](docs/development.md).
+
+## Licence
+
+GNU General Public License version 3 or later; see LICENSE.

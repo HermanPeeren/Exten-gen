@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<ruleset name="extengen">
+	<description>
+		PSR-12, minus the rules that contradict Joomla's own conventions.
+
+		Scoped to the new code for now. The component's own tree predates this
+		and joins at step 1.11, together with the Joomla 6 sweep; running the
+		standard over it today would report thousands of findings that say
+		nothing about whether the code is correct.
+	</description>
+
+	<file>tests</file>
+	<file>build</file>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/joomla/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="PSR12"/>
+
+	<!--
+		A build script declares its helpers and then does its work in the same
+		file, which is what a script is.
+	-->
+	<rule ref="PSR1.Files.SideEffects">
+		<exclude-pattern>build/*</exclude-pattern>
+		<exclude-pattern>tools/*</exclude-pattern>
+	</rule>
+
+	<rule ref="Generic.Files.LineLength">
+		<properties>
+			<property name="lineLimit" value="150"/>
+			<property name="absoluteLineLimit" value="0"/>
+		</properties>
+	</rule>
+</ruleset>
