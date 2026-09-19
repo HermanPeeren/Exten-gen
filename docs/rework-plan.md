@@ -280,15 +280,37 @@ and says so: it proves the old calls are gone, not that the new ones behave.
 *Done when* the component's own tree is free of them and the guard test fails when one
 returns.
 
-**1.8 Joomla 6 sweep — the generated output.** Templates to current APIs: the calls
-1.7 removed are still in `generator_templates/` — `JHtmlSidebar` (4), `Factory::getUser`
-(4), `CMSObject` (3), `Factory::getDbo` (1) — so every component Exten-gen writes today
-needs the `behaviour - compat6` plugin in order to run. Bound
-parameters in generated list-model queries, which currently interpolate with
-`$db->quote()`. Removal of the commented-out Akeeba ATS blocks, and of the roughly 130
-unreferenced files under `generator_templates/` (akeeba layouts, plugin skeletons, an
-entire `template/` folder) — only 8 distinct template names are actually rendered. Every
-change arrives as a golden-file diff to be reviewed.
+**1.8 Joomla 6 sweep — the generated output.** Two calls in the templates were fatal
+on a Joomla 6 without the `behaviour - compat6` plugin, not merely deprecated:
+`\JHtmlSidebar`, which is an alias that plugin registers rather than a class, and
+`$app->input`, which is protected in Joomla 6. `Factory::getUser` and `Table::$_db`
+were deprecated. Filter values in generated list models interpolated with
+`$db->quote()`; they are bound now.
+
+Reading `delete()` closely turned up a real bug: `$query` was only ever declared by
+an m2m fragment, so a generated Table for an entity with no n:n relation called
+`$query->clear()` on an undefined variable — a fatal on every delete.
+
+Of 174 files under `generator_templates/`, 29 are rendered. Reachability was
+measured with a recording renderer over every golden model and cross-checked
+against what the generators' concatenated names can expand to, not guessed. The
+other 145 — the Akeeba ATS source the set was copied out of, eleven plugin
+skeletons, a module, an entire site template — are gone, along with 634 lines of
+commented-out ATS `getListQuery()` that every generated component carried.
+`TemplateReachabilityTest` keeps it that way.
+
+`strict_variables` is on and `LegacyTwigRenderer` is deleted. Three names did not
+survive it, each a bug: `pageNamelower` gave every list table `id="List"`;
+`linkPageName` was assigned only inside the branch that did not need its fallback,
+so a page with no links generated `addNew('.add')`; `updateServerURL` is for a
+feature the model does not have and now says `|default('')`.
+
+`Joomla4Target` is `Joomla6Target`, which the output has earned. `$outputType` and
+`$extengenAdminPath` went with the rename: their only readers built a path under
+`generated/` that nothing used once 1.4 stopped writing to disk.
+
+*Done when* generated output calls no API Joomla 6 has removed or deprecated, every
+generated PHP file parses, and no template in the set is unreachable.
 
 **1.9 The reference-field rework.** The model is emitted once as JSON into the page;
 reference fields become custom elements reading one in-memory model. The roughly 300
