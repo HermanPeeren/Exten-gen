@@ -88,6 +88,29 @@ final class Joomla4Target implements TargetInterface
     /**
      * The generators, in the order they run.
      *
+     * A constant rather than a list built inside `generators()`, so that the
+     * order - which is the definition, see the class comment - has one home,
+     * and a test that has to drive these with a renderer of its own does not
+     * restate it.
+     *
+     * @var class-string<GeneratorInterface>[]
+     *
+     * @since  0.9.0
+     */
+    public const GENERATORS = [
+        ComponentGeneral::class,
+        AdminGeneral::class,
+        AdminEntities::class,
+        AdminMVC::class,
+        Forms::class,
+        SiteMVC::class,
+        // Last: it needs every string the others collected.
+        LanguageFiles::class,
+    ];
+
+    /**
+     * The generators, wired to one renderer.
+     *
      * They share one `LanguageStringUtil`: it is both a Twig extension the
      * templates call and the place the strings accumulate, so a generator with
      * its own copy would collect strings nobody ever writes out.
@@ -106,18 +129,20 @@ final class Joomla4Target implements TargetInterface
             [$languageStringUtil]
         );
 
-        $make = static fn (string $class): GeneratorInterface
-            => new $class('Joomla4', $renderer, $languageStringUtil);
+        return array_map(
+            static fn (string $class): GeneratorInterface
+                => new $class('Joomla4', $renderer, $languageStringUtil),
+            self::GENERATORS
+        );
+    }
 
-        return [
-            $make(ComponentGeneral::class),
-            $make(AdminGeneral::class),
-            $make(AdminEntities::class),
-            $make(AdminMVC::class),
-            $make(Forms::class),
-            $make(SiteMVC::class),
-            // Last: it needs every string the others collected.
-            $make(LanguageFiles::class),
-        ];
+    /**
+     * The directory the template set is rooted at.
+     *
+     * @since  0.9.0
+     */
+    public function templateSetRoot(): string
+    {
+        return rtrim($this->templateRoot, '/\\') . '/Joomla4';
     }
 }

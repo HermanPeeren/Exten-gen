@@ -48,7 +48,7 @@ class HtmlView extends BaseHtmlView
 
 		// Get the project_id and put it in the model
 		// Todo: this must be done in the (display)controller and probably best via UserState
-		$projectId = Factory::getApplication()->input->getInt('project_id');
+		$projectId = Factory::getApplication()->getInput()->getInt('project_id');
 		$model->setProjectId($projectId);
 
 		// Get the AST from the model

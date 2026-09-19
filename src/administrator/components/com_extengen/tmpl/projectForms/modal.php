@@ -22,7 +22,7 @@ $app = Factory::getApplication();
 // todo: get a min.js version of admin-projects-modal.js
 HTMLHelper::_('script', 'com_extengen/admin-projects-modal.js', array('version' => 'auto', 'relative' => true));
 
-$function  = $app->input->getCmd('function', 'jSelectProject');
+$function  = $app->getInput()->getCmd('function', 'jSelectProject');
 $onclick   = $this->escape($function);
 ?>
 <div class="container-popup">
@@ -74,7 +74,7 @@ $onclick   = $this->escape($function);
 		<?php endif; ?>
 
 		<input type="hidden" name="task" value="">
-		<input type="hidden" name="forcedLanguage" value="<?php echo $app->input->get('forcedLanguage', '', 'CMD'); ?>">
+		<input type="hidden" name="forcedLanguage" value="<?php echo $app->getInput()->get('forcedLanguage', '', 'CMD'); ?>">
 		<?php echo HTMLHelper::_('form.token'); ?>
 
 	</form>

@@ -64,6 +64,19 @@ final class JoomlaApiTest extends TestCase
                 '$this->_db',
                 '$this->getDatabase()',
             ],
+            // Deliberately not the bare `->input->`: that would also catch
+            // `$this->input` inside a controller, which is
+            // BaseController::$input - protected, not deprecated, and the
+            // right thing to write there.
+            'the application input property' => [
+                'getApplication()->input',
+                'getApplication()->getInput(). AbstractWebApplication::$input is protected in '
+                    . 'Joomla 6, so reading it from outside is a fatal, not a notice',
+            ],
+            'the application input property, via a local' => [
+                '$app->input',
+                '$app->getInput(), for the same reason',
+            ],
         ];
     }
 
@@ -94,7 +107,7 @@ final class JoomlaApiTest extends TestCase
         $found = 0;
 
         foreach ($this->phpFiles() as $relative => $source) {
-            if (!str_starts_with($relative, 'View/') || !str_contains($source, 'getCurrentUser()')) {
+            if (!str_starts_with($relative, 'src/View/') || !str_contains($source, 'getCurrentUser()')) {
                 continue;
             }
 
@@ -118,10 +131,34 @@ final class JoomlaApiTest extends TestCase
     // that is not ours, and no test here can run far enough to see whether it
     // held. It waits for the step that can drive a real site.
 
-    /** @return array<string, string> relative path => source */
+    /**
+     * The component's own PHP: `src/` and the layouts under `tmpl/`.
+     *
+     * `tmpl/` was outside this scan when it was first written, and that is
+     * exactly how five layouts kept `$app->input` through the sweep that
+     * removed it everywhere else. `generator_templates/` stays outside on
+     * purpose: those are sources for generated code, and the golden baseline
+     * is what reviews them.
+     *
+     * @return array<string, string> relative path => source
+     */
     private function phpFiles(): array
     {
-        $root  = \dirname(__DIR__, 2) . '/src/administrator/components/com_extengen/src';
+        $component = \dirname(__DIR__, 2) . '/src/administrator/components/com_extengen';
+        $files     = [];
+
+        foreach (['src', 'tmpl'] as $directory) {
+            $files += $this->phpFilesUnder($component . '/' . $directory, $directory . '/');
+        }
+
+        ksort($files);
+
+        return $files;
+    }
+
+    /** @return array<string, string> relative path => source */
+    private function phpFilesUnder(string $root, string $prefix): array
+    {
         $files = [];
 
         $iterator = new \RecursiveIteratorIterator(
@@ -133,11 +170,9 @@ final class JoomlaApiTest extends TestCase
                 continue;
             }
 
-            $relative         = str_replace('\\', '/', substr($file->getPathname(), \strlen($root) + 1));
+            $relative         = $prefix . str_replace('\\', '/', substr($file->getPathname(), \strlen($root) + 1));
             $files[$relative] = (string) file_get_contents($file->getPathname());
         }
-
-        ksort($files);
 
         return $files;
     }

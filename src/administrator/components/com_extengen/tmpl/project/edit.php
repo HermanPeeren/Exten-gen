@@ -23,7 +23,7 @@ HTMLHelper::_('script', 'com_extengen/admin-extengen-letter.js', array('version'
 HTMLHelper::_('script', 'com_extengen/admin-project.js', array('version' => 'auto', 'relative' => true));
 
 $app = Factory::getApplication();
-$input = $app->input;
+$input = $app->getInput();
 
 $assoc = Associations::isEnabled();
 
