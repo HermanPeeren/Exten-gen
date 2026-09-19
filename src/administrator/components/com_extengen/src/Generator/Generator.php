@@ -10,7 +10,6 @@
 
 namespace Yepr\Component\Extengen\Administrator\Generator;
 
-use Yepr\Component\Extengen\Administrator\CustomCode\CustomCode;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Gen\Core\GeneratorInterface;
 use Yepr\Gen\Core\Model\ModelInterface;
@@ -156,37 +155,6 @@ abstract class Generator implements GeneratorInterface
      * @since  0.9.0
      */
     abstract protected function generateFiles(): array;
-
-    /**
-     * The custom code one model object carries, as regions a template emits.
-     *
-     * Slots are the model-side answer to "the generator cannot write this
-     * part": the code lives in the model, so it survives a regeneration by
-     * construction rather than by rescue. The generator hands a template the
-     * finished region rather than the body, so the markers are written in one
-     * place and cannot drift from the pattern the merger matches - a drift
-     * that would show up only as somebody's code failing to come back.
-     *
-     * @param  ?object  $node      The entity or page these belong to.
-     * @param  string   $owner     `Entity` or `Page`.
-     * @param  ?string  $pageType  Narrows Page slots to one kind of page.
-     *
-     * @return array<string, string>  Slot id => rendered region.
-     *
-     * @since  1.0.0
-     */
-    protected function slots(?object $node, string $owner, ?string $pageType = null): array
-    {
-        $custom = new CustomCode();
-
-        foreach ($custom->unknownSlots($node) as $slot) {
-            // Code stored against a slot nobody offers goes nowhere, and a file
-            // that is simply missing it says nothing about why.
-            $this->log[] = 'custom code for unknown slot "' . $slot . '" was not generated anywhere';
-        }
-
-        return $custom->regions($node, $owner, $pageType);
-    }
 
     /**
      * Render a template and add the result to the collection.

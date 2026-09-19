@@ -297,4 +297,59 @@ final class PackageTest extends TestCase
         $this->assertMatchesRegularExpression("/LIBRARY_MINIMUM\s*=\s*'[0-9]+\.[0-9]+\.[0-9]+'/", $script);
         $this->assertStringContainsString("LIBRARY = 'yepr_gen'", $script);
     }
+
+    /**
+     * The composer dependency and the install script ask for the same library.
+     *
+     * Two places name a version and only one of them is checked at run time.
+     * `composer.json` decides what the tests run against; `LIBRARY_MINIMUM`
+     * decides what an installed site is allowed to have. Let them drift and the
+     * suite passes against a library the package will refuse to install beside,
+     * or - worse the other way round - a site accepts a library too old for the
+     * code that was tested.
+     *
+     * That is not hypothetical. The build script picked the newest library zip
+     * lying in the sibling checkout without comparing it to LIBRARY_MINIMUM at
+     * all, so bumping the minimum produced a package whose own install script
+     * rejected the library it carried.
+     */
+    public function testTheDeclaredDependencyMatchesTheInstallScript(): void
+    {
+        $script = (string) file_get_contents($this->root() . '/src/script.php');
+
+        preg_match("/LIBRARY_MINIMUM\s*=\s*'([^']+)'/", $script, $minimum);
+
+        $composer = json_decode(
+            (string) file_get_contents($this->root() . '/composer.json'),
+            true,
+            512,
+            \JSON_THROW_ON_ERROR
+        );
+
+        $constraint = $composer['require']['yepr/generator-core'];
+
+        $this->assertSame(
+            '^' . implode('.', \array_slice(explode('.', $minimum[1]), 0, 2)),
+            $constraint,
+            'composer.json asks for ' . $constraint . ' but script.php insists on ' . $minimum[1] . '.'
+        );
+    }
+
+    /**
+     * The build refuses a library older than the install script demands.
+     *
+     * Checked by reading the build script rather than by building, because a
+     * build needs the network and this needs to fail on the commit that breaks
+     * it.
+     */
+    public function testTheBuildComparesTheLibraryVersionItPicks(): void
+    {
+        $build = (string) file_get_contents($this->root() . '/build/build.php');
+
+        $this->assertStringContainsString(
+            'version_compare($version, $required,',
+            $build,
+            'build.php picks a local library without checking it is new enough.'
+        );
+    }
 }

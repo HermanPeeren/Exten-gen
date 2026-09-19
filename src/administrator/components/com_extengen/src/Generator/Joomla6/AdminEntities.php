@@ -1,320 +1,227 @@
 <?php
 
 /**
- * @package     Extension Generator
- * @subpackage  Joomla6 Generator
- * @version     0.8.0
+ * @package     Extengen
+ * @subpackage  Generator
  *
- * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
+ * @copyright   Copyright (C) Yepr, Herman Peeren. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
-use Yepr\Component\Extengen\Administrator\Generator\Generator;
+use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 
 /**
- * A concrete generator to create the entity-related files of a J4-component administrator-side
- * generated files: sql/install.mysql.utf8 (SQL to create the db-tables) and the Table files
+ * The database: one table per entity, plus the junctions between them.
  *
- * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla6
+ * The Table classes come from a rule, because a Table class is a template
+ * rendered once per entity. The sql does not, and this is where the line
+ * between a rule and an emitter falls: `install.mysql.utf8.sql` is a single
+ * file assembled from every entity at once, with a junction section that can
+ * only be written after all of them have been seen. There is no template, no
+ * per-node output path, and nothing for a rule to say.
+ *
+ * It is also the only file here whose *contents* are a language - sql - with
+ * its own quoting, which is exactly what the emitters exist for.
+ *
+ * @since  0.8.0
  */
-class AdminEntities extends Generator
+class AdminEntities extends RuleDrivenGenerator
 {
 	/**
-	 * Generate the files. This method is called from the model.
+	 * The model's data types, in MySQL.
 	 *
-	 * @return array the log of this concrete generator; logs which files were generated
+	 * todo: other types, like JSON, and attributes and defaults.
+	 * N.B. Bool and Boolean are not native MySQL types.
+	 *
+	 * @var    array<string, string>
+	 * @since  1.1.0
 	 */
-	protected function generateFiles(): array
+	private const SQL_TYPES = [
+		'Integer'    => 'int NOT NULL DEFAULT 0',
+		'Boolean'    => 'tinyint unsigned NOT NULL DEFAULT 0',
+		'Text'       => 'text',
+		'Decimal'    => 'decimal(10,2)',
+		'Currency'   => 'decimal(10,2)',
+		'Float'      => 'float',
+		'Short_Text' => 'varchar(255)',
+		'Time'       => 'time',
+		'Date'       => 'date',
+		'DateTime'   => "datetime NOT NULL DEFAULT '0000-00-00 00:00:00'",
+		'File'       => 'varchar(255)',
+		'Link'       => 'varchar(255)',
+		'Image'      => 'varchar(255)',
+	];
+
+	/**
+	 * The rules that produce the Table classes.
+	 *
+	 * @return  string
+	 *
+	 * @since   1.1.0
+	 */
+	public function rulePrefix(): string
 	{
-		// Initialise variables
-		$project = $this->AST;
-		$log = [];
-		$logAppend = function ($append) use (&$log) {
-$log = array_merge($log, $append);
-        };
+		return 'admin.entity.';
+	}
 
-		// The name of the component (without 'com_' prefix and possibly with capitals)
+	/**
+	 * The install and uninstall sql.
+	 *
+	 * Nothing is opened until every statement has been collected, so a run that
+	 * fails part way through leaves no half-written schema behind.
+	 *
+	 * @return  string[]
+	 *
+	 * @since   1.1.0
+	 */
+	protected function generateBeyondRules(): array
+	{
+		$project       = $this->AST;
 		$componentName = ucfirst($this->componentName);
+		$prefix        = '#__' . strtolower($componentName) . '_';
 
+		$entities = [];
 
-
-		// Path of generated file IN the directory for generated files of component
-		$generatedFilePath = 'administrator/components/com_' . strtolower($componentName) . '/';
-
-		// Where the sql files go inside the package. Nothing is opened here:
-		// the statements are collected below and the files added once complete,
-		// so a run that fails part way through leaves nothing behind.
-		$sqlPath = $generatedFilePath . 'sql/';
-
-		$logAppend(['generated install.mysql.utf8.sql sql-file']);
-		$logAppend(['generated uninstall.mysql.utf8.sql sql-file']);
-
-		// Table class template within the Joomla6 templates
-		$templateFilePath = 'component/administrator/components/com_componentname/src/Table/';
-
-		// Path to generated Table-files in component
-		$generatedTablesPath = $generatedFilePath . 'src/Table/';
-
-		// General template variables
-		$templateVariables = ['componentName' => $componentName];
-		$templateVariables['projectName'] = ucfirst($project->name);
-
-		$manifest = $project->extensions->component->manifest;
-		$templateVariables['copyright'] = $manifest->copyright;
-		$templateVariables['license'] = $manifest->license;
-		$templateVariables['company_namespace'] = $manifest->company_namespace;
-		$templateVariables['version'] = $manifest->version;
-
-		// Loop over the entities to make a map of entity_id to name and from entity_id to entity
-		$entityNameMap = [];
-		$entityMap     = [];
 		foreach ($project->datamodel as $entity) {
-			$entityNameMap[$entity->entity_id] = ucfirst($entity->entity_name);
-			$entityMap[$entity->entity_id]     = $entity;
+			$entities[$entity->entity_id] = $entity;
 		}
 
-		// Loop over the entities to create the tables in the sql-file and the Table-files for Joomla
-		$sqlCreateTable = [];
-		$sqlDropTable   = [];
-		$junctionTables = [];
+		$log        = ['generated install.mysql.utf8.sql sql-file', 'generated uninstall.mysql.utf8.sql sql-file'];
+		$create     = [];
+		$drop       = [];
+		$junctions  = [];
+
 		foreach ($project->datamodel as $entity) {
-			// Only Entities have their own table, not Embeddables / Value Objects.
-			if (!property_exists($entity, 'isvalueobject')) {
-				$entityName = ucfirst($entity->entity_name);
-				$templateVariables['entityName'] = $entityName;
-				$templateVariables['getFK'] = '';
-				$templateVariables['m2m_bind'] = '';
-				$templateVariables['m2m_delete'] = '';
-				$templateVariables['m2m_localstore'] = '';
-				$templateVariables['m2m_relatedstore'] = '';
+			// Only entities have a table of their own; an embeddable is stored
+			// inside the entity that refers to it.
+			if (property_exists($entity, 'isvalueobject')) {
+				continue;
+			}
 
-				// Code written against this entity in the model, as regions the
-				// Table template emits. See CustomCode and SlotCatalogue.
-				$templateVariables['slots'] = $this->slots($entity, 'Entity');
+			$entityName = ucfirst($entity->entity_name);
 
-				// --- CREATE TABLE sql statement for this entity and write to sql-file ---
-				// N.B.: I now name the table singular. It might be nicer to do it in plural (but inflector only works for English names)
-				// Maybe stick to English names for the entities. But for now: use entityName for the tableName
-				$tableName = '#__' . strtolower($componentName) . "_" . strtolower($entityName);
-				$tableRows = [];
-				$tableRows[] = "CREATE TABLE IF NOT EXISTS `$tableName` (";
+			// Singular, because the inflector only works for English names.
+			$tableName = $prefix . strtolower($entityName);
 
-				// Add a Drop Table to the uninstall sql file
-				$sqlDropTable[] = "DROP TABLE IF EXISTS `$tableName`;";
+			// Every table has an auto increment id, and it is the primary key.
+			$columns = ['`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT'];
 
-				$attributeRows = [];
-				// By default all tables have an auto increment id.
-				$attributeRows[] = "`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT";
+			foreach ($entity->field as $field) {
+				$column = $this->column($field, $entity, $entities, $junctions);
 
-				// Add fields
-				foreach ($entity->field as $field) {
-					switch ($field->field_type) {
-						case "property":
-							$attributeRows[] = '`'
-								. $field->field_name . '` '
-								. $this->standard2SqlTypes($field->property->type);
-							break;
-
-						case "reference":
-							$refEntity = $entityMap[$field->reference->reference];
-
-							// For references to Embeddables: add a db-text-field with that reference-name
-							if (property_exists($refEntity, 'isvalueobject')) {
-								$attributeRows[] = '`' . strtolower($field->field_name) . '` ' . "TEXT";
-							} else {
-								if (property_exists($field->reference, 'ismultiple')) {
-									// Many-to-many relation
-									$fromEntityName = strtolower($entityName);
-									$toEntityName   = strtolower($entityNameMap[$field->reference->reference]);
-
-									$templateVariables['relatedEntityName'] = ucfirst($entityNameMap[$field->reference->reference]);
-
-									// For references to multiple entities: create the junction table for this n:n-relation
-									$junctionTables[] =
-										[
-											'fromEntityName' => $fromEntityName,
-											'toEntityName'   => $toEntityName,
-										];
-									// todo: skip the getter in the next line; will be in the model (via a template fragment)
-
-									$templateVariables['pivotTable'] =
-										$fromEntityName > $toEntityName ? $toEntityName . '_' . $fromEntityName : $fromEntityName . '_' . $toEntityName;
-
-									$subTemplates = ['m2m_bind', 'm2m_delete', 'm2m_localstore', 'm2m_relatedstore'];
-									foreach ($subTemplates as $subTemplate) {
-										$templateVariables[$subTemplate] .= $this->renderTemplateFragment(
-											$templateFilePath . 'fragments/',
-											$subTemplate . '.php.twig',
-											$templateVariables
-										);
-									}
-									// todo: also add this to the JTable of the other side!
-								} else {
-									// For references to a single entity (many-to-one relation): add the foreign key
-									$attributeRows[] = '`'
-										. strtolower($entityNameMap[$field->reference->reference]) . '_id` '
-										. "bigint(20) UNSIGNED";
-								}
-							}
-
-							break;
-					}
+				if ($column !== null) {
+					$columns[] = $column;
 				}
-
-				// The id also is the primary key.
-				$attributeRows[] = "PRIMARY KEY (`id`)";
-
-				// Add the attributes to the table
-				$tableRows[] =  implode(",\n", $attributeRows);
-				$tableRows[] = ")  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;";
-
-				// Generate the Create Table sql
-				$sqlCreateTable[] = implode("\n", $tableRows);
-				$logAppend(['generated CREATE TABLE sql statement for ' . $tableName . ' in sql-file']);
-
-				// --- create Joomla\CMS\Table file for this entity ---
-				$templateFileName = 'Table.php.twig';
-				$generatedFileName = $entityName . 'Table.php';
-
-				$logAppend($this->generateFileWithTemplate($templateFilePath, $templateFileName, $generatedTablesPath, $generatedFileName, $templateVariables));
 			}
+
+			$columns[] = 'PRIMARY KEY (`id`)';
+
+			$create[] = "CREATE TABLE IF NOT EXISTS `$tableName` (\n"
+				. implode(",\n", $columns)
+				. "\n)  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;";
+			$drop[]   = "DROP TABLE IF EXISTS `$tableName`;";
+
+			$log[] = 'generated CREATE TABLE sql statement for ' . $tableName . ' in sql-file';
 		}
 
-		// Junction tables
-		if (!empty($junctionTables)) {
-			// Get rid of duplicate junction tables (junction table fromEntity->toEntity == toEntity->fromEntity)
-			$sortedJunctions       = array_map(
-                function (array $entityNames) {
-											// Sort the two entityNames alphabetcally
-											$sortedJunction = $entityNames;
-											if ($entityNames['fromEntityName'] > $entityNames['toEntityName']) {
-												$sortedJunction['fromEntityName'] = $entityNames['toEntityName'];
-												$sortedJunction['toEntityName'] = $entityNames['fromEntityName'];
-											}
-											return $sortedJunction;
-                },
-                $junctionTables
-            );
+		foreach ($this->uniqueJunctions($junctions) as $junction) {
+			$tableName = $prefix . $junction[0] . '_' . $junction[1];
 
-			$uniqueJunctionStrings = array_unique(array_map(
-				fn(array $junction): string => $junction['fromEntityName'] . $junction['toEntityName'],
-                $sortedJunctions
-            ));
-			$uniqueJunctions       = array_intersect_key($sortedJunctions, $uniqueJunctionStrings);
+			$id1 = '`' . $junction[0] . '_id`';
+			$id2 = '`' . $junction[1] . '_id`';
 
-			// Create the junction tables from uniqueJunctions-array
-			foreach ($uniqueJunctions as $uniqueJunction) {
-				$tableName = '#__' . strtolower($componentName)
-					. "_" . strtolower($uniqueJunction['fromEntityName'])
-					. "_" . strtolower($uniqueJunction['toEntityName']);
-				$tableRows = [];
-				$tableRows[] = "CREATE TABLE IF NOT EXISTS `$tableName` (";
+			$create[] = "CREATE TABLE IF NOT EXISTS `$tableName` (\n"
+				. $id1 . " bigint(20) UNSIGNED,\n"
+				. $id2 . " bigint(20) UNSIGNED,\n"
+				. "PRIMARY KEY ($id1, $id2)\n"
+				. ')  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;';
+			$drop[]   = "DROP TABLE IF EXISTS `$tableName`;";
 
-				// Add a Drop Table to the uninstall sql file
-				$sqlDropTable[] = "DROP TABLE IF EXISTS `$tableName`;";
-
-				// Add both foreign keys for the junction
-				$id1 = '`' . strtolower($uniqueJunction['fromEntityName']) . '_id`';
-				$id2 = '`' . strtolower($uniqueJunction['toEntityName']) . '_id`';
-				$tableRows[] = $id1 . " bigint(20) UNSIGNED,";
-				$tableRows[] = $id2 . " bigint(20) UNSIGNED,";
-
-				// And make the combination the primary key of the junction table
-				$tableRows[] = "PRIMARY KEY ($id1, $id2)";
-				$tableRows[] = ")  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;";
-
-				// Generate the Create Table sql
-				$sqlCreateTable[] = implode("\n", $tableRows);
-				$logAppend(['generated CREATE TABLE sql statement for ' . $tableName . ' in sql-file']);
-			}
+			$log[] = 'generated CREATE TABLE sql statement for ' . $tableName . ' in sql-file';
 		}
 
-		// Add the sql files, now that every statement has been collected.
-		$this->addFile($sqlPath . 'install.mysql.utf8.sql', implode("\n\n", $sqlCreateTable));
-		$this->addFile($sqlPath . 'uninstall.mysql.utf8.sql', implode("\n", $sqlDropTable));
+		$sqlPath = 'administrator/components/com_' . strtolower($componentName) . '/sql/';
+
+		$this->addFile($sqlPath . 'install.mysql.utf8.sql', implode("\n\n", $create));
+		$this->addFile($sqlPath . 'uninstall.mysql.utf8.sql', implode("\n", $drop));
 
 		return $log;
 	}
 
 	/**
-	 * Convert the standard data type from the model to the proper MySql data type.
-	 * todo: other types, like JSON. And: attributes & defaults
-	 * N.B.: Bool and Boolean are not native MySql types: https://dev.mysql.com/doc/refman/8.0/en/other-vendor-data-types.html
+	 * One field's column definition, or null when the field needs no column of its own.
 	 *
-	 * All MySql types:
-	 *      Numeric Data Types
-	 *          - Integer Types (Exact Value) - INTEGER, INT, SMALLINT, TINYINT, MEDIUMINT, BIGINT
-	 *          - Fixed-Point Types (Exact Value) - DECIMAL, NUMERIC
-	 *          - Floating-Point Types (Approximate Value) - FLOAT, DOUBLE
-	 *          - Bit-Value Type - BIT
-	 *      Date and Time Data Types
-	 *          - The DATE, DATETIME, and TIMESTAMP Types
-	 *          - The TIME Type
-	 *          - The YEAR Type
-	 *      String Data Types
-	 *          - The CHAR and VARCHAR Types
-	 *          - The BINARY and VARBINARY Types
-	 *          - The BLOB and TEXT Types
-	 *          - The ENUM Type
-	 *          - The SET Type
-	 *      Spatial Data Types
-	 *          - single geometry values: GEOMETRY, POINT, LINESTRING, POLYGON
-	 *          - collections of values: MULTIPOINT, MULTILINESTRING, MULTIPOLYGON, GEOMETRYCOLLECTION
-	 *      The JSON Data Type
+	 * A many-to-many reference needs a junction table rather than a column, and
+	 * notes one in $junctions as a side effect.
 	 *
+	 * @param   object                     $field      The field.
+	 * @param   object                     $entity     The entity it belongs to.
+	 * @param   array<string|int, object>  $entities   Every entity, by id.
+	 * @param   array<int, string[]>       $junctions  Collected junctions, added to.
 	 *
-	 * @param $standardType
+	 * @return  ?string
 	 *
-	 * @return string the sql type
+	 * @since   1.1.0
 	 */
-	private function standard2SqlTypes($standardType)
+	private function column(object $field, object $entity, array $entities, array &$junctions): ?string
 	{
-		switch ($standardType) {
-			case ('Integer'):
-				$sqlDef = "int NOT NULL DEFAULT 0";
-				break;
-			case ('Boolean'):
-				$sqlDef = "tinyint unsigned NOT NULL DEFAULT 0";
-				break;
-			case ('Text'):
-				$sqlDef = "text";
-				break;
-			case ('Decimal'):
-				$sqlDef = "decimal(10,2)";
-				break;
-			case ('Currency'):
-				$sqlDef = "decimal(10,2)";
-				break;
-			case ('Float'):
-				$sqlDef = "float";
-				break;
-			case ('Short_Text'):
-				$sqlDef = "varchar(255)";
-				break;
-			case ('Time'):
-				$sqlDef = "time";
-				break;
-			case ('Date'):
-				$sqlDef = "date";
-				break;
-			case ('DateTime'):
-				$sqlDef = "datetime NOT NULL DEFAULT '0000-00-00 00:00:00'";
-				break;
-			case ('File'):
-				$sqlDef = "varchar(255)";
-				break;
-			case ('Link'):
-				$sqlDef = "varchar(255)";
-				break;
-			case ('Image'):
-				$sqlDef = "varchar(255)";
-				break;
-			default:
-				$sqlDef = "text";
+		if ($field->field_type === 'property') {
+			return '`' . $field->field_name . '` ' . (self::SQL_TYPES[$field->property->type] ?? 'text');
 		}
 
-		return $sqlDef;
+		if ($field->field_type !== 'reference') {
+			return null;
+		}
+
+		$referred = $entities[$field->reference->reference];
+
+		// An embeddable is stored inline, as text.
+		if (property_exists($referred, 'isvalueobject')) {
+			return '`' . strtolower($field->field_name) . '` TEXT';
+		}
+
+		if (!property_exists($field->reference, 'ismultiple')) {
+			// n:1 - a foreign key on this table.
+			return '`' . strtolower($referred->entity_name) . '_id` bigint(20) UNSIGNED';
+		}
+
+		// n:n - a junction table, which is written once both sides are known.
+		$junctions[] = [strtolower($entity->entity_name), strtolower($referred->entity_name)];
+
+		return null;
+	}
+
+	/**
+	 * The junctions, each named once.
+	 *
+	 * A junction from Speaker to Presentation and one from Presentation to
+	 * Speaker are the same table. Sorting the pair and then taking the distinct
+	 * ones is what says so.
+	 *
+	 * @param   array<int, string[]>  $junctions  Every junction noted, in both directions.
+	 *
+	 * @return  array<int, string[]>
+	 *
+	 * @since   1.1.0
+	 */
+	private function uniqueJunctions(array $junctions): array
+	{
+		$sorted = array_map(
+			static function (array $pair): array {
+				sort($pair);
+
+				return $pair;
+			},
+			$junctions
+		);
+
+		$unique = array_unique(array_map(
+			static fn (array $pair): string => $pair[0] . $pair[1],
+			$sorted
+		));
+
+		return array_values(array_intersect_key($sorted, $unique));
 	}
 }

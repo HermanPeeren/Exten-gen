@@ -499,6 +499,49 @@ explicit target structure model from 1.4.
 **2.1 Extract the transformation rules into data.** Separate *what maps to what* from
 *how it is written out*. The mapping becomes a structure; the emitters stay code.
 
+`Yepr\Gen\Core\Rule` in the shared library is the runtime, released as 0.2.0: `Rule`,
+`RuleSet`, `RuleEngine` and a validator that checks a set without a model in sight. A rule
+reads as one sentence - for each node a selector yields, when it passes these conditions,
+render this template to this target path, binding these variables. The vocabularies are
+closed on purpose: four condition operators, five binding kinds, four path filters, and
+selectors and derivations that must be registered by name. A rule set that could name any
+callable would be a program stored as JSON, with no analysis, no debugger and no types.
+
+Exten-gen's own mapping is 27 rules in `Rules/joomla6.rules.json`, four selectors
+(`root`, `entities`, `backendPages`, `frontendPages` - the last two being the join between
+the flat page list and the sections that reference it, which used to be re-derived inline
+twice) and twenty named derivations. The five template-rendering generators are between
+four and twelve lines each now; 930 lines became 126 plus the rule file.
+
+**What stayed code: the emitters.** `Forms` builds form XML through DOM, `LanguageFiles`
+assembles ini, `AdminEntities` writes the sql. None of them renders a template once per
+node - each assembles one file out of the whole model, and the junction tables cannot be
+written until every entity has been seen. There is nothing for a rule to say about them,
+which is exactly the line this step was drawn along.
+
+**Order had to be preserved, and it is not decoration.** Consecutive rules over one
+selector form a block that runs node-major, because templates register language strings as
+they render: emitting every controller and then every model produces the same file set and
+a different `.ini`.
+
+Writing the mapping down made two things visible that the control flow had hidden.
+`SiteMVC` opened with the comment "same as AdminMVC, can we combine that?", which nobody
+could answer while both were three hundred lines; as rules the topology is identical and
+the real differences are three derivations, each now carrying a docblock that says how it
+differs. And `siteIndexEntity` reproduces a bug: the front-end generator reused `$entity`
+as its filter loop's variable, so an index model's field lists came from the *last
+filter's* entity rather than the page's. Preserved, not fixed - fixing it here would bury
+a behaviour change inside a diff whose whole claim is that it has none.
+
+*Done:* byte-identical output across all three golden models, 205 unit tests and the 17
+browser specs green, including generating a component through the UI, installing it and
+viewing its front end. `RuleSetTest` is the compiler the rule file does not have; it found
+a dead derivation the first time it ran. Two defects were fixed on the way: `build.php`
+bundled whichever library zip lay newest in the sibling checkout without comparing it to
+`LIBRARY_MINIMUM`, so bumping the minimum produced a package whose own install script
+rejected the library it carried; and a section referring to a deleted page stopped
+generation with an undefined index instead of skipping it.
+
 **2.2 Model the generator.** Forms for transformation rules, MPS-style: source pattern to
 target structure, with conditions and iteration.
 

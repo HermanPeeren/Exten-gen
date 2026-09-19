@@ -320,6 +320,10 @@ src/Generator/
   Model/Project.php              one project, as stored
   Target/Joomla6Target.php       which generators run, in what order
   Generator.php                  what every generator shares
+  RuleDrivenGenerator.php        runs its slice of the rule file
+  Rules/joomla6.rules.json       the mapping: 27 rules, as data
+  Rules/Joomla6Selectors.php     which source elements a rule can be written for
+  Rules/Joomla6Derivations.php   the computed bindings, each with a name
   Joomla6/*.php                  seven generators, one concern each
 ```
 
@@ -354,12 +358,67 @@ same way, so the two agreed. The flag catches a template asking for a name
 nobody supplies, not a name that is simply wrong. Both sides say
 `company_namespace` now; the output is identical.
 
-**What did not change: the generators themselves.** They still build strings and
-still read the decoded project. Separating the transformation from the
-templating — the intermediate model the plan aims at — is a change to how they
-are written, and doing it in the step that moved the I/O would have made the diff
-unreadable against the baseline. What this step bought is that it is now
-possible: the seam is a `FileCollection`, not a filesystem.
+## Rules and emitters
+
+Stage 2.1 separated *what maps to what* from *how it is written out*. Read one
+rule and it is a sentence:
+
+```json
+{
+    "id": "admin.entity.table",
+    "for": "entities",
+    "when": [{ "operator": "missing", "path": "isvalueobject" }],
+    "template": "component/administrator/.../src/Table/Table.php.twig",
+    "target": "administrator/components/com_{componentName|lower}/src/Table/{entityName}Table.php",
+    "bind": { "entityName": { "derive": "entityNameUcfirst" }, ... }
+}
+```
+
+For each node a selector yields, when it passes these conditions, render this
+template to this target path, binding these variables. All 27 of them are in
+`Rules/joomla6.rules.json`, and `RuleEngine` in the shared library walks them.
+
+**Five kinds of binding, and the split between them is the point.** `literal`,
+`path` (from the model root) and `node` (from the matched element) are data.
+`derive` names a function, and `fragments` names one that yields a list, each
+entry rendering a smaller template that is concatenated into the file. What is
+a lookup is data; what is a computation stays PHP with a name and a test. There
+is deliberately no expression language: a rule set that could compute would be a
+program stored as JSON, with no analysis, no debugger and no types.
+
+**Order is meaning.** Later rules overwrite earlier ones at the same path, and
+consecutive rules over one selector form a block that runs *node-major* — for
+each back-end page, its controller, model, view and layout, rather than every
+controller and then every model. Both orders produce the same file set. They do
+not produce the same language files, because templates register strings while
+they render.
+
+**What stayed code, on purpose: the emitters.** `Forms` builds form XML through
+DOM, `LanguageFiles` assembles ini, and `AdminEntities` writes the sql. None of
+them renders a template once per node: each assembles one file out of the whole
+model, and a junction table cannot be written until every entity has been seen.
+There is nothing for a rule to say about them.
+
+Writing the mapping down made two things visible that three hundred lines of
+control flow had hidden. `AdminMVC` and `SiteMVC` opened with the comment "same
+as AdminMVC, can we combine that?" and nobody could answer it; as rules, the
+topology is identical and the real differences are three derivations, each of
+which now has a docblock saying how it differs. And `siteIndexEntity` reproduces
+a bug: the front-end generator reused the name `$entity` as its filter loop's
+variable, so the index model's field lists were built from the *last filter's*
+entity. It is preserved rather than fixed, because fixing it in a refactoring
+would bury a behaviour change in a diff that is supposed to have none.
+
+**What a rule set is checked for.** Data has no compiler, so `RuleSetTest` is
+the substitute: every selector and derivation a rule names is registered, every
+template it names exists, every `{placeholder}` in a target path is bound,
+nothing escapes the package, every rule is run by exactly one generator, and
+nothing is registered that no rule uses. It found a dead derivation the first
+time it ran.
+
+**What did not change: the output.** Byte for byte, against all three golden
+models. That is the only acceptable result for this step — the rules either say
+what the code said or they are wrong.
 
 ## Golden files
 

@@ -133,6 +133,16 @@ function libraryMinimum(string $script): string
 }
 
 /**
+ * The version in a library package's file name, or null when it has none.
+ */
+function libraryVersion(string $path): ?string
+{
+    return preg_match('/lib_yepr_gen-(\d+\.\d+\.\d+)\.zip$/', basename($path), $match) === 1
+        ? $match[1]
+        : null;
+}
+
+/**
  * Find the library package to bundle: the one given, the newest built locally,
  * or the released one.
  */
@@ -148,11 +158,23 @@ function resolveLibrary(string $root, ?string $given, string $required): string
     }
 
     // A sibling checkout that has been built is the usual case while working on
-    // both at once, and it is what should be shipped then.
-    $local = glob($root . '/../generator-core/build/lib_yepr_gen-*.zip') ?: [];
+    // both at once, and it is what should be shipped then - but only if it is
+    // new enough. This used to take whichever local build sorted last, so
+    // bumping LIBRARY_MINIMUM and rebuilding produced a package carrying a
+    // library its own install script refuses: the zip installs, the library
+    // does not, and the component lands on a site unable to generate.
+    $local = [];
+
+    foreach (glob($root . '/../generator-core/build/lib_yepr_gen-*.zip') ?: [] as $candidate) {
+        $version = libraryVersion($candidate);
+
+        if ($version !== null && version_compare($version, $required, '>=')) {
+            $local[$version] = $candidate;
+        }
+    }
 
     if ($local !== []) {
-        sort($local, SORT_STRING);
+        uksort($local, static fn (string $x, string $y): int => version_compare($x, $y));
 
         $newest = (string) end($local);
 
