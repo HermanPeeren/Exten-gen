@@ -545,6 +545,50 @@ generation with an undefined index instead of skipping it.
 **2.2 Model the generator.** Forms for transformation rules, MPS-style: source pattern to
 target structure, with conditions and iteration.
 
+Done in **Gen-gen**, whose repository now holds something: four forms - a generator, a
+rule, a condition, a binding - and the model behind them. One rule reads as the sentence
+2.1 made it: for each node this source pattern yields, when it passes these conditions,
+render this template to this output path, binding these variables.
+
+**Everything a rule may say is a choice, not a text box**, which is the part that makes it
+modelling rather than JSON editing with rounded corners. A target publishes what its rules
+may say - `Vocabulary` in the library at 0.3.0, written by Exten-gen's
+`build/vocabulary.php` off the live registries and the template directory - and
+`VocabularyLibrary` finds those descriptors among the installed components. So Gen-gen
+depends on none of the components it models generators for, a new target appears in the
+list by being installed, and a rule naming a selector that does not exist cannot be
+written. The operators and binding kinds come from the library instead: a target may add
+selectors and derivations, it does not get to add operators.
+
+`GeneratorDefinition` is the one translation between the two shapes, and it exists because
+Joomla's form layer cannot hold a rule the way the engine wants it - a repeating group is
+an object keyed `binding0`, `binding1`, and a field holds a scalar, not a key that is
+itself the meaning.
+
+*Done:* Exten-gen's own twenty-seven rules, through the form shape and back, identical -
+and then checked against the target's vocabulary, because two arrays matching proves
+nothing if both are nonsense. 24 tests, PHPStan level 5, phpcs. Three things the
+translation gets right that a naive one would not: an empty literal is a value and not an
+absence (`getFK` is bound to `""` and a template reads it); a valueless operator writes no
+value, because the form's hidden box still holds whatever was typed before the operator
+changed; and rule order survives, which decides what a generated language file contains.
+
+`FormsTest` is the compiler a form file does not have: every subform source exists, every
+custom field type has a class, every class declares the type its form asks for, and every
+`showon` names a value the library actually has. A `formsource` Joomla cannot resolve
+raises nothing - the subform renders empty, which looks like a feature nobody filled in -
+and a field type it cannot resolve falls back to a plain text box, silently turning a
+closed list into a place to type anything at all.
+
+One defect found and fixed in passing, in both repositories: PHPStan was scanning the
+shared library twice, once from composer and once from the copy installed into the
+development site, and analysing against whichever resolved first. It surfaced here as
+"undefined constant `Binding::KINDS`" against a constant that very much exists; in
+Exten-gen it had not surfaced yet, which is not the same as not being there.
+
+*Not in 2.2, deliberately:* the component's MVC, its manifest, its package and its release
+workflow. That is 2.4, and 2.3 comes first.
+
 **2.3 Generate a generator, and check it.** Acceptance criterion: byte-identical output to
 the hand-written generator it replaces, measured against Stage 1's golden files. Not a
 judgement call.

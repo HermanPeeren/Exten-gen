@@ -28,6 +28,18 @@ parameters:
         - tools/phpstan-bootstrap.php
 
     excludePaths:
+        # The shared library is installed into the development site as well as
+        # required through composer, and the two are only the same version
+        # until one of them is updated - which is the normal state of affairs
+        # while working on both. Scanning both means analysing against
+        # whichever copy resolves first. It surfaced in Gen-gen as "undefined
+        # constant Binding::KINDS" against a constant that very much exists;
+        # here it had not surfaced yet, which is not the same as not being
+        # there. Composer's copy is what the tests run against, so it is the
+        # one that counts.
+        analyseAndScan:
+            - joomla/libraries/yepr_gen
+
         analyse:
             # Golden fixtures are generated output, kept to diff against. What
             # they would say is whether the *generator* is right, which the
