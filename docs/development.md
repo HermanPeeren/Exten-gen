@@ -34,22 +34,20 @@ This replaced `src/com_extengen/administrator/...`, where the package root was a
 directory named after the component and every path had to be read twice.
 `LayoutTest` checks it has not crept back.
 
-## Two manifests
+## One manifest
 
-There are two, and they have to agree:
+`src/extengen.xml` is the only one. There used to be a second copy inside the
+component folder, listed in the first's own `<files>`, kept in step by hand — and
+it was never needed: `Installer::copyManifest()` puts the manifest into the
+component folder during installation, which is why a core component like
+com_content ships exactly one.
 
-- `src/extengen.xml` is what the **installer** reads. It carries `<scriptfile>`,
-  `<media>` and the `<administration><files>` inventory.
-- `src/administrator/components/com_extengen/extengen.xml` is the copy that ends
-  up **on the site**, listed in that inventory.
-
-Two copies of a version number are two places for it to be wrong, so `LayoutTest`
-asserts they match. Step 1.6 generates the second from the first and removes the
-problem rather than policing it.
-
-Known gaps in the manifest today, both for 1.6: `generator_templates/` is not in
-the `<files>` inventory, so a real install ships a generator with no templates;
-and the shared library is not referenced at all.
+`PackageTest` reads the manifest rather than a list written beside it, and checks
+both directions: everything it claims exists, and every folder that exists is
+claimed. The second is the one that bit. `generator_templates` was not listed, so
+a real install shipped a generator with no templates — invisible in development,
+where the component is a symlink to the working copy and every file is present
+whatever the manifest says.
 
 ## The shared library
 
@@ -272,17 +270,47 @@ duplicated submenu entry in `eventschedule.xml`.
 ## Building
 
 ```
-php build/build.php     # -> build/com_extengen-<version>.zip
+php build/build.php                        -> build/com_extengen-<version>.zip
+php build/build.php --library=path/to.zip  bundle a locally built library
+php build/build.php --no-library           leave it out, deliberately
 ```
 
 The version comes from `src/extengen.xml`. The build copies `src/` and leaves out
 what is a product rather than a source: `generated/`, `compilation_cache/` and
 the `node_modules/` tree that exists for one uuid helper.
 
-It currently produces exactly what the manifest describes, which is less than the
-component needs — see the manifest gaps above. Step 1.6 fixes both together,
-because a build script that ships files the manifest does not list would install
-nothing.
+**The package carries the shared library.** Joomla has no way for a package
+manifest to declare a dependency on another extension, so `lib_yepr_gen` rides
+along under `library/` and `src/script.php` installs it when the site has none or
+has an older one — the Regular Labs and Akeeba pattern. The check runs on update
+as well as install, because a site can be updated to a version of Exten-gen that
+needs a newer library.
+
+`script.php` names the library version it needs, and the build reads that number
+to decide what to bundle, so the two cannot drift. It prefers a sibling
+`generator-core` checkout that has been built, and otherwise fetches the release
+— what ships is then the artefact that was released and verified rather than one
+assembled on the way past.
+
+The script also refuses Joomla below 6.0 and PHP below 8.3. It used to insist on
+Joomla 4.0 while the output targeted 6, so it would have let the component onto a
+site it could not run on.
+
+## What generation produces
+
+A run writes two things next to each other:
+
+```
+generated/<Name>/com_<name>-<version>.zip    the installable package
+generated/<Name>/Joomla4/com_<name>/...      the same files, unpacked
+```
+
+The archive is the deliverable — it is the only form in which the output is one
+thing that can be handed to Joomla — and its name carries the version, because a
+downloads folder full of identically named packages says nothing about which is
+which. The tree stays beside it because that is how generated output gets read
+here: opened, compared, looked through. Offering the archive as a download from
+the component's own interface is the part still missing.
 
 ## The site this is developed against
 

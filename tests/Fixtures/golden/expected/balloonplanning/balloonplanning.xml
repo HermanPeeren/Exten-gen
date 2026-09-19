@@ -12,7 +12,13 @@
 	<namespace path="src">Yepr\Component\BalloonPlanning</namespace>
 
 	<!-- Scripts to run on installation -->
-	<scriptfile>script.php</scriptfile>
+	<!--
+		No scriptfile. Nothing generates a script.php, and a manifest that
+		names one that is not in the package is a manifest saying something
+		untrue - Joomla tolerates it by quietly ignoring the declaration,
+		which is worse than refusing it. It comes back when the model can
+		say what an install script should do.
+	-->
 
 	<!-- Runs on install -->
 	<install>

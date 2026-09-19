@@ -49,23 +49,12 @@ final class LayoutTest extends TestCase
         );
     }
 
-    public function testBothManifestsDeclareTheSameVersion(): void
+    public function testThePackageManifestIsTheOnlyOne(): void
     {
-        $package   = simplexml_load_file($this->root() . '/src/extengen.xml');
-        $installed = simplexml_load_file(
-            $this->root() . '/src/administrator/components/com_extengen/extengen.xml'
-        );
-
-        $this->assertNotFalse($package);
-        $this->assertNotFalse($installed);
-
-        // Two copies of a manifest are two places for a version to be wrong.
-        // Until the build generates one from the other - step 1.6 - the only
-        // defence is saying so here.
-        $this->assertSame(
-            trim((string) $package->version),
-            trim((string) $installed->version),
-            'The package manifest and the installed copy disagree about the version.'
-        );
+        // There were two, kept in step by hand. Joomla's installer copies the
+        // manifest into the component folder itself, so the second one was
+        // never needed - see PackageTest, which covers what it has to contain.
+        $this->assertFileExists($this->root() . '/src/extengen.xml');
+        $this->assertFileDoesNotExist($this->root() . '/src/administrator/components/com_extengen/extengen.xml');
     }
 }

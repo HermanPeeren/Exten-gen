@@ -1,150 +1,222 @@
 <?php
+
 /**
- * @package     Joomla.Administrator
- * @subpackage  com_extengen
+ * @package     Extengen
  *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) Yepr, Herman Peeren. All rights reserved.
+ * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
+
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Factory;
+use Joomla\CMS\Installer\Installer;
 use Joomla\CMS\Installer\InstallerAdapter;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Log\Log;
+use Joomla\Database\DatabaseInterface;
+use Joomla\Database\ParameterType;
 
 /**
- * Script file of Extengen Component
+ * Install script for Exten-gen.
  *
- * @since  1.0.0
+ * Two jobs: refuse an environment the component cannot run in, and make sure
+ * the shared library is there.
+ *
+ * The library carries the generation engine and the packages it needs, and is
+ * shared with Gen-gen, Meta-gen and Plug-gen so a site holds one copy rather
+ * than one per extension. Joomla has no way for a package manifest to declare a
+ * dependency on it, so the package carries a copy and this installs it when the
+ * site has none or has an older one. Regular Labs and Akeeba do the same, for
+ * the same reason.
+ *
+ * The check runs on update as well as install: a site can be updated to a
+ * version of Exten-gen that needs a newer library than the one already there.
  */
-class Com_extengenInstallerScript
+class Com_ExtengenInstallerScript
 {
-	/**
-	 * Minimum Joomla version to check
-	 *
-	 * @var    string
-	 * @since  1.0.0
-	 */
-	private $minimumJoomlaVersion = '4.0';
+    /**
+     * The library this component cannot work without.
+     */
+    private const LIBRARY = 'yepr_gen';
 
-	/**
-	 * Minimum PHP version to check
-	 *
-	 * @var    string
-	 * @since  1.0.0
-	 */
-	private $minimumPHPVersion = JOOMLA_MINIMUM_PHP;
+    /**
+     * The oldest library release that has everything this version calls.
+     */
+    private const LIBRARY_MINIMUM = '0.1.0';
 
-	/**
-	 * Method to install the extension
-	 *
-	 * @param   InstallerAdapter  $parent  The class calling this method
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since  1.0.0
-	 */
-	public function install($parent): bool
-	{
-		echo Text::_('COM_EXTENGEN_INSTALLERSCRIPT_INSTALL');
+    /**
+     * The oldest Joomla this runs on.
+     *
+     * Six, not four: the generated output targets Joomla 6, and the component's
+     * own code uses APIs that older versions do not have.
+     *
+     * @var string
+     */
+    private $minimumJoomlaVersion = '6.0';
 
-		return true;
-	}
+    /**
+     * The oldest PHP this runs on, which is Joomla 6's own minimum.
+     *
+     * @var string
+     */
+    private $minimumPHPVersion = '8.3';
 
-	/**
-	 * Method to uninstall the extension
-	 *
-	 * @param   InstallerAdapter  $parent  The class calling this method
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since  1.0.0
-	 */
-	public function uninstall($parent): bool
-	{
-		echo Text::_('COM_EXTENGEN_INSTALLERSCRIPT_UNINSTALL');
+    /**
+     * Refuse an environment that cannot run this.
+     *
+     * @param   string            $type    install, update, discover_install or uninstall
+     * @param   InstallerAdapter  $parent  The installer
+     *
+     * @return  boolean  False stops the installation.
+     */
+    public function preflight($type, $parent): bool
+    {
+        if ($type === 'uninstall') {
+            return true;
+        }
 
-		return true;
-	}
+        if (version_compare(PHP_VERSION, $this->minimumPHPVersion, '<')) {
+            $this->say(Text::sprintf('JLIB_INSTALLER_MINIMUM_PHP', $this->minimumPHPVersion), 'error');
 
-	/**
-	 * Method to update the extension
-	 *
-	 * @param   InstallerAdapter  $parent  The class calling this method
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since  1.0.0
-	 *
-	 */
-	public function update($parent): bool
-	{
-		echo Text::_('COM_EXTENGEN_INSTALLERSCRIPT_UPDATE');
+            return false;
+        }
 
-		return true;
-	}
+        if (version_compare(JVERSION, $this->minimumJoomlaVersion, '<')) {
+            $this->say(Text::sprintf('JLIB_INSTALLER_MINIMUM_JOOMLA', $this->minimumJoomlaVersion), 'error');
 
-	/**
-	 * Function called before extension installation/update/removal procedure commences
-	 *
-	 * @param   string            $type    The type of change (install, update or discover_install, not uninstall)
-	 * @param   InstallerAdapter  $parent  The class calling this method
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since  1.0.0
-	 *
-	 * @throws Exception
-	 */
-	public function preflight($type, $parent): bool
-	{
-		if ($type !== 'uninstall')
-		{
-			// Check for the minimum PHP version before continuing
-			if (!empty($this->minimumPHPVersion) && version_compare(PHP_VERSION, $this->minimumPHPVersion, '<'))
-			{
-				Log::add(
-					Text::sprintf('JLIB_INSTALLER_MINIMUM_PHP', $this->minimumPHPVersion),
-					Log::WARNING,
-					'jerror'
-				);
+            return false;
+        }
 
-				return false;
-			}
+        return true;
+    }
 
-			// Check for the minimum Joomla version before continuing
-			if (!empty($this->minimumJoomlaVersion) && version_compare(JVERSION, $this->minimumJoomlaVersion, '<'))
-			{
-				Log::add(
-					Text::sprintf('JLIB_INSTALLER_MINIMUM_JOOMLA', $this->minimumJoomlaVersion),
-					Log::WARNING,
-					'jerror'
-				);
+    /**
+     * Put the shared library in place if it is missing or too old.
+     *
+     * @param   string            $type    install, update, discover_install or uninstall
+     * @param   InstallerAdapter  $parent  The installer
+     *
+     * @return  boolean  True, always: a failure here is reported rather than fatal.
+     */
+    public function postflight($type, $parent): bool
+    {
+        if ($type === 'uninstall') {
+            return true;
+        }
 
-				return false;
-			}
-		}
+        $installed = $this->installedLibraryVersion();
 
-		echo Text::_('COM_EXTENGEN_INSTALLERSCRIPT_PREFLIGHT');
+        if ($installed !== null && version_compare($installed, self::LIBRARY_MINIMUM, '>=')) {
+            return true;
+        }
 
-		return true;
-	}
+        $package = $parent->getParent()->getPath('source') . '/library';
 
-	/**
-	 * Function called after extension installation/update/removal procedure commences
-	 *
-	 * @param   string            $type    The type of change (install, update or discover_install, not uninstall)
-	 * @param   InstallerAdapter  $parent  The class calling this method
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since  1.0.0
-	 *
-	 */
-	public function postflight($type, $parent)
-	{
-		echo Text::_('COM_EXTENGEN_INSTALLERSCRIPT_POSTFLIGHT');
+        if (!is_dir($package)) {
+            $this->say('The Yepr Gen library is not in this package, so it could not be installed.', 'warning');
 
-		return true;
-	}
+            return true;
+        }
+
+        $installer = new Installer();
+        $installer->setDatabase(Factory::getContainer()->get(DatabaseInterface::class));
+
+        if ($installer->install($package)) {
+            $this->say(
+                $installed === null
+                    ? 'The Yepr Gen library was installed.'
+                    : 'The Yepr Gen library was updated from ' . $installed . '.',
+                'message'
+            );
+
+            return true;
+        }
+
+        // Not fatal. The component is installed; it simply will not generate
+        // until the library is there, and saying so is more use than rolling
+        // back everything the user just did.
+        $this->say('The Yepr Gen library could not be installed. Exten-gen needs it in order to generate.', 'warning');
+
+        return true;
+    }
+
+    /**
+     * The version of the shared library this site has, or null when it has none.
+     *
+     * @return  string|null
+     */
+    private function installedLibraryVersion()
+    {
+        $db      = Factory::getContainer()->get(DatabaseInterface::class);
+        $element = self::LIBRARY;
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('manifest_cache'))
+            ->from($db->quoteName('#__extensions'))
+            ->where($db->quoteName('type') . ' = ' . $db->quote('library'))
+            ->where($db->quoteName('element') . ' = :element')
+            ->bind(':element', $element, ParameterType::STRING);
+
+        $db->setQuery($query);
+
+        $manifest = $db->loadResult();
+
+        if (!is_string($manifest) || $manifest === '') {
+            return null;
+        }
+
+        $decoded = json_decode($manifest, true);
+
+        return is_array($decoded) && isset($decoded['version']) ? (string) $decoded['version'] : null;
+    }
+
+    /**
+     * Tell the user something, if there is anybody to tell.
+     *
+     * @param   string  $message  What happened.
+     * @param   string  $type     message, warning or error.
+     *
+     * @return  void
+     */
+    private function say($message, $type)
+    {
+        $app = Factory::getApplication();
+
+        if ($app) {
+            $app->enqueueMessage($message, $type);
+        }
+    }
+
+    /**
+     * @param   InstallerAdapter  $parent  The installer
+     *
+     * @return  boolean
+     */
+    public function install($parent): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param   InstallerAdapter  $parent  The installer
+     *
+     * @return  boolean
+     */
+    public function update($parent): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param   InstallerAdapter  $parent  The installer
+     *
+     * @return  boolean
+     */
+    public function uninstall($parent): bool
+    {
+        // The library is deliberately left in place. The other extensions in
+        // the family share it, and removing something they depend on because
+        // this one was uninstalled is how a working site breaks.
+        return true;
+    }
 }

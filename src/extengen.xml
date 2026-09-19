@@ -42,12 +42,12 @@
 		</submenu>
 		<files folder="administrator/components/com_extengen">
 			<filename>access.xml</filename>
-			<filename>extengen.xml</filename>
 			<filename>config.xml</filename>
 			<folder>forms</folder>
 			<folder>language</folder>
 			<folder>services</folder>
 			<folder>sql</folder>
+			<folder>generator_templates</folder>
 			<folder>src</folder>
 			<folder>tmpl</folder>
 		</files>

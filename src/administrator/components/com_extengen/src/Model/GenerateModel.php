@@ -135,7 +135,7 @@ class GenerateModel extends AdminModel
 			$this->log = array_merge($this->log, $generator->log());
 		}
 
-		$this->write($files, $project->componentName());
+		$this->write($files, $project);
 	}
 
 	/**
@@ -146,22 +146,42 @@ class GenerateModel extends AdminModel
 	 *
 	 * @return  void
 	 */
-	private function write(FileCollection $files, string $componentName): void
+	private function write(FileCollection $files, Project $project): void
 	{
-		$root = JPATH_ROOT . '/administrator/components/com_extengen/generated/'
-			. $componentName . '/Joomla4/com_' . strtolower($componentName);
+		$componentName = $project->componentName();
+		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/' . $componentName;
+		$root          = $generated . '/Joomla4/com_' . strtolower($componentName);
 
 		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root))
 		{
 			throw new \RuntimeException('Cannot create ' . $root);
 		}
 
+		$writer = new ZipWriter();
+
+		// The archive is the deliverable: it is what somebody installs, and it
+		// is the only form in which the output is a single thing that can be
+		// handed to Joomla. The version is in its name because a downloads
+		// folder full of identically named packages says nothing about which
+		// is which, and the one that matters is rarely the newest by date.
+		$version = trim((string) ($project->manifest()->version ?? '')) ?: '0.0.0';
+		$archive = $generated . '/com_' . strtolower($componentName) . '-' . $version . '.zip';
+
+		$writer->write($files, $archive);
+
+		// And the tree beside it, because that is how generated output has
+		// always been read here - opened, compared, looked through. It costs
+		// nothing to keep and it is the only way to see a diff between runs
+		// without unpacking anything.
+		//
 		// The writer re-checks every path against this root before writing, on
 		// top of the collection having rejected anything that escapes.
-		(new ZipWriter())->writeToDirectory($files, $root);
+		$writer->writeToDirectory($files, $root);
 
 		$this->log[] = '&nbsp;';
-		$this->log[] = '<b>' . count($files) . ' files written to ' . $root . '</b>';
+		$this->log[] = '<b>' . count($files) . ' files</b>';
+		$this->log[] = 'package: ' . $archive;
+		$this->log[] = 'unpacked: ' . $root;
 	}
 
 	/**
