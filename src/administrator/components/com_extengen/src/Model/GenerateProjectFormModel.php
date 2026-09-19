@@ -19,9 +19,9 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Object\CMSObject; // TODO!!!
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
-use Yepr\Component\Extengen\Administrator\Model\Generator\ProjectForms;
+use Yepr\Component\Extengen\Administrator\Generator\ProjectForms;
 
-use	Yepr\Component\Extengen\Administrator\Model\LanguageStringUtil;
+use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 
 
 /**

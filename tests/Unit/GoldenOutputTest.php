@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Tests\Unit;
 
-use Yepr\Component\Extengen\Tests\Support\LegacyGeneratorRunner;
+use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Gen\Core\Output\FileCollection;
 use Yepr\Gen\Core\Testing\GoldenFiles;
 use Yepr\Gen\Core\Testing\GoldenTestCase;
@@ -35,6 +35,6 @@ final class GoldenOutputTest extends GoldenTestCase
     {
         $ast = json_decode($this->fixtures()->model($name), false, 512, JSON_THROW_ON_ERROR);
 
-        return LegacyGeneratorRunner::run($ast);
+        return GenerationHarness::run($ast);
     }
 }

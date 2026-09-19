@@ -8,16 +8,16 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Model\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
 
-use Yepr\Component\Extengen\Administrator\Model\Generator\Generator;
+use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use DOMDocument;
 
 /**
  * A concrete generator to create the form files of  J4 pages
  * generated files: form xml-files todo: also filters
  *
- * @package     Yepr\Component\Extengen\Administrator\Model\Generator\Joomla4
+ * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla4
  *
  * @since       version 1.0
  */
@@ -33,7 +33,7 @@ class Forms extends Generator
 	 *
 	 * @since version 1.0
 	 */
-	public function generate(): array
+	protected function generateFiles(): array
 	{
 		// Initialise variables
 		$project = $this->AST;
@@ -98,11 +98,9 @@ class Forms extends Generator
 		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
 
 
-		// Create the directory for the form files if it doen't exist
-		$formDirectory = $generatedFilesPathComponent . $generatedFilePath . 'forms/';
-		if (!file_exists($formDirectory)) {
-			mkdir($formDirectory, 0755, true);
-		}
+		// Where the form files go inside the package. No directory is made:
+		// the collection holds them until somebody asks for them on disk.
+		$formPath = $generatedFilePath . 'forms/';
 
 		$logAppend(["&nbsp;", "<b>=== FORM FILES ===</b>"]);
 
@@ -353,8 +351,8 @@ class Forms extends Generator
 					$fieldset->appendChild($formField);
 				}
 
-				// Write to file
-				$form->save($formDirectory . $formName . '.xml');
+				// saveXML() returns exactly what save() would have written.
+				$this->addFile($formPath . $formName . '.xml', (string) $form->saveXML());
 				$logAppend([$formName . '.xml generated']);
 
 			}
@@ -523,8 +521,7 @@ class Forms extends Generator
 						$fields->appendChild($formField);
 					}
 
-					// Write to file
-					$form->save($formDirectory . "filter_" . $formName . '.xml');
+					$this->addFile($formPath . 'filter_' . $formName . '.xml', (string) $form->saveXML());
 					$logAppend(["filter_" . $formName . '.xml generated']);
 				}
 			}

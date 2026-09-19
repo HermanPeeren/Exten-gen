@@ -165,6 +165,43 @@ Linux CI never sees this, so it will not be caught for you. The flattening in 1.
 took fourteen characters off every one of these paths, which helps and does not
 solve it.
 
+## How generation works
+
+```
+src/Generator/
+  Model/Project.php              one project, as stored
+  Target/Joomla4Target.php       which generators run, in what order
+  Template/LegacyTwigRenderer.php  the templates, with the settings they were written under
+  Generator.php                  what every generator shares
+  Joomla4/*.php                  seven generators, one concern each
+```
+
+A generator contributes files to a `FileCollection` held in memory and never
+opens a file. `GenerateModel` runs the shared `Pipeline` over the target and
+writes the whole set to disk afterwards, all at once — so a run that fails part
+way through leaves nothing behind, where before it left half a component.
+
+**Order is part of the target's definition.** `LanguageFiles` runs last because
+every other generator adds language strings while its templates render, so the
+set is only complete once they have finished. That generator was lifted out of
+`GenerateModel`, where it had been the one piece of generated output produced
+outside any generator.
+
+**`LegacyTwigRenderer` is temporary.** The shared library's renderer turns
+`strict_variables` on; these templates have never run that way and would not
+survive it — nineteen read `company_namespace` while one reads
+`companyNamepace`, and each generator hands a different set of variables to
+templates that share a directory. Turning it on would throw where today an empty
+string is rendered, which is a change to the output. Step 1.8 sweeps the
+templates and deletes this class.
+
+**What did not change: the generators themselves.** They still build strings and
+still read the decoded project. Separating the transformation from the
+templating — the intermediate model the plan aims at — is a change to how they
+are written, and doing it in the step that moved the I/O would have made the diff
+unreadable against the baseline. What this step bought is that it is now
+possible: the seam is a `FileCollection`, not a filesystem.
+
 ## Golden files
 
 What the generators produce today, pinned byte for byte:

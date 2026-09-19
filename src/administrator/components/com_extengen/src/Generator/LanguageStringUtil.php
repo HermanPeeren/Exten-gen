@@ -9,7 +9,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Model;
+namespace Yepr\Component\Extengen\Administrator\Generator;
 
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -55,15 +55,44 @@ class LanguageStringUtil extends AbstractExtension
 	 *
 	 * @return  void
 	 */
-	public function __construct(object $AST)
+	public function __construct(?object $AST = null)
 	{
-		$this->AST = $AST;
-
-		// todo: as the $AST is only needed for this, it can better be called from the outside, so the whole AST is not carried around
-		$this->initLangTree();
-
 		// test translation todo: choose different translate options
 		$this->translate = new \Statickidz\GoogleTranslate();
+
+		if ($AST !== null)
+		{
+			$this->useProject($AST);
+		}
+	}
+
+	/**
+	 * Start collecting strings for a project.
+	 *
+	 * The generators share one of these. It is both the Twig function the
+	 * templates call and the place the strings accumulate, so a generator with a
+	 * copy of its own would gather strings that nobody ever writes out. They
+	 * cannot each construct it with the project either, because a target builds
+	 * its generators before being told which project it is generating.
+	 *
+	 * So whichever generator runs first calls this, and the rest find it already
+	 * done. Asking again for the same project changes nothing; asking for a
+	 * different one starts a fresh tree, which is what a second run wants.
+	 *
+	 * @param   object  $AST  The form-data of the project.
+	 *
+	 * @return  void
+	 */
+	public function useProject(object $AST): void
+	{
+		if (isset($this->AST) && $this->AST === $AST)
+		{
+			return;
+		}
+
+		$this->AST = $AST;
+
+		$this->initLangTree();
 	}
 
 	public function getFunctions()

@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Yepr\Component\Extengen\Tests\Support\LegacyGeneratorRunner;
+use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Gen\Core\Testing\GoldenFiles;
 
 $fixtures = new GoldenFiles(__DIR__ . '/../tests/Fixtures/golden');
@@ -32,7 +32,7 @@ if ($names === []) {
 
 foreach ($names as $name) {
     $ast     = json_decode($fixtures->model($name), false, 512, JSON_THROW_ON_ERROR);
-    $files   = LegacyGeneratorRunner::run($ast);
+    $files   = GenerationHarness::run($ast);
     $written = $fixtures->write($name, $files);
 
     printf("%s: %d file(s)\n", $name, \count($written));

@@ -8,9 +8,9 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Model\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
 
-use Yepr\Component\Extengen\Administrator\Model\Generator\Generator;
+use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
 /**
  * A concrete generator to create the general admin files of a J4-component with templates
@@ -25,7 +25,7 @@ class AdminGeneral extends Generator
 	 *
 	 * @return array the log of this concrete generator; logs which files were generated
 	 */
-	public function generate(): array
+	protected function generateFiles(): array
 	{
 		// Initialise variables
 		$project = $this->AST;

@@ -42,7 +42,15 @@ use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 
-use	Yepr\Component\Extengen\Administrator\Model\LanguageStringUtil;
+use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
+use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
+use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla4Target;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
+use Yepr\Gen\Core\Model\ValidationException;
+use Yepr\Gen\Core\Output\FileCollection;
+use Yepr\Gen\Core\Output\ZipWriter;
+use Yepr\Gen\Core\Pipeline;
+use Yepr\Gen\Core\Target\Target;
 
 
 /**
@@ -84,119 +92,93 @@ class GenerateModel extends AdminModel
 	}
 
 	/**
-	 * Generate the files using various generators.
-	 * This is the central place from where all concrete generators are called.
+	 * Generate the files for this project.
 	 *
+	 * Everything now goes through the shared pipeline: it validates the project,
+	 * runs the target's generators in order, and hands back the whole file set in
+	 * memory. Writing it to disk happens here, afterwards and all at once, so a
+	 * run that fails part way through leaves no half a component behind.
+	 *
+	 * @return  void
 	 */
 	public function generate()
 	{
-		// Initialise variables
-		$outputType = "Joomla4"; // todo: get the outputType from the generator... multiple generators...
-		$AST = $this->initiateAST();
-		$languageStringUtil = new LanguageStringUtil($AST);
+		$project = $this->loadProject();
+		$target  = new Joomla4Target(
+			JPATH_ROOT . '/administrator/components/com_extengen/generator_templates',
+			JPATH_ROOT . '/administrator/components/com_extengen/compilation_cache'
+		);
 
-		// Component name
-		$component = $AST->extensions->component;
-		$componentName = $component->component_name;
+		$generators = $target->generators();
 
-		// file paths for generated (language)files
-		$extengenAdminPath = JPATH_ROOT . '/administrator/components/com_extengen/';
-		$generatedFilesPathComponent = $extengenAdminPath . '/generated/' . $componentName .'/'
-			. $outputType . '/com_'.strtolower($componentName) . '/';
-
-		foreach ($this->outputTypes as $outputType)
+		try
 		{
-			$generatorNamespace = 'Yepr\\Component\\Extengen\\Administrator\\Model\\Generator\\' . $outputType . '\\';
+			$files = (new Pipeline())->run($project, new Target(
+				$target->id(),
+				$target->label(),
+				$target->validator(),
+				...$generators
+			));
+		}
+		catch (ValidationException $e)
+		{
+			foreach ($e->getErrors() as $problem)
+			{
+				$this->log[] = '<b>' . htmlspecialchars($problem, ENT_QUOTES, 'UTF-8') . '</b>';
+			}
 
-			// --- Component ---
-			$this->log[] = "<b>=== COMPONENT GENERAL ===</b>";
-			$this->useConcreteGenerator($generatorNamespace . "ComponentGeneral", $outputType, $AST, $languageStringUtil);
-
-			// --- Backend ---
-			$this->log[] = "<b>=== BACK-END ===</b>";
-			// Call the various generators
-			$this->useConcreteGenerator($generatorNamespace . "AdminGeneral", $outputType, $AST, $languageStringUtil);
-			$this->useConcreteGenerator($generatorNamespace . "AdminEntities", $outputType, $AST, $languageStringUtil);
-			$this->useConcreteGenerator($generatorNamespace . "AdminMVC", $outputType, $AST, $languageStringUtil);
-
-			$this->useConcreteGenerator($generatorNamespace . "Forms", $outputType, $AST, $languageStringUtil);
-
-			// --- Frontend ---
-			$this->log[] = "&nbsp;";
-			$this->log[] = "<b>=== FRONT-END ===</b>";
-			$this->useConcreteGenerator($generatorNamespace . "SiteMVC", $outputType, $AST, $languageStringUtil);
-			// ...more generators here
+			throw $e;
 		}
 
-		// Generate the language files; assume for now there is only a component
-		$this->log[] = "&nbsp;";
-		$this->log[] = "<b>=== LANGUAGE FILES ===</b>";
-
-		$languageTree = $languageStringUtil->getLangTree();
-		$baseGeneratedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
-		foreach ($languageTree as $section_name => $section)
+		foreach ($generators as $generator)
 		{
-			switch ($section_name)
-			{
-				case 'backend':
-				case 'sys':
-					$generatedFilePath = 'administrator/components/com_'.strtolower($componentName) .'/language/';
-					break;
-				case 'frontend':
-					$generatedFilePath = 'components/com_'.strtolower($componentName) .'/language/';
-					break;
-			}
-			foreach ($section->languages as $language)
-			{
-				$languageFolderName = $language->language_code . '-' . $language->country_code;
-
-				// Create the directory for the generated files if it doesn't exist
-				$generatedDirectory = $generatedFilesPathComponent . $generatedFilePath . $languageFolderName;
-				if (!file_exists($generatedDirectory)) {
-					mkdir($generatedDirectory, 0755, true);
-				}
-
-				// Create the content of the language file
-				$languageContent = [];
-				foreach ($language->key_value_pairs as $keyValuePair)
-				{
-					$languageContent[] = $keyValuePair->language_string . '="' . $keyValuePair->locale_string . '"';
-				}
-
-				// Sort language strings alphabetically
-				sort($languageContent);
-
-				// todo: Add a heading to language string files with project, copyright, license and version
-
-				// File name
-				$sys = "";
-				if ($section_name == 'sys')
-				{
-					$sys = ".sys";
-				}
-				$generatedFileName ='com_' . strtolower($componentName) . $sys . '.ini';
-
-				// Write the file
-				$languageFile = fopen( $generatedDirectory . "/" . $generatedFileName, "w") or die("Unable to open file!");
-				fwrite($languageFile, implode("\n",$languageContent));
-				fclose($languageFile);
-				$this->log[] = $generatedFilePath . $languageFolderName . '/' . $generatedFileName . ' generated';
-			}
+			$this->log = array_merge($this->log, $generator->log());
 		}
+
+		$this->write($files, $project->componentName());
 	}
 
 	/**
-	 * Use a specific concrete generator to generate files and add the result to the log.
+	 * Put the generated file set on disk, under the component's output directory.
 	 *
-	 * @param   string              $generatorFQN         The Full Qualified Name of the concrete Generator
-	 * @param   string              $outputType           The type of output we generate files for, for instance "Joomla4"
-	 * @param   object              $AST                  The Abstract Syntax Tree (= all properties of the project)
-	 * @param   LanguageStringUtil  $languageStringUtil   A Twig extension with language string utilities
+	 * @param   FileCollection  $files          What was generated.
+	 * @param   string          $componentName  Names the output directory.
+	 *
+	 * @return  void
 	 */
-	private function useConcreteGenerator(string $generatorFQN, string $outputType, object $AST, LanguageStringUtil $languageStringUtil)
+	private function write(FileCollection $files, string $componentName): void
 	{
-		$generator = new $generatorFQN($outputType, $AST, $languageStringUtil);
-		$this->log = array_merge($this->log, $generator->generate());
+		$root = JPATH_ROOT . '/administrator/components/com_extengen/generated/'
+			. $componentName . '/Joomla4/com_' . strtolower($componentName);
+
+		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root))
+		{
+			throw new \RuntimeException('Cannot create ' . $root);
+		}
+
+		// The writer re-checks every path against this root before writing, on
+		// top of the collection having rejected anything that escapes.
+		(new ZipWriter())->writeToDirectory($files, $root);
+
+		$this->log[] = '&nbsp;';
+		$this->log[] = '<b>' . count($files) . ' files written to ' . $root . '</b>';
+	}
+
+	/**
+	 * The project being generated from.
+	 *
+	 * @return  Project
+	 */
+	private function loadProject(): Project
+	{
+		$project = (new ProjectRepository($this->getDatabase()))->find((int) $this->projectId);
+
+		if ($project === null)
+		{
+			throw new \RuntimeException(sprintf('Cannot read project %d.', $this->projectId));
+		}
+
+		return $project;
 	}
 
 	/**

@@ -8,16 +8,16 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Model\Generator;
+namespace Yepr\Component\Extengen\Administrator\Generator;
 
-use	Yepr\Component\Extengen\Administrator\Model\LanguageStringUtil;
+use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use DOMDocument;
 
 /**
  * A concrete generator to create the project-form files
  * generated files: form xml-files
  *
- * @package     Yepr\Component\Extengen\Administrator\Model\Generator\
+ * @package     Yepr\Component\Extengen\Administrator\Generator\
  *
  * @since       version 1.0
  */

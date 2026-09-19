@@ -42,7 +42,7 @@ use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 
-use	Yepr\Component\Extengen\Administrator\Model\LanguageStringUtil;
+use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 
 
 /**

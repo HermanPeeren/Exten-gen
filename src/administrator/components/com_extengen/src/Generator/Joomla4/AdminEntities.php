@@ -8,15 +8,15 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\Model\Generator\Joomla4;
+namespace Yepr\Component\Extengen\Administrator\Generator\Joomla4;
 
-use Yepr\Component\Extengen\Administrator\Model\Generator\Generator;
+use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
 /**
  * A concrete generator to create the entity-related files of a J4-component administrator-side
  * generated files: sql/install.mysql.utf8 (SQL to create the db-tables) and the Table files
  *
- * @package     Yepr\Component\Extengen\Administrator\Model\Generator\Joomla4
+ * @package     Yepr\Component\Extengen\Administrator\Generator\Joomla4
  */
 class AdminEntities extends Generator
 {
@@ -25,7 +25,7 @@ class AdminEntities extends Generator
 	 *
 	 * @return array the log of this concrete generator; logs which files were generated
 	 */
-	public function generate(): array
+	protected function generateFiles(): array
 	{
 		// Initialise variables
 		$project = $this->AST;
@@ -48,20 +48,12 @@ class AdminEntities extends Generator
 		// Path of generated file IN the directory for generated files of component
 		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
 
-		// Create the install.mysql.utf8 sql file and open for writing
-		$sqlDirectory = $generatedFilesPathComponent . $generatedFilePath . 'sql/';
+		// Where the sql files go inside the package. Nothing is opened here:
+		// the statements are collected below and the files added once complete,
+		// so a run that fails part way through leaves nothing behind.
+		$sqlPath = $generatedFilePath . 'sql/';
 
-		// Create the directory for the sql files if it doen't exist
-		if (!file_exists($sqlDirectory)) {
-			mkdir($sqlDirectory, 0755, true);
-		}
-
-		// Open the sql-install-file for writing
-		$sqlfile = fopen( $sqlDirectory . 'install.mysql.utf8.sql', "w") or die("Unable to open file!");
 		$logAppend(['generated install.mysql.utf8.sql sql-file']);
-
-		// Open the sql-UNinstall-file for writing
-		$sqlUNfile = fopen( $sqlDirectory . 'uninstall.mysql.utf8.sql', "w") or die("Unable to open file!");
 		$logAppend(['generated uninstall.mysql.utf8.sql sql-file']);
 
 		// Table class template within the Joomla4 templates
@@ -258,15 +250,9 @@ class AdminEntities extends Generator
 
 		}
 
-		// Write the sql install file
-		fwrite($sqlfile, implode("\n\n", $sqlCreateTable));
-		// Close the sql-file
-		fclose($sqlfile);
-
-		// Write the sql UNinstall file
-		fwrite($sqlUNfile, implode("\n", $sqlDropTable));
-		// Close the sql-uninstall-file
-		fclose($sqlUNfile);
+		// Add the sql files, now that every statement has been collected.
+		$this->addFile($sqlPath . 'install.mysql.utf8.sql', implode("\n\n", $sqlCreateTable));
+		$this->addFile($sqlPath . 'uninstall.mysql.utf8.sql', implode("\n", $sqlDropTable));
 
 		return $log;
 	}
