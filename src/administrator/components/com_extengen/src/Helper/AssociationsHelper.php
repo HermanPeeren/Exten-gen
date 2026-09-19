@@ -56,7 +56,17 @@ class AssociationsHelper extends AssociationExtensionHelper
 	 */
 	public function getAssociationsForItem($id = 0, $view = null)
 	{
-		return AssociationHelper::getAssociations($id, $view);
+		// This called AssociationHelper::getAssociations(), and no class of
+		// that name exists anywhere in the component - the commented-out
+		// import above points at a site-side helper that was never written.
+		// So every call here was a fatal.
+		//
+		// Associations are outside v1's scope, and an empty list is what
+		// "this item has no associations" means, so that is what Joomla is
+		// told until there is something true to say. Whether
+		// $associationsSupport should therefore be false is a decision about
+		// the product, not a repair, and is left alone here.
+		return [];
 	}
 
 	/**

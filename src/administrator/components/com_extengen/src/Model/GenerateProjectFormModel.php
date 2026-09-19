@@ -14,6 +14,7 @@ namespace Yepr\Component\Extengen\Administrator\Model;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Model\AdminModel;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectFormRepository;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Text;
 use Joomla\Registry\Registry;
