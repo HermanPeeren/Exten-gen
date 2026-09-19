@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -60,8 +61,7 @@ class LanguageStringUtil extends AbstractExtension
 		// test translation todo: choose different translate options
 		$this->translate = new \Statickidz\GoogleTranslate();
 
-		if ($AST !== null)
-		{
+		if ($AST !== null) {
 			$this->useProject($AST);
 		}
 	}
@@ -85,8 +85,7 @@ class LanguageStringUtil extends AbstractExtension
 	 */
 	public function useProject(object $AST): void
 	{
-		if (isset($this->AST) && $this->AST === $AST)
-		{
+		if (isset($this->AST) && $this->AST === $AST) {
 			return;
 		}
 
@@ -127,28 +126,30 @@ class LanguageStringUtil extends AbstractExtension
 		string $templateValue = '',
 		string $english = '',
 		string $applicationType = 'Administrator',
-		bool   $sys = false
-	)
-	{
+		bool $sys = false
+	) {
 		// Create the language string
 		$langstring = "COM_" . strtoupper($componentName) . "_"
-			. str_replace(["pageName", "fieldName"],[strtoupper($pageName),strtoupper($fieldName)],$templateValue);
+			. str_replace(["pageName", "fieldName"], [strtoupper($pageName),strtoupper($fieldName)], $templateValue);
 
 		// Side effect:add the language-string to the language tree for all languages in this component's section
 		// Add to backend, sys or frontend?
 		$fileType = $this->langTree->backend;
-		if ($sys) $fileType = $this->langTree->sys;
-		if ($applicationType == "Site") $fileType = $this->langTree->frontend;
+		if ($sys) {
+$fileType = $this->langTree->sys;
+        }
+		if ($applicationType == "Site") {
+$fileType = $this->langTree->frontend;
+        }
 
 		// If language key does not yet exist, then add it to the language-strings
-		if ($this->isUniqueLanguageString($fileType->languages->languages0->key_value_pairs, $langstring))
-		foreach ($fileType->languages as $language)
-		{
+		if ($this->isUniqueLanguageString($fileType->languages->languages0->key_value_pairs, $langstring)) {
+		foreach ($fileType->languages as $language) {
 			$keyValuePair = new \stdClass();
 			$keyValuePair->language_string = $langstring;
 
 			// TEST automatic translation for other languages todo: proper translation API
-			$locale_string = ucfirst(str_replace(["%componentName%", "%pageName%", "%fieldName%"],[strtolower($componentName),strtolower($pageName),strtolower($fieldName)], $english));
+			$locale_string = ucfirst(str_replace(["%componentName%", "%pageName%", "%fieldName%"], [strtolower($componentName),strtolower($pageName),strtolower($fieldName)], $english));
 
 			$locale_string_translated = $locale_string;
 
@@ -166,6 +167,7 @@ class LanguageStringUtil extends AbstractExtension
 
 			$language->key_value_pairs[] = $keyValuePair;
 		}
+        }
 
 		return $langstring;
 	}
@@ -179,15 +181,12 @@ class LanguageStringUtil extends AbstractExtension
 	{
 		$langTree = new \stdClass();
 		$extensions = $this->AST->extensions;
-		if (!empty($extensions))
-		{
-			foreach ($extensions as $type => $extension)
-			{
+		if (!empty($extensions)) {
+			foreach ($extensions as $type => $extension) {
 				// I now assume that there is max 1 component in the project
 				// todo: adjust this for modules and plugins...
-				if ($type=='component')
-				{
-					$languages = new \stdClass;
+				if ($type == 'component') {
+					$languages = new \stdClass();
 					$languages->languages = $extension->languages;
 
 					// just cloning is not enough: nested objects are still references. Hence: unserialize(serialize($object))
@@ -198,8 +197,7 @@ class LanguageStringUtil extends AbstractExtension
 					$langTree->sys     = unserialize($languages_serialised);
 
 					// Frontend languages
-					if (!empty($extension->Sections->frontendsection))
-					{
+					if (!empty($extension->Sections->frontendsection)) {
 						$langTree->frontend = unserialize($languages_serialised);
 					}
 				}
@@ -217,7 +215,8 @@ class LanguageStringUtil extends AbstractExtension
 	 *
 	 * @return boolean true if unique, false if not.
 	 */
-	private function isUniqueLanguageString(array $key_value_pairs, string $language_string): bool {
+	private function isUniqueLanguageString(array $key_value_pairs, string $language_string): bool
+    {
 		foreach ($key_value_pairs as $keyValuePair) {
 			if ($keyValuePair->language_string === $language_string) {
 				return false;
@@ -235,5 +234,4 @@ class LanguageStringUtil extends AbstractExtension
 	{
 		return $this->langTree;
 	}
-
 }

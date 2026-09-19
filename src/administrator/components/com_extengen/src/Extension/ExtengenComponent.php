@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -11,9 +12,8 @@
 
 namespace Yepr\Component\Extengen\Administrator\Extension;
 
-defined('JPATH_PLATFORM') or die;
+\defined('_JEXEC') or die;
 
-use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Association\AssociationServiceInterface;
 use Joomla\CMS\Association\AssociationServiceTrait;
 use Joomla\CMS\Categories\CategoryServiceInterface;
@@ -22,7 +22,6 @@ use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
 use Yepr\Component\Extengen\Administrator\Service\HTML\AdministratorService;
-use Yepr\Component\Extengen\Administrator\Service\HTML\Icon;
 use Psr\Container\ContainerInterface;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Component\Router\RouterServiceInterface;
@@ -31,8 +30,7 @@ use Joomla\CMS\Component\Router\RouterServiceTrait;
 /**
  * Component class for com_extengen.
  */
-class ExtengenComponent extends MVCComponent
-implements BootableExtensionInterface, CategoryServiceInterface, AssociationServiceInterface, RouterServiceInterface
+class ExtengenComponent extends MVCComponent implements BootableExtensionInterface, CategoryServiceInterface, AssociationServiceInterface, RouterServiceInterface
 {
 	use CategoryServiceTrait;
 	use AssociationServiceTrait;
@@ -52,8 +50,7 @@ implements BootableExtensionInterface, CategoryServiceInterface, AssociationServ
 	 */
 	public function boot(ContainerInterface $container)
 	{
-		$this->getRegistry()->register('extengenadministrator', new AdministratorService);
-        $this->getRegistry()->register('extengenicon', new Icon($container->get(SiteApplication::class)));
+		$this->getRegistry()->register('extengenadministrator', new AdministratorService());
 	}
 
     /**
@@ -91,7 +88,6 @@ implements BootableExtensionInterface, CategoryServiceInterface, AssociationServ
 	protected function getTableNameForSection(string $section = null)
 	{
 		return ($section === 'category' ? 'categories' : 'extengen_projects');
-
 	}
 
     /**
@@ -105,6 +101,4 @@ implements BootableExtensionInterface, CategoryServiceInterface, AssociationServ
     {
         return 'published';
     }
-
 }
-

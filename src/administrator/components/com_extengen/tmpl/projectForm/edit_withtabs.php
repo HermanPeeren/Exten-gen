@@ -15,6 +15,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
@@ -121,7 +122,7 @@ if (($this->item->id)>0)
 		'ERDModal',
 		array(
 			'title'  => Text::_('COM_EXTENGEN_BUTTON_ERD'),
-			'url' => JUri::root() . "administrator/index.php?option=com_extengen&view=ERD&tmpl=component&project_id=" .  $this->item->id,
+			'url' => Uri::root() . "administrator/index.php?option=com_extengen&view=ERD&tmpl=component&project_id=" .  $this->item->id,
 			'height' => "700",
 			'width' => "700"
 		)

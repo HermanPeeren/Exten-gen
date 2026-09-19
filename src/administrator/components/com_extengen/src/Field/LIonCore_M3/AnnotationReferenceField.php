@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -36,20 +37,18 @@ class AnnotationReferenceField extends ListField
 		$classifierNameMap[0] = '&nbsp;';
 
 		$AST = $this->initiateAST();
-		if (!is_null($AST))
-		{
+		if (!is_null($AST)) {
 			// Get the LanguaeEntitiesntities that are currently in the model.
 			// todo: cache this (in the AST) and in the project-model
-			foreach ($AST->languageEntities as $languageEntity)
-			{
+			foreach ($AST->languageEntities as $languageEntity) {
 				// Only use Annotations
-				if (($languageEntity->languageEntity_type == 'Classifier')
-					&& ($languageEntity->classifier->classifier_type == 'Annotation'))
-				{
+				if (
+                    ($languageEntity->languageEntity_type == 'Classifier')
+					&& ($languageEntity->classifier->classifier_type == 'Annotation')
+                ) {
 					$classifierNameMap[$languageEntity->key] = ucfirst($languageEntity->name);
 				}
 			}
-
 		}
 
 		// Todo: sort
@@ -57,8 +56,7 @@ class AnnotationReferenceField extends ListField
 
 		// use a for-each to iterate over the $classifierNameMap
 		$classifierOptions = [];
-        foreach($classifierNameMap as $key => $classifierName)
-        {
+        foreach ($classifierNameMap as $key => $classifierName) {
 	        // Set an array with the  value / text items.
 	        $classifierOptions[] = array("value" => $key, "text" => $classifierName);
         }
@@ -75,12 +73,11 @@ class AnnotationReferenceField extends ListField
 	 * @return object|null
 	 */
 	private function initiateAST(): ?object
-	{
+    {
+
 		// The id of the record being edited comes from the request: a reference
 		// field is rendered inside that record's own form.
 		$id = (int) Factory::getApplication()->getInput()->getInt('id');
-
-		return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-	}
-
+return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -32,8 +33,7 @@ class ProjectFormsModel extends ListModel
 	 */
 	public function __construct($config = array())
 	{
-		if (empty($config['filter_fields']))
-		{
+		if (empty($config['filter_fields'])) {
 			$config['filter_fields'] = array(
 				'id', 'a.id',
 				'name', 'a.name',
@@ -51,8 +51,7 @@ class ProjectFormsModel extends ListModel
 
 			$assoc = Associations::isEnabled();
 
-			if ($assoc)
-			{
+			if ($assoc) {
 				$config['filter_fields'][] = 'association';
 			}
 		}
@@ -63,12 +62,12 @@ class ProjectFormsModel extends ListModel
 	/**
 	 * Build an SQL query to load the list data.
 	 *
-	 * @return  \JDatabaseQuery
+	 * @return  \Joomla\Database\QueryInterface
 	 */
 	protected function getListQuery()
 	{
 		// Create a new query object.
-		$db = $this->getDbo();
+		$db = $this->getDatabase();
 		$query = $db->getQuery(true);
 
 		// Select the required fields from the table.
@@ -117,8 +116,7 @@ class ProjectFormsModel extends ListModel
 			);
 
 		// Join over the associations.
-		if (Associations::isEnabled())
-		{
+		if (Associations::isEnabled()) {
 			$subQuery = $db->getQuery(true)
 				->select('COUNT(' . $db->quoteName('asso1.id') . ') > 1')
 				->from($db->quoteName('#__associations', 'asso1'))
@@ -141,46 +139,35 @@ class ProjectFormsModel extends ListModel
 			);
 
 		// Filter by access level.
-		if ($access = $this->getState('filter.access'))
-		{
+		if ($access = $this->getState('filter.access')) {
 			$query->where($db->quoteName('a.access') . ' = ' . (int) $access);
 		}
 
 		// Filter by published state
 		$published = (string) $this->getState('filter.published');
 
-		if (is_numeric($published))
-		{
+		if (is_numeric($published)) {
 			$query->where($db->quoteName('a.published') . ' = ' . (int) $published);
-		}
-		elseif ($published === '')
-		{
+		} elseif ($published === '') {
 			$query->where('(' . $db->quoteName('a.published') . ' = 0 OR ' . $db->quoteName('a.published') . ' = 1)');
 		}
 
 		// Filter by a single or group of categories.
 		$categoryId = $this->getState('filter.category_id');
 
-		if (is_numeric($categoryId))
-		{
+		if (is_numeric($categoryId)) {
 			$query->where($db->quoteName('a.catid') . ' = ' . (int) $categoryId);
-		}
-		elseif (is_array($categoryId))
-		{
+		} elseif (is_array($categoryId)) {
 			$query->where($db->quoteName('a.catid') . ' IN (' . implode(',', ArrayHelper::toInteger($categoryId)) . ')');
 		}
 
 		// Filter by search in name.
 		$search = $this->getState('filter.search');
 
-		if (!empty($search))
-		{
-			if (stripos($search, 'id:') === 0)
-			{
+		if (!empty($search)) {
+			if (stripos($search, 'id:') === 0) {
 				$query->where('a.id = ' . (int) substr($search, 3));
-			}
-			else
-			{
+			} else {
 				$search = $db->quote('%' . str_replace(' ', '%', $db->escape(trim($search), true) . '%'));
 				$query->where(
 					'(' . $db->quoteName('a.name') . ' LIKE ' . $search . ')'
@@ -189,8 +176,7 @@ class ProjectFormsModel extends ListModel
 		}
 
 		// Filter on the language.
-		if ($language = $this->getState('filter.language'))
-		{
+		if ($language = $this->getState('filter.language')) {
 			$query->where($db->quoteName('a.language') . ' = ' . $db->quote($language));
 		}
 
@@ -198,8 +184,7 @@ class ProjectFormsModel extends ListModel
 		$orderCol = $this->state->get('list.ordering', 'a.name');
 		$orderDirn = $this->state->get('list.direction', 'asc');
 
-		if ($orderCol == 'a.ordering' || $orderCol == 'category_title')
-		{
+		if ($orderCol == 'a.ordering' || $orderCol == 'category_title') {
 			$orderCol = $db->quoteName('c.title') . ' ' . $orderDirn . ', ' . $db->quoteName('a.ordering');
 		}
 
@@ -225,14 +210,12 @@ class ProjectFormsModel extends ListModel
 		$forcedLanguage = $app->getInput()->get('forcedLanguage', '', 'cmd');
 
 		// Adjust the context to support modal layouts.
-		if ($layout = $app->getInput()->get('layout'))
-		{
+		if ($layout = $app->getInput()->get('layout')) {
 			$this->context .= '.' . $layout;
 		}
 
 		// Adjust the context to support forced languages.
-		if ($forcedLanguage)
-		{
+		if ($forcedLanguage) {
 			$this->context .= '.' . $forcedLanguage;
 		}
 
@@ -240,8 +223,7 @@ class ProjectFormsModel extends ListModel
 		parent::populateState($ordering, $direction);
 
 		// Force a language.
-		if (!empty($forcedLanguage))
-		{
+		if (!empty($forcedLanguage)) {
 			$this->setState('filter.language', $forcedLanguage);
 		}
 	}

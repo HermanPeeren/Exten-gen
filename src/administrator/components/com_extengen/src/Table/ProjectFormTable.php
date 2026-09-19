@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @package     Extengen
@@ -53,8 +54,7 @@ class ProjectFormTable extends Table
 	public function store($updateNulls = false)
 	{
 		// Transform the params field
-		if (is_array($this->params))
-		{
+		if (is_array($this->params)) {
 			$registry = new Registry($this->params);
 			$this->params = (string) $registry;
 		}
@@ -71,33 +71,27 @@ class ProjectFormTable extends Table
 	 */
 	public function check()
 	{
-		try
-		{
+		try {
 			parent::check();
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			$this->setError($e->getMessage());
 
 			return false;
 		}
 
 		// Check the publish down date is not earlier than publish up.
-		if ($this->publish_down > $this->getDatabase()->getNullDate() && $this->publish_down < $this->publish_up)
-		{
+		if ($this->publish_down > $this->getDatabase()->getNullDate() && $this->publish_down < $this->publish_up) {
 			$this->setError(Text::_('JGLOBAL_START_PUBLISH_AFTER_FINISH'));
 
 			return false;
 		}
 
 		// Set publish_up, publish_down to null if not set
-		if (!$this->publish_up)
-		{
+		if (!$this->publish_up) {
 			$this->publish_up = null;
 		}
 
-		if (!$this->publish_down)
-		{
+		if (!$this->publish_down) {
 			$this->publish_down = null;
 		}
 

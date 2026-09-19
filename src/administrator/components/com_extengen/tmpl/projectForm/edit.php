@@ -15,6 +15,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
@@ -74,7 +75,7 @@ if (($this->item->id)>0)
 		'ProjectFormModal',
 		array(
 			'title'  => Text::_('COM_EXTENGEN_BUTTON_PROJECTFORM_DIAGRAM'),
-			'url' => JUri::root() . "administrator/index.php?option=com_extengen&view=FormsDiagram&tmpl=component&projectform_id=" .  $this->item->id,
+			'url' => Uri::root() . "administrator/index.php?option=com_extengen&view=FormsDiagram&tmpl=component&projectform_id=" .  $this->item->id,
 			'height' => "700",
 			'width' => "700"
 		)

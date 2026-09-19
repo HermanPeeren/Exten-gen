@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -51,11 +52,13 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null)
 	{
-		$this->item = $this->get('Item');
+		/** @var \Yepr\Component\Extengen\Administrator\Model\ProjectFormModel $model */
+		$model = $this->getModel();
+
+		$this->item = $model->getItem();
 
 		// If we are forcing a language in modal (used for associations).
-		if ($this->getLayout() === 'modal' && $forcedLanguage = Factory::getApplication()->getInput()->get('forcedLanguage', '', 'cmd'))
-		{
+		if ($this->getLayout() === 'modal' && $forcedLanguage = Factory::getApplication()->getInput()->get('forcedLanguage', '', 'cmd')) {
 			// Set the language field to the forcedLanguage and disable changing it.
 			$this->form->setValue('language', null, $forcedLanguage);
 			$this->form->setFieldAttribute('language', 'readonly', 'true');
@@ -66,7 +69,7 @@ class HtmlView extends BaseHtmlView
 
 		$this->addToolbar();
 
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**
@@ -88,8 +91,7 @@ class HtmlView extends BaseHtmlView
 		$canDo = ContentHelper::getActions('com_extengen'); //, 'category', $this->item->catid
 
 		// Build the actions for new and existing records.
-		if ($isNew)
-		{
+		if ($isNew) {
 			// For new records, check the create permission.
 			//if ($isNew && (count($user->getAuthorisedCategories('com_extengen', 'core.create')) > 0))
 			//{
@@ -105,9 +107,7 @@ class HtmlView extends BaseHtmlView
 			//}
 
 			ToolbarHelper::cancel('projectform.cancel'); // TODO: I want 'Close' on the button, not 'Cancel'
-		}
-		else
-		{
+		} else {
 			// Since it's an existing record, check the edit permission, or fall back to edit own if the owner.
 			//$itemEditable = $canDo->get('core.edit') || ($canDo->get('core.edit.own') && $this->item->created_by == $userId);
 
@@ -121,15 +121,13 @@ class HtmlView extends BaseHtmlView
 				$toolbarButtons[] = ['save', 'projectform.save'];
 
 				// We can save this record, but check the create permission to see if we can return to make a new one.
-				if ($canDo->get('core.create'))
-				{
+				if ($canDo->get('core.create')) {
 					$toolbarButtons[] = ['save2new', 'projectform.save2new'];
 				}
 			//}
 
 			// If checked out, we can still save
-			if ($canDo->get('core.create'))
-			{
+			if ($canDo->get('core.create')) {
 				$toolbarButtons[] = ['save2copy', 'projectform.save2copy'];
 			}
 

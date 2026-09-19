@@ -2,29 +2,94 @@ includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
-    level: 6
+    # Level 5, across everything. The docblock levels above this - 6 asks every
+    # array to say what it holds - are 76 further findings in the component's
+    # own tree, almost all of them `array` in a parameter or return type on code
+    # written years before the analyser was pointed at it. Level 5 is where the
+    # findings are about whether the code works.
+    level: 5
 
-    # Only the new code, for now. The component's own tree is 18k lines written
-    # against Joomla 4 and is analysed from step 1.11, once the Joomla 6 sweep
-    # has happened and there is Joomla reference material to resolve its base
-    # classes against. Pointing the analyser at it today would produce a wall of
-    # findings nobody reads, which is worse than not running it.
     paths:
+        - src/administrator/components/com_extengen/src
         - tests
         - build
 
-    # No scanDirectories yet. Joomla is reference material - it supplies the base
-    # classes the component extends - and it is needed the moment src joins the
-    # paths above, at 1.11. Listing a directory that nobody has unpacked only
-    # fails the build for a reason unrelated to the code.
+    # Joomla is reference material: it supplies the base classes the component
+    # extends, the constants it reads and the deprecation notices that make the
+    # sweep steps checkable. Unpack a Joomla 6 package into /joomla, which is
+    # git-ignored; `composer joomla` fetches it, and CI does the same.
+    scanDirectories:
+        - joomla/libraries
+        - joomla/administrator/components
+
+    # Joomla defines these when an application boots, so they exist at runtime
+    # and in no file an analyser reads.
+    bootstrapFiles:
+        - tools/phpstan-bootstrap.php
 
     excludePaths:
         analyse:
-            # Golden fixtures are generated output, kept to diff against. They
-            # are Joomla code, so analysing them without Joomla present reports
-            # two thousand unknown classes - and even with it, what they say is
-            # whether the *generator* is right, which the golden comparison
-            # already answers. They are syntax-checked by the suite instead.
+            # Golden fixtures are generated output, kept to diff against. What
+            # they would say is whether the *generator* is right, which the
+            # golden comparison already answers - and they are Joomla code, so
+            # analysing them reports the framework rather than this project.
+            # GeneratedSyntaxTest parses them instead.
             - tests/Fixtures/golden/expected/*
+
+            # Somebody else's library, vendored into src/ rather than required
+            # through composer - `namespace Statickidz`, by Adrian Barrio
+            # Andres. LanguageStringUtil pulls it in with a require_once, which
+            # is also the only reason it loads at all: its namespace does not
+            # match where it sits, so PSR-4 cannot find it. Correcting third
+            # party code in place is how a dependency becomes unupdatable.
+            - src/administrator/components/com_extengen/src/Generator/GoogleTranslate.php
+
+    ignoreErrors:
+        # setError() inside a Table's check() is not debt, it is the migration
+        # path. Joomla 6's LegacyErrorHandlingTrait::setError() reads
+        # `if ($this->useExceptions && is_string($error)) throw ...`, so whether
+        # a failed check reports or throws is the caller's choice, made with
+        # setUseExceptions(true) - which the list views here now do. A table
+        # that threw on its own would escape AdminModel::save(), which inspects
+        # `if (!$table->check())` and turns a refused save into a message on
+        # the form. Every core Joomla 6 table writes it this way: com_banners,
+        # com_contact, com_menus and com_newsfeeds all call setError() in
+        # check(). These go when Joomla's own tables do.
+        # And its counterpart. setUseExceptions() carries the deprecation notice
+        # of the trait it lives on - the whole legacy error mechanism goes in
+        # 7.0 - but calling it is how a caller opts out of that mechanism, and
+        # com_content's Articles view opens with exactly this line.
+        -
+            message: '#Call to deprecated method setUseExceptions\(\) of class Joomla\\CMS\\MVC\\Model\\BaseModel#'
+            path: src/administrator/components/com_extengen/src/View/*/HtmlView.php
+
+        -
+            message: '#Call to deprecated method setError\(\) of class Joomla\\CMS\\Table\\Table#'
+            path: src/administrator/components/com_extengen/src/Table/*.php
+
+        # Two entries, one cause: Joomla declares a method's return as the
+        # parent type and hands back the child, so a perfectly ordinary call
+        # looks undefined. Core writes both of these itself, which is the test
+        # of whether an exception here is the framework's shape or this
+        # project's mistake.
+        #
+        # An administrator view's document is an HtmlDocument - that is what
+        # renders the page - but AbstractView::getDocument() is typed to
+        # Document. com_content's Articles view writes
+        # `$this->getDocument()->getToolbar()`.
+        -
+            message: '#Call to an undefined method Joomla\\CMS\\Document\\Document::getToolbar\(\)#'
+
+        # Joomla docblocks that are narrower than the code beneath them.
+        # `Associations::getAssociations()` types $aliasField as string and
+        # says, in the same docblock, "Null to not use it" - and the body reads
+        # `if (!empty($aliasField))`. `getContentLanguages()` types
+        # $publishedStates as array and opens with `elseif ($publishedStates
+        # === false)`. Core passes exactly these values: com_content's
+        # ArticleModel calls `getContentLanguages(false, false, null, ...)`.
+        -
+            message: '#Parameter \#6 \$aliasField of static method Joomla\\CMS\\Language\\Associations::getAssociations\(\) expects string, null given#'
+        -
+            message: '#Parameter \#(1 \$publishedStates|3 \$pivot) of static method Joomla\\CMS\\Language\\LanguageHelper::getContentLanguages\(\) expects (array, false|string, null) given#'
 
     treatPhpDocTypesAsCertain: false

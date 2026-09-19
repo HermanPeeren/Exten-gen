@@ -1,0 +1,9 @@
+-- The baseline this component's schema history starts from.
+--
+-- Joomla reads this folder on install and on update: the highest version
+-- here becomes the row in #__schemas, and every later file is run in turn to
+-- migrate a site that is behind. A version with no schema change still needs
+-- a file, because a missing one means Joomla cannot tell where a site is.
+--
+-- 0.8.0 is where install.mysql.utf8.sql leaves a fresh site, so there is
+-- nothing to do here.

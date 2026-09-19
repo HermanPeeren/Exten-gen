@@ -163,6 +163,39 @@ Linux CI never sees this, so it will not be caught for you. The flattening in 1.
 took fourteen characters off every one of these paths, which helps and does not
 solve it.
 
+## Running it
+
+```
+composer test           # PHPUnit
+composer test-js        # the browser logic that needs no DOM, under node --test
+composer analyse        # PHPStan level 5, needs /joomla
+composer cs             # coding standard
+composer install-local  # build the package and install it into ./joomla
+npm run cypress         # the browser specs, against that install
+```
+
+**`/joomla` is reference material and a test site at once.** Unpack a Joomla 6
+package there - it is git-ignored. PHPStan resolves the component's base classes
+against it, and `composer install-local` installs the built package into it
+through Joomla's own CLI, which needs no login and no browser.
+
+**Cypress needs a login, and it comes from `cypress.env.json`.** Copy
+`cypress.env.json.dist`, fill in the two fields; the file is git-ignored.
+`tools/seed-project.php` puts a golden fixture model into the site so the specs
+have a project to open:
+
+```
+php tools/seed-project.php conference
+```
+
+**What each gate can and cannot see.** Everything above `npm run cypress` reads
+source or runs generation with two constants standing in for Joomla. None of it
+boots the framework, and for five steps that was enough to miss a component
+whose Extension class opened with `defined('JPATH_PLATFORM') or die;` - a
+constant Joomla 6 removed, so every request returned 200 with an empty body and
+nothing in any log. If a change touches a view, a layout, a service or the
+manifest, the browser specs are the only thing that will tell you.
+
 ## How a reference field works
 
 ```

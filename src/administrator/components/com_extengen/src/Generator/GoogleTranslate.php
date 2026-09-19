@@ -65,8 +65,9 @@ class GoogleTranslate
 	protected static function requestTranslation($source, $target, $text)
 	{
 
-		if (strlen($text) >= 5000)
+		if (strlen($text) >= 5000) {
 			throw new \Exception("Maximum number of characters exceeded: 5000");
+        }
 
 		// Google translate URL
 		$url = "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t";
@@ -119,8 +120,9 @@ class GoogleTranslate
 		$sentencesArray = json_decode($json, true);
 		$sentences = "";
 
-		if (!$sentencesArray || !isset($sentencesArray[0]))
+		if (!$sentencesArray || !isset($sentencesArray[0])) {
 			throw new \Exception("Google detected unusual traffic from your computer network, try again later (2 - 48 hours)");
+        }
 
 		foreach ($sentencesArray[0] as $s) {
 			$sentences .= isset($s[0]) ? $s[0] : '';

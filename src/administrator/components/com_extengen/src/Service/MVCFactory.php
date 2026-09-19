@@ -26,7 +26,6 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
 */
 
-
 namespace Yepr\Component\Extengen\Administrator\Service;
 
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
@@ -41,7 +40,7 @@ use Joomla\DI\Exception\DependencyResolutionException;
 use Joomla\Input\Input;
 
 // phpcs:disable PSR1.Files.SideEffects
-\defined('JPATH_PLATFORM') or die;
+\defined('_JEXEC') or die;
 // phpcs:enable PSR1.Files.SideEffects
 
 /**
@@ -74,8 +73,7 @@ class MVCFactory implements MVCFactoryInterface
     public function __construct(
 		string $namespace,
 		Container $container
-    )
-    {
+    ) {
         $this->namespace = $namespace;
 		$this->container = $container;
     }
@@ -89,7 +87,7 @@ class MVCFactory implements MVCFactoryInterface
      * @param   CMSApplicationInterface  $app     The app
      * @param   Input                    $input   The input
      *
-     * @return  object | false ControllerInterface
+     * @return  ?ControllerInterface
      * @throws  DependencyResolutionException if the object could not be built (due to missing information)
      */
     public function createController($name, $prefix, array $config, CMSApplicationInterface $app, Input $input)
@@ -120,7 +118,7 @@ class MVCFactory implements MVCFactoryInterface
      * @param   string  $prefix  Optional model prefix.
      * @param   array   $config  Optional configuration array for the model.
      *
-     * @return  object | false  ModelInterface
+     * @return  ?ModelInterface
      * @throws  DependencyResolutionException if the object could not be built (due to missing information)
      */
     public function createModel($name, $prefix = '', array $config = [])
@@ -162,7 +160,7 @@ class MVCFactory implements MVCFactoryInterface
      * @param   string  $viewType Optional type of view.
      * @param   array   $config   Optional configuration array for the view.
      *
-     * @return  object | false  ViewInterface
+     * @return  ?ViewInterface
      * @throws  DependencyResolutionException if the object could not be built (due to missing information)
      */
     public function createView($name, $prefix = '', $viewType = '', array $config = [])
@@ -205,7 +203,7 @@ class MVCFactory implements MVCFactoryInterface
      * @param   string  $prefix  Optional table prefix.
      * @param   array   $config  Optional configuration array for the table.
      *
-     * @return  object | false  Table
+     * @return  ?Table
      * @throws  DependencyResolutionException if the object could not be built (due to missing information)
      */
     public function createTable($name, $prefix = '', array $config = [])

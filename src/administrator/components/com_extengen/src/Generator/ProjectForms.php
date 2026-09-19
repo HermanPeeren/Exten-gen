@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extension Generator
  * @subpackage  Joomla Generator
@@ -23,8 +24,6 @@ use DOMDocument;
  */
 class ProjectForms
 {
-
-
 	/**
 	 * The Abstract Syntax Tree (AST) = the form-data of the project as 1 object with hierarchical properties
 	 *
@@ -63,11 +62,28 @@ class ProjectForms
 	protected string $projectFormNamespace;
 
 	/**
+	 * The component these forms belong to, which is Extengen itself.
+	 *
+	 * This generator writes the forms Extengen uses to edit a model, so the
+	 * component is not read from the model the way Joomla6\Forms reads it -
+	 * it is this one. Held as properties because the namespace prefixes and
+	 * the table names both need them.
+	 *
+	 * @var string
+	 */
+	protected string $componentName = 'Extengen';
+
+	/**
+	 * @var string
+	 */
+	protected string $companyNamespace = 'Yepr';
+
+	/**
 	 * Generator Class Constructor
 	 *
 	 * @param   string        $projectFormName    The name of the projectform
 	 * @param   object        $AST                The Abstract Syntax Tree (AST) = the form-data of the project
-	 * @param   object        $languageStringUtil The languagestring utility
+	 * @param   LanguageStringUtil  $languageStringUtil The languagestring utility
 	 */
 	public function __construct(string $projectFormName, object $AST, LanguageStringUtil $languageStringUtil)
 	{
@@ -94,7 +110,7 @@ class ProjectForms
 		$projectForm = $this->AST;
 
 		// The path where the projectforms are made
-		$generatedProjectFormFilesPath = $this->extengenAdminPath . 'forms/ProjectForms/' . $this->projectFormName .'/';
+		$generatedProjectFormFilesPath = $this->extengenAdminPath . 'forms/ProjectForms/' . $this->projectFormName . '/';
 
 		// Create the directory for the projectForm files if it doen't exist
 		if (!file_exists($generatedProjectFormFilesPath)) {
@@ -106,31 +122,24 @@ class ProjectForms
 		$keyConceptMap = [];
 		$keyConceptInterfaceMap = [];
 		$root = new \stdClass();
-		foreach ($projectForm->languageEntities as $languageEntity)
-		{
-			if ($languageEntity->languageEntity_type=='Classifier')
-			{
+		foreach ($projectForm->languageEntities as $languageEntity) {
+			if ($languageEntity->languageEntity_type == 'Classifier') {
 				// Concepts
-				if ($languageEntity->classifier->classifier_type=='Concept')
-				{
+				if ($languageEntity->classifier->classifier_type == 'Concept') {
 					$keyConceptMap[$languageEntity->key] = $languageEntity;// ? alleen de naam nodig???
 
 					// is this the root? Property partition only exists if it == 1.
 					// todo: multiple root nodes; we now only assume 1 (= the last one that is encountered in the concepts)
-					if (property_exists($languageEntity->classifier->concept,'partition'))
-					{
+					if (property_exists($languageEntity->classifier->concept, 'partition')) {
 						$root = $languageEntity;
 					}
 				}
 
 				// ConceptInterfaces
-				if ($languageEntity->classifier->classifier_type=='ConceptInterface')
-				{
+				if ($languageEntity->classifier->classifier_type == 'ConceptInterface') {
 					$keyConceptInterfaceMap[$languageEntity->key] = $languageEntity;// ? alleen de naam nodig???
 				}
-
 			}
-
 		}
 
 		// A type of a link can refer to any Classifier, so make a combined map
@@ -138,7 +147,9 @@ class ProjectForms
 		$keyClassifierMap = array_merge($keyConceptMap, $keyConceptInterfaceMap);
 
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
 
 
 		// Gather the extensions and implementations of concept-interfaces and concepts.
@@ -149,53 +160,55 @@ class ProjectForms
 		$umlCreate[] = "@startuml";
 
 		// Loop over all CONCEPTINTERFACES TODO: extract the repetition with "concepts"
-		foreach ($keyConceptInterfaceMap as $languageEntity)
-		{
-
+		foreach ($keyConceptInterfaceMap as $languageEntity) {
 			// Add fields to the fieldset
 
 			// Get extended conceptInterface and add it as the parent
 			$extends = $languageEntity->classifier->conceptInterface->extends;
-			if (!empty($extends))
-			{
-				
-
+			if (!empty($extends)) {
 				$umlRef[] =  $keyConceptInterfaceMap[$extends]->name . ' <|-- ' . $languageEntity->name;
-
-
-
 			}
 
-			foreach ($languageEntity->classifier->feature as $feature)
-			{
+			foreach ($languageEntity->classifier->feature as $feature) {
 				// Get other properties of this conceptInterface, if any
-				if ($feature->feature_type=='Property')
-				{
+				if ($feature->feature_type == 'Property') {
 					$umlCreate[] = $feature->name; // todo: type
 				}
 				// Get children and references
-				if ($feature->feature_type=='Link')
-				{
+				if ($feature->feature_type == 'Link') {
 					$featureName = ":" . $feature->name;
 
-					if (( $feature->is_optional) && ( $feature->link->is_multiple)) $toCardinality = ' "0..*" ';
-					if (( $feature->is_optional) && (!$feature->link->is_multiple)) $toCardinality = ' "0..1" ';
-					if ((!$feature->is_optional) && ( $feature->link->is_multiple)) $toCardinality = ' "1..*" ';
-					if ((!$feature->is_optional) && (!$feature->link->is_multiple)) $toCardinality = ' "1" ';
+					// The four branches below cover both booleans, so one always runs -
+					// unless a model is missing either property, which would otherwise
+					// reach the diagram as an undefined variable.
+					$toCardinality = '';
+
+					if (( $feature->is_optional) && ( $feature->link->is_multiple)) {
+$toCardinality = ' "0..*" ';
+                    }
+					if (( $feature->is_optional) && (!$feature->link->is_multiple)) {
+$toCardinality = ' "0..1" ';
+                    }
+					if ((!$feature->is_optional) && ( $feature->link->is_multiple)) {
+$toCardinality = ' "1..*" ';
+                    }
+					if ((!$feature->is_optional) && (!$feature->link->is_multiple)) {
+$toCardinality = ' "1" ';
+                    }
 
 					$fromCardinality = ''; // we don't know anything of the cardinality on the "from-side"
 
-					if ($feature->link->link_type=='Containment')
-					{
-						if (!empty($feature->link->type))
+					if ($feature->link->link_type == 'Containment') {
+						if (!empty($feature->link->type)) {
 							$umlRef[] =  $languageEntity->name . $fromCardinality . ' *-- ' . $toCardinality
 								. $keyClassifierMap[$feature->link->type]->name . $featureName;
+                        }
 					}
-					if ($feature->link->link_type=='Reference')
-					{
-						if (!empty($feature->link->type))
+					if ($feature->link->link_type == 'Reference') {
+						if (!empty($feature->link->type)) {
 							$umlRef[] =  $languageEntity->name . $fromCardinality . ' --> '  . $toCardinality
 								. $keyClassifierMap[$feature->link->type]->name . $featureName;
+                        }
 					}
 				}
 			}
@@ -203,12 +216,10 @@ class ProjectForms
 			$umlCreate[] = "}
 				
 				";
-
 		}
 
 		// Loop over all CONCEPTS
-		foreach ($keyConceptMap as $languageEntity)
-		{
+		foreach ($keyConceptMap as $languageEntity) {
 			// Add fields to the fieldset
 
 
@@ -221,59 +232,67 @@ class ProjectForms
 
 			// Get extended concept and add it as the parent
 			$extends = $languageEntity->classifier->concept->extends;
-			if (!empty($extends))
-			{
-
+			if (!empty($extends)) {
 				$umlRef[] =  $keyConceptMap[$extends]->name . ' <|-- ' . $languageEntity->name;
-
 			}
 
 			// Get implemented conceptInterfaces and add an implements-line to them
 			$implements = $languageEntity->classifier->concept->implements;
-			if (!empty($implements))
-			{
-				foreach ($implements as $interface)
-				{
+			if (!empty($implements)) {
+				foreach ($implements as $interface) {
 					$umlRef[] =  $keyConceptInterfaceMap[$interface->conceptInterface]->name . ' <|.. ' . $languageEntity->name;
 				}
-
 			}
 
-			foreach ($languageEntity->classifier->feature as $feature)
-			{
+			foreach ($languageEntity->classifier->feature as $feature) {
 				// Get other properties of this concept, if any
-				if ($feature->feature_type=='Property')
-				{
+				if ($feature->feature_type == 'Property') {
 					$umlCreate[] = $feature->name; // todo: type
 				}
 				// Get children and references
-				if ($feature->feature_type=='Link')
-				{
+				if ($feature->feature_type == 'Link') {
 					$featureName = ":" . $feature->name;
 
 					// because $feature->is_optional and $feature->link->is_multiple are checkboxes,
 					// those properties don't exist if the checkbox was empty.
-					if (!property_exists($feature, 'is_optional')) $feature->is_optional = false;
-					if (!property_exists($feature->link, 'is_multiple')) $feature->link->is_multiple = false;
+					if (!property_exists($feature, 'is_optional')) {
+$feature->is_optional = false;
+                    }
+					if (!property_exists($feature->link, 'is_multiple')) {
+$feature->link->is_multiple = false;
+                    }
 
-					if (( $feature->is_optional) && ( $feature->link->is_multiple)) $toCardinality = ' "0..*" ';
-					if (( $feature->is_optional) && (!$feature->link->is_multiple)) $toCardinality = ' "0..1" ';
-					if ((!$feature->is_optional) && ( $feature->link->is_multiple)) $toCardinality = ' "1..*" ';
-					if ((!$feature->is_optional) && (!$feature->link->is_multiple)) $toCardinality = ' "1" ';
+					// The four branches below cover both booleans, so one always runs -
+					// unless a model is missing either property, which would otherwise
+					// reach the diagram as an undefined variable.
+					$toCardinality = '';
+
+					if (( $feature->is_optional) && ( $feature->link->is_multiple)) {
+$toCardinality = ' "0..*" ';
+                    }
+					if (( $feature->is_optional) && (!$feature->link->is_multiple)) {
+$toCardinality = ' "0..1" ';
+                    }
+					if ((!$feature->is_optional) && ( $feature->link->is_multiple)) {
+$toCardinality = ' "1..*" ';
+                    }
+					if ((!$feature->is_optional) && (!$feature->link->is_multiple)) {
+$toCardinality = ' "1" ';
+                    }
 
 					$fromCardinality = ''; // we don't know anything of the cardinality on the "from-side"
 
-					if ($feature->link->link_type=='Containment')
-					{
-						if (!empty($feature->link->type))
+					if ($feature->link->link_type == 'Containment') {
+						if (!empty($feature->link->type)) {
 							$umlRef[] =  $languageEntity->name . $fromCardinality . ' *-- ' . $toCardinality
 								. $keyClassifierMap[$feature->link->type]->name . $featureName;
+                        }
 					}
-					if ($feature->link->link_type=='Reference')
-					{
-						if (!empty($feature->link->type))
+					if ($feature->link->link_type == 'Reference') {
+						if (!empty($feature->link->type)) {
 							$umlRef[] =  $languageEntity->name . $fromCardinality . ' --> '  . $toCardinality
 								. $keyClassifierMap[$feature->link->type]->name . $featureName;
+                        }
 					}
 				}
 			}
@@ -292,8 +311,7 @@ class ProjectForms
 		$uml = implode("\n", $umlCreate);
 
 		// Create a form from a node
-		$createForm = function ($node) use ($generatedProjectFormFilesPath, $logAppend)
-		{
+		$createForm = function ($node) use ($generatedProjectFormFilesPath, $logAppend) {
 			// Start the form-creation
 			$form               = new DOMDocument();
 			$form->encoding     = 'utf-8';
@@ -302,15 +320,19 @@ class ProjectForms
 			$root               = $form->createElement('form');
 			$form->appendChild($root);
 
-			$formName =$node->name;
+			$formName = $node->name;
 
 			// Add a fieldset
 			$fieldset   = $form->createElement('fieldset');
-			$ruleprefix = new \DOMAttr('addruleprefix',
-				$this->projectFormNamespace . $formName . '\\Rule');
+			$ruleprefix = new \DOMAttr(
+                'addruleprefix',
+                $this->projectFormNamespace . $formName . '\\Rule'
+            );
 			$fieldset->setAttributeNode($ruleprefix);
-			$fieldprefix = new \DOMAttr('addfieldprefix',
-				$this->projectFormNamespace . $formName . '\\Field');
+			$fieldprefix = new \DOMAttr(
+                'addfieldprefix',
+                $this->projectFormNamespace . $formName . '\\Field'
+            );
 			$fieldset->setAttributeNode($fieldprefix);
 			$root->appendChild($fieldset);
 
@@ -325,17 +347,15 @@ class ProjectForms
 			// Write to file
 			$form->save($generatedProjectFormFilesPath . $formName . '.xml');
 			$logAppend([$formName . '.xml generated']);
-
 		};
 
 
 
 		// Closure to loop through the tree (based on a json_decoded object) and apply a function
 		// (can be recursively used by calling $treeIterate from the function)
-		$treeIterate = function ($rootNode, $function)//, $done
-		{
-			foreach ($rootNode as $childNode)
-			{
+		$treeIterate = function ($rootNode, $function) {
+//, $done
+			foreach ($rootNode as $childNode) {
 				$function($childNode);
 			}
 		};
@@ -360,25 +380,50 @@ class ProjectForms
 		// todo: make this more general to use it when building generators in Extengen
 		$entityMap = [];
 		$fieldMap  = [];
-		foreach ($projectForm->datamodel as $entity)
-		{
+		foreach ($projectForm->datamodel as $entity) {
 			$entityMap[$entity->entity_id] = $entity;
-			foreach ($entity->field as $field)
-			{
+			foreach ($entity->field as $field) {
 				$fieldMap[$field->field_id] = $field;
 			}
 		}
 
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
+		$componentName    = $this->componentName;
+		$companyNamespace = $this->companyNamespace;
+
+		// Get the utility to manipulate the language strings
+		$languageStringUtil = $this->languageStringUtil;
+		$addLanguageString  = function (
+			string $componentName,
+			string $pageName = '',
+			string $fieldName = '',
+			string $templateValue = '',
+			string $english = '',
+			string $applicationType = "Administrator",
+			bool $sys = false
+		) use ($languageStringUtil) {
+			return $languageStringUtil->addLanguageString(
+				componentName: $componentName,
+				pageName: $pageName,
+				fieldName: $fieldName,
+				templateValue: $templateValue,
+				english: $english,
+				applicationType: $applicationType,
+				sys: $sys
+			);
+		};
+
 		// Path to administrator-side of com_extengen
 		$extengenAdminPath = $this->extengenAdminPath;
 
 		// Path to generated files of component
-		$generatedFilesPathComponent = $extengenAdminPath . '/forms/projectForms/' . $this->projectFormName .'/';
+		$generatedFilesPathComponent = $extengenAdminPath . '/forms/projectForms/' . $this->projectFormName . '/';
 
 		// Path of generated file IN the directory for generated files of component
-		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
+		$generatedFilePath = 'administrator/components/com_' . strtolower($componentName) . '/';
 
 
 		// Create the directory for the form files if it doen't exist
@@ -394,14 +439,11 @@ class ProjectForms
 
 
 
-		foreach ($projectForm->pages as $page)
-		{
+		foreach ($projectForm->pages as $page) {
 			$formName = strtolower($page->page_name);
 
 			// Generate the detail page forms + subforms
-			if (($page->page_type)=="detailspage" || ($page->page_type)=="subform")
-			{
-
+			if (($page->page_type) == "detailspage" || ($page->page_type) == "subform") {
 // todo: SimpleXML doesn't format the xml, DOMdocument only puts new tags on new line (with identation),
 				// todo: but I also want the attributes on new line, vertically stacked. Hence: paste my own xml...
 				// todo: or can I extend DOMdocument to adjust output-format?
@@ -418,11 +460,15 @@ class ProjectForms
 
 				// Add a fieldset
 				$fieldset   = $form->createElement('fieldset');
-				$ruleprefix = new \DOMAttr('addruleprefix',
-					$companyNamespace . '\\Component\\' . $this->componentName . '\\Administrator\\Rule');
+				$ruleprefix = new \DOMAttr(
+                    'addruleprefix',
+                    $companyNamespace . '\\Component\\' . $this->componentName . '\\Administrator\\Rule'
+                );
 				$fieldset->setAttributeNode($ruleprefix);
-				$fieldprefix = new \DOMAttr('addfieldprefix',
-					$companyNamespace . '\\Component\\' . $this->componentName . '\\Administrator\\Field');
+				$fieldprefix = new \DOMAttr(
+                    'addfieldprefix',
+                    $companyNamespace . '\\Component\\' . $this->componentName . '\\Administrator\\Field'
+                );
 				$fieldset->setAttributeNode($fieldprefix);
 				$root->appendChild($fieldset);
 
@@ -433,8 +479,7 @@ class ProjectForms
 				$entity    = $entityMap[$entity_id];
 
 				// Loop over the fields in that entity and map them to HtmlFields
-				foreach ($entity->field as $field)
-				{
+				foreach ($entity->field as $field) {
 					// todo: possibility (in editFields) to exclude fields from the form.
 
 					// fieldname: field->field_name
@@ -450,40 +495,33 @@ class ProjectForms
 					// Type
 
 					//    - Property
-					if (($field->field_type) == "property")
-					{
+					if (($field->field_type) == "property") {
 						// By default use a standard HtmlType.
 						$property = $field->property;
 						$type     = $this->standard2HtmlTypes($property->type);
 
 						// Is this field in the editFields?
-						foreach ($page->editfields as $editfield)
-						{
+						foreach ($page->editfields as $editfield) {
 							// The current field is in the editfields
-							if (($editfield->attribute->field_reference) == $field->field_id)
-							{
+							if (($editfield->attribute->field_reference) == $field->field_id) {
 								// If in editfields, then use the HtmlType defined there.
 								$type = $editfield->htmltype;
 
 								// Process parameters of editfield, if not empty
-								if (!empty($editfield->parameters))
-								{
-									switch ($type)
-									{
+								if (!empty($editfield->parameters)) {
+									switch ($type) {
 										case 'list':
 										case 'checkboxes':
 										case 'radio':
-
 											// Default empty choice as first option
 											$option = $form->createElement('option');
-											$key    = new \DOMAttr('value', 0);
+											$key    = new \DOMAttr('value', '0');
 											$option->setAttributeNode($key);
 											$option->textContent = '&nbsp;';
 											$formField->appendChild($option);
 
 											// Add options to the list-field
-											foreach ($editfield->parameters as $parameter)
-											{
+											foreach ($editfield->parameters as $parameter) {
 												$option = $form->createElement('option');
 												$key    = new \DOMAttr('value', $parameter->key);
 												$option->setAttributeNode($key);
@@ -493,13 +531,10 @@ class ProjectForms
 											break;
 										default:
 											// Add the parameters as attributes to the formField
-											foreach ($editfield->parameters as $parameter)
-											{
+											foreach ($editfield->parameters as $parameter) {
 												$key_value = new \DOMAttr($parameter->key, $parameter->value);
 												$formField->setAttributeNode($key_value);
 											}
-
-
 									}
 								}
 							}
@@ -516,17 +551,14 @@ class ProjectForms
 					}
 
 					//    - Reference
-					if (($field->field_type) == "reference")
-					{
+					if (($field->field_type) == "reference") {
 						$reference = $field->reference;
 
 						$refEntity_id = $reference->reference_id;
 						$refEntity    = $entityMap[$refEntity_id];
 
 						// In case of an embeddable: refer to a subform
-						if (property_exists($refEntity, 'isvalueobject'))
-						{
-
+						if (property_exists($refEntity, 'isvalueobject')) {
 							// Type
 							$type = new \DOMAttr('type', 'subform');
 							$formField->setAttributeNode($type);
@@ -534,51 +566,42 @@ class ProjectForms
 							// FormSource
 							$formsource = new \DOMAttr(
 								'formsource',
-								'administrator/components/com_'.strtolower($componentName) .
+								'administrator/components/com_' . strtolower($componentName) .
 								'/forms/' . strtolower($refEntity->entity_name) . '.xml'
 							);
 							$formField->setAttributeNode($formsource);
 
 							// Attributes
 							// Is this field in the editFields?
-							foreach ($page->editfields as $editfield)
-							{
+							foreach ($page->editfields as $editfield) {
 								// The current field is in the editfields
-								if (($editfield->attribute->field_reference) == $field->field_id)
-								{
+								if (($editfield->attribute->field_reference) == $field->field_id) {
 									// If in editfields, then use the HtmlType defined there.
 									// $type = $editfield->htmltype; // can now only be subform
 
 									// Add parameters of editfield, if not empty
-									if (!empty($editfield->parameters))
-									{
+									if (!empty($editfield->parameters)) {
 										// Add the parameters as attributes to the formField
-										foreach ($editfield->parameters as $parameter)
-										{
+										foreach ($editfield->parameters as $parameter) {
 											$key_value = new \DOMAttr($parameter->key, $parameter->value);
 											$formField->setAttributeNode($key_value);
 										}
 									}
 								}
 							}
-						}
-						else
-						{
+						} else {
 							// (n:1)
 							// Find the default field to display this reference
 							$refDisplayFieldName = '';
-							foreach ($refEntity->field as $foreignField)
-							{
-								if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display'))
-								{
+							foreach ($refEntity->field as $foreignField) {
+								if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display')) {
 									$refDisplayFieldName = $foreignField->field_name;
 									break;
 								}
 							}
 
 							// display the id if no display-field available
-							if (empty($refDisplayFieldName))
-							{
+							if (empty($refDisplayFieldName)) {
 								$refDisplayFieldName = 'id';
 							}
 
@@ -614,8 +637,7 @@ class ProjectForms
 					$fieldset->appendChild($formField);
 				}
 
-				if (($page->page_type)!="subform")
-				{
+				if (($page->page_type) != "subform") {
 					// HIDDEN field: id
 					$formField = $form->createElement('field');
 
@@ -633,16 +655,13 @@ class ProjectForms
 				// Write to file
 				$form->save($formDirectory . $formName . '.xml');
 				$logAppend([$formName . '.xml generated']);
-
 			}
 
 
 			// Generate the index page FILTER-forms
-			if (($page->page_type)=="indexpage")
-			{
+			if (($page->page_type) == "indexpage") {
 				// Do we have any filters on this page?
-				if (!empty($page->filters))
-				{
+				if (!empty($page->filters)) {
 					// Start the form-creation
 					$form = new DOMDocument();
 					$form->encoding = 'utf-8';
@@ -680,15 +699,29 @@ class ProjectForms
 					$inputmode = new \DOMAttr('inputmode', 'search');
 					$searchField->setAttributeNode($inputmode);
 					// Label
-					$label = new \DOMAttr('label',
+					$label = new \DOMAttr(
+                        'label',
 						$addLanguageString(
-							$componentName, $formName, '', "pageName_FIELD_SEARCH_LABEL", 'Search'));
+                            $componentName,
+                            $formName,
+                            '',
+                            "pageName_FIELD_SEARCH_LABEL",
+                            'Search'
+                        )
+                    );
 					$searchField->setAttributeNode($label);
 					// Description
 					//todo: longer description how to use search-string; see com_content)
-					$description = new \DOMAttr('description',
+					$description = new \DOMAttr(
+                        'description',
 						$addLanguageString(
-							$componentName, $formName, '', "pageName_FIELD_SEARCH_DESC", 'Search'));
+                            $componentName,
+                            $formName,
+                            '',
+                            "pageName_FIELD_SEARCH_DESC",
+                            'Search'
+                        )
+                    );
 					$searchField->setAttributeNode($description);
 					// Hint
 					$hint = new \DOMAttr('hint', 'JSEARCH_FILTER');
@@ -699,8 +732,7 @@ class ProjectForms
 					// todo: general joomla filter-possibilities like language, categories, tags, etc.
 
 					// Add fields to the fields-tag: loop over the filters for this page
-					foreach ($page->filters as $filter)
-					{
+					foreach ($page->filters as $filter) {
 						$entity_id = $filter->entity_reference;
 						$entity = $entityMap[$entity_id];
 
@@ -724,20 +756,22 @@ class ProjectForms
 						$type = new \DOMAttr('type', 'sql');
 						$formField->setAttributeNode($type);
 
+						// A field is a property or a reference, so one of the two branches
+						// below always runs; set here so a third kind cannot reach DOMAttr
+						// as null.
+						$query = '';
+
 						// Make the query todo: when another value is stored in the db, we need another value for the selected text
 						//    - Property: query the table of this entity
-						if (($field->field_type)=="property")
-						{
+						if (($field->field_type) == "property") {
 							// Make the custom sql to get the values for the dropdown-list todo $db->quoteName i.s.o. directly backticks
 							$table = '#__' . strtolower($componentName) . "_" . strtolower($entity->entity_name);
-							$query="SELECT DISTINCT `" . $field->field_name . "` AS value, `" . $field->field_name . "` AS text FROM `" . $table . "`";
+							$query = "SELECT DISTINCT `" . $field->field_name . "` AS value, `" . $field->field_name . "` AS text FROM `" . $table . "`";
 							$refDisplayFieldName = $field->field_name;
-
 						}
 
 						//    - Reference (n:1): query the foreign table
-						if (($field->field_type)=="reference")
-						{
+						if (($field->field_type) == "reference") {
 							$reference = $field->reference;
 
 							$refEntity_id = $reference->reference_id;
@@ -745,24 +779,21 @@ class ProjectForms
 
 							// Find the default field to display this reference
 							$refDisplayFieldName = '';
-							foreach ($refEntity->field as $foreignField)
-							{
-								if ((($foreignField->field_type)=="property") && property_exists($foreignField->property,'default_ref_display'))
-								{
+							foreach ($refEntity->field as $foreignField) {
+								if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display')) {
 									$refDisplayFieldName = $foreignField->field_name;
 									break;
 								}
 							}
 
 							// display the id if no display-field available
-							if (empty($refDisplayFieldName))
-							{
+							if (empty($refDisplayFieldName)) {
 								$refDisplayFieldName = 'id';
 							}
 
 							// Make the custom sql to get the values for the dropdown-list todo $db->quoteName i.s.o. directly backticks
 							$table = '#__' . strtolower($componentName) . "_" . strtolower($refEntity->entity_name);
-							$query="SELECT `id` AS value, `" . $refDisplayFieldName . "` AS text FROM `" . $table . "`";
+							$query = "SELECT `id` AS value, `" . $refDisplayFieldName . "` AS text FROM `" . $table . "`";
 						}
 
 						$query = new \DOMAttr('query', $query);
@@ -770,7 +801,12 @@ class ProjectForms
 
 						// Empty choice with field name on top of options
 						$header = new \DOMAttr('header', $addLanguageString(
-							$componentName, $formName, $field->field_name, "pageName_FILTER_FIELD_fieldName_HEADER", '- Select %fieldName% -'));
+                            $componentName,
+                            $formName,
+                            $field->field_name,
+                            "pageName_FILTER_FIELD_fieldName_HEADER",
+                            '- Select %fieldName% -'
+                        ));
 						$formField->setAttributeNode($header);
 
 						// Submit on change
@@ -786,15 +822,23 @@ class ProjectForms
 						$formField->setAttributeNode($valueField);
 
 						// Label language-string: COM_componentname_formName_FIELD_fieldname_LABEL
-						$label = new \DOMAttr('label',
+						$label = new \DOMAttr(
+                            'label',
 							$addLanguageString(
-								$componentName, $formName, $field->field_name, "pageName_FILTER_FIELD_fieldName_LABEL", 'Filter %fieldName%'));
+                                $componentName,
+                                $formName,
+                                $field->field_name,
+                                "pageName_FILTER_FIELD_fieldName_LABEL",
+                                'Filter %fieldName%'
+                            )
+                        );
 						$formField->setAttributeNode($label);
 
 						// Description language-string: COM_componentname_formName_FILTER_FIELD_fieldname_DESC
-						$description = new \DOMAttr('description',
-							$addLanguageString($componentName, $formName, $field->field_name, "pageName_FILTER_FIELD_fieldName_DESC", 'Filter on %fieldName%.'
-								));
+						$description = new \DOMAttr(
+                            'description',
+							$addLanguageString($componentName, $formName, $field->field_name, "pageName_FILTER_FIELD_fieldName_DESC", 'Filter on %fieldName%.')
+                        );
 						$formField->setAttributeNode($description);
 
 						$fields->appendChild($formField);
@@ -959,8 +1003,7 @@ class ProjectForms
 	 */
 	private function standard2HtmlTypes($standardType)
 	{
-		switch ($standardType)
-		{
+		switch ($standardType) {
 			case ('Integer'):
 				$htmlDef = "number";
 				break;
@@ -996,6 +1039,5 @@ class ProjectForms
 		}
 
 		return $htmlDef;
-
 	}
 }

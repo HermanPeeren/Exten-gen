@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -44,6 +45,7 @@ use Joomla\Utilities\ArrayHelper;
 use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
+use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
@@ -78,7 +80,7 @@ class GenerateModel extends AdminModel
 	 * There must be a subdirectory with this name with the concrete generators.
 	 * When templates are used, they must be in a subdirectory under /generator_templates with that same name. todo: templates in db
 	 *
-	 * @var   string
+	 * @var   string[]
 	 */
 	protected array $outputTypes = ['Joomla6']; //todo: set other output types
 
@@ -112,28 +114,28 @@ class GenerateModel extends AdminModel
 
 		$generators = $target->generators();
 
-		try
-		{
+		try {
 			$files = (new Pipeline())->run($project, new Target(
 				$target->id(),
 				$target->label(),
 				$target->validator(),
 				...$generators
 			));
-		}
-		catch (ValidationException $e)
-		{
-			foreach ($e->getErrors() as $problem)
-			{
+		} catch (ValidationException $e) {
+			foreach ($e->getErrors() as $problem) {
 				$this->log[] = '<b>' . htmlspecialchars($problem, ENT_QUOTES, 'UTF-8') . '</b>';
 			}
 
 			throw $e;
 		}
 
-		foreach ($generators as $generator)
-		{
-			$this->log = array_merge($this->log, $generator->log());
+		foreach ($generators as $generator) {
+			// Keeping a log is this project's habit rather than something
+			// the shared GeneratorInterface promises, so it is asked for
+			// where it exists instead of widening that interface for it.
+			if ($generator instanceof Generator) {
+				$this->log = array_merge($this->log, $generator->log());
+			}
 		}
 
 		$this->write($files, $project);
@@ -143,7 +145,7 @@ class GenerateModel extends AdminModel
 	 * Put the generated file set on disk, under the component's output directory.
 	 *
 	 * @param   FileCollection  $files          What was generated.
-	 * @param   string          $componentName  Names the output directory.
+	 * @param   Project         $project        The model it generated from.
 	 *
 	 * @return  void
 	 */
@@ -153,8 +155,7 @@ class GenerateModel extends AdminModel
 		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/' . $componentName;
 		$root          = $generated . '/Joomla6/com_' . strtolower($componentName);
 
-		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root))
-		{
+		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root)) {
 			throw new \RuntimeException('Cannot create ' . $root);
 		}
 
@@ -212,8 +213,7 @@ class GenerateModel extends AdminModel
 	 */
 	private function carryOverEdits(FileCollection $files, string $root): void
 	{
-		if (!is_dir($root))
-		{
+		if (!is_dir($root)) {
 			// Nothing has been generated here before.
 			return;
 		}
@@ -222,37 +222,31 @@ class GenerateModel extends AdminModel
 		$carried = 0;
 		$orphans = [];
 
-		foreach ($files->all() as $path => $contents)
-		{
+		foreach ($files->all() as $path => $contents) {
 			$previous = $root . '/' . $path;
 
-			if (!is_file($previous))
-			{
+			if (!is_file($previous)) {
 				continue;
 			}
 
 			$existing = (string) file_get_contents($previous);
 			$merged   = $merger->merge($existing, $contents);
 
-			foreach ($merger->orphanedRegions() as $id)
-			{
+			foreach ($merger->orphanedRegions() as $id) {
 				$orphans[] = $path . ' : ' . $id;
 			}
 
-			if ($merged !== $contents)
-			{
+			if ($merged !== $contents) {
 				$files->replace($path, $merged);
 				$carried++;
 			}
 		}
 
-		if ($carried > 0)
-		{
+		if ($carried > 0) {
 			$this->log[] = 'kept hand-written regions in ' . $carried . ' file(s) from the previous run';
 		}
 
-		foreach ($orphans as $orphan)
-		{
+		foreach ($orphans as $orphan) {
 			// Its content is still in the file on disk and nowhere else, so
 			// saying where is the whole of the warning.
 			$this->log[] = '<b>not carried over, and only in the previous output: ' .
@@ -269,82 +263,14 @@ class GenerateModel extends AdminModel
 	{
 		$project = (new ProjectRepository($this->getDatabase()))->find((int) $this->projectId);
 
-		if ($project === null)
-		{
+		if ($project === null) {
 			throw new \RuntimeException(sprintf('Cannot read project %d.', $this->projectId));
 		}
 
 		return $project;
 	}
 
-	/**
-	 * Get the (json-encoded) form-data of the project that form the AST.
-	 *
-	 * @return object
-	 */
-	private function initiateAST(): object
-	{
-		// The id is set on this model by the controller, not taken from the
-		// request: the model is told which record it is working on.
-		$id = (int) $this->projectId;
 
-		$model = (new ProjectRepository($this->getDatabase()))->find($id)?->raw();
-
-		if ($model === null)
-		{
-			// The declared return type is not nullable, so without this a
-			// missing or unreadable record arrives as a TypeError with
-			// nothing in it to act on.
-			throw new \RuntimeException(sprintf('Cannot read project %d.', $id));
-		}
-
-		return $model;
-	}
-
-	/**
-	 * NOT IN USE NOW (instead: directly query via initiateAST()).
-	 * Method to get the project-data.
-	 * Overriden to prevent initiating a non-existing Generator-Table.
-	 *
-	 * @param   integer  $pk  The id of the primary key.
-	 *
-	 * @return  mixed   Object on success, false on failure.
-	 */
-	public function getItem($pk = null)
-	{
-			$pk = (!empty($pk)) ? $pk : (int) $this->getState($this->getName() . '.id');
-
-			// get the Project table
-			$table = $this->getTable("Project");
-
-			if ($pk > 0) {
-				// Attempt to load the row.
-				$return = $table->load($pk);
-
-				// Check for a table object error.
-				if ($return === false) {
-					// If there was no underlying error, then the false means there simply was not a row in the db for this $pk.
-					if (!$table->getError()) {
-						$this->setError(Text::_('JLIB_APPLICATION_ERROR_NOT_EXIST'));
-					} else {
-						$this->setError($table->getError());
-					}
-
-					return false;
-				}
-			}
-
-			// Convert to \stdClass before adding other data.
-			$properties = get_object_vars($table);
-			$item = ArrayHelper::toObject($properties);
-
-			if (property_exists($item, 'params')) {
-				$registry = new Registry($item->params);
-				$item->params = $registry->toArray();
-			}
-
-			return $item;
-	}
 
 	/**
 	 * NOT USED ATM. BUT MUST BE IMPLEMENTED. MIGHT USE IN FUTURE TO CHOOSE GENERATORS.
@@ -359,5 +285,4 @@ class GenerateModel extends AdminModel
 	{
 		return false;
 	}
-
 }

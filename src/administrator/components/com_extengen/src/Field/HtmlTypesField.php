@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -177,8 +178,7 @@ class HtmlTypesField extends ListField
 
         // use a for each to iterate over the JSON
 		$htmlTypeOptions = [];
-        foreach($htmlTypes as $htmlType => $text)
-        {
+        foreach ($htmlTypes as $htmlType => $text) {
 	        // Set an array with the  value / text items.
 	        $htmlTypeOptions[] = array("value" => $htmlType, "text" => $text);
         }

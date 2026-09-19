@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -47,14 +48,14 @@ class HtmlView extends BaseHtmlView
 	/**
 	 * The model state
 	 *
-	 * @var  \JObject
+	 * @var  \Joomla\Registry\Registry
 	 */
 	protected $state;
 
 	/**
 	 * Form object for search filters
 	 *
-	 * @var  \JForm
+	 * @var  \Joomla\CMS\Form\Form
 	 */
 	public $filterForm;
 
@@ -82,42 +83,41 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null): void
 	{
-		$this->items = $this->get('Items');
-		$this->pagination = $this->get('Pagination');
-		$this->filterForm = $this->get('FilterForm');
-		$this->activeFilters = $this->get('ActiveFilters');
-		$this->state = $this->get('State');
+		/** @var \Yepr\Component\Extengen\Administrator\Model\ProjectsModel $model */
+		$model = $this->getModel();
+
+		// Ask the model to throw rather than collect errors. This is what
+		// retires the getErrors() check below it: setError() and getError()
+		// go in Joomla 7, and a model that throws says what went wrong at
+		// the point it went wrong.
+		$model->setUseExceptions(true);
+
+		$this->items         = $model->getItems();
+		$this->pagination    = $model->getPagination();
+		$this->filterForm    = $model->getFilterForm();
+		$this->activeFilters = $model->getActiveFilters();
+		$this->state         = $model->getState();
 
         /*if (!\count($this->items) && $this->isEmptyState = $this->get('IsEmptyState')) {
             $this->setLayout('emptystate');*/
 
-		// Check for errors.
-		if (count($errors = $this->get('Errors')))
-		{
-			throw new Genericdataexception(implode("\n", $errors), 500);
-		}
 
 		// Preprocess the list of items to find ordering divisions.
 		// TODO: Complete the ordering stuff with nested sets
-		foreach ($this->items as &$item)
-		{
+		foreach ($this->items as &$item) {
 			$item->order_up = true;
 			$item->order_dn = true;
 		}
 
 		// We don't need toolbar in the modal window.
-		if ($this->getLayout() !== 'modal')
-		{
+		if ($this->getLayout() !== 'modal') {
 			ExtengenHelper::addSubmenu('project');
 			$this->addToolbar();
 			$this->sidebar = Sidebar::render();
-		}
-		else
-		{
+		} else {
 			// In project associations modal we need to remove language filter if forcing a language.
 			// We also need to change the category filter to show show categories with All or the forced language.
-			if ($forcedLanguage = Factory::getApplication()->getInput()->get('forcedLanguage', '', 'CMD'))
-			{
+			if ($forcedLanguage = Factory::getApplication()->getInput()->get('forcedLanguage', '', 'CMD')) {
 				// If the language is forced we can't allow to select the language, so transform the language selector filter into a hidden field.
 				$languageXml = new \SimpleXMLElement('<field name="language" type="hidden" default="' . $forcedLanguage . '" />');
 				$this->filterForm->setField($languageXml, 'filter', true);
@@ -145,17 +145,15 @@ class HtmlView extends BaseHtmlView
 		$user  = $this->getCurrentUser();
 
 		// Get the toolbar object instance
-		$toolbar = Toolbar::getInstance('toolbar');
+		$toolbar = $this->getDocument()->getToolbar();
 
 		ToolbarHelper::title(Text::_('COM_EXTENGEN_MANAGER_PROJECTS'), 'projects');
 
-		if ($canDo->get('core.create') || count($user->getAuthorisedCategories('com_extengen', 'core.create')) > 0)
-		{
+		if ($canDo->get('core.create') || count($user->getAuthorisedCategories('com_extengen', 'core.create')) > 0) {
 			$toolbar->addNew('project.add');
 		}
 
-		if ($canDo->get('core.edit.state'))
-		{
+		if ($canDo->get('core.edit.state')) {
 			$dropdown = $toolbar->dropdownButton('status-group')
 				->text('JTOOLBAR_CHANGE_STATUS')
 				->toggleSplit(false)
@@ -171,13 +169,11 @@ class HtmlView extends BaseHtmlView
 
 			//$childBar->archive('projects.archive')->listCheck(true);
 
-			if ($user->authorise('core.admin'))
-			{
+			if ($user->authorise('core.admin')) {
 				$childBar->checkin('projects.checkin')->listCheck(true);
 			}
 
-			if ($this->state->get('filter.published') != -2)
-			{
+			if ($this->state->get('filter.published') != -2) {
 				$childBar->trash('extengen.trash')->listCheck(true);
 			}
 		}
@@ -195,8 +191,7 @@ class HtmlView extends BaseHtmlView
 				->listCheck(true);
 		//}
 
-		if ($user->authorise('core.admin', 'com_extengen') || $user->authorise('core.options', 'com_extengen'))
-		{
+		if ($user->authorise('core.admin', 'com_extengen') || $user->authorise('core.options', 'com_extengen')) {
 			$toolbar->preferences('com_extengen');
 		}
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  <li>@package     Extengen
 
@@ -31,6 +32,12 @@ use Joomla\CMS\MVC\View\GenericDataException;
  */
 class HtmlView extends BaseHtmlView
 {
+	/**
+	 * The HTML for the sidebar, which the layout prints when there is any.
+	 *
+	 * @var  string
+	 */
+	protected $sidebar;
 
 	/**
 	 <li>Method to display the view.
@@ -46,7 +53,7 @@ class HtmlView extends BaseHtmlView
 		ExtengenHelper::addSubmenu('info');
 		$this->addToolbar();
 		$this->sidebar = Sidebar::render();
-        
+
         $info = <<<INFO
         <h2>Extengen</h2>
         <p>Extension generator as Joomla extension, model based on eJSL (JooMDD), with projectional editor</p>.
@@ -114,7 +121,7 @@ INFO;
 	protected function addToolbar()
 	{
 		// Get the toolbar object instance
-		$toolbar = Toolbar::getInstance('toolbar');
+		$toolbar = $this->getDocument()->getToolbar();
 
 		ToolbarHelper::title(Text::_('COM_EXTENGEN_MANAGER_INFO'), 'generators');
 

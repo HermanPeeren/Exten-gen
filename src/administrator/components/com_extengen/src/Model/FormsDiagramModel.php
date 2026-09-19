@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -59,7 +60,7 @@ class FormsDiagramModel extends AdminModel
 	/**
 	 * Set the project id.
 	 *
-	 * @param   int  $projectId
+	 * @param   int  $projectFormId
 	 */
 	public function setProjectFormId(int $projectFormId): void
 	{
@@ -73,68 +74,43 @@ class FormsDiagramModel extends AdminModel
 	 * @return object the AST
 	 */
 	public function getAST(): object
-	{
+    {
+
 		// The id is set on this model by the controller, not taken from the
 		// request: the model is told which record it is working on.
 		$id = (int) $this->projectFormId;
-
-		$model = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-
-		if ($model === null)
-		{
-			// The declared return type is not nullable, so without this a
+$model = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+if ($model === null) {
+// The declared return type is not nullable, so without this a
 			// missing or unreadable record arrives as a TypeError with
 			// nothing in it to act on.
 			throw new \RuntimeException(sprintf('Cannot read project form %d.', $id));
-		}
+}
 
 		return $model;
-	}
+    }
 
 	/**
-	 * NOT IN USE NOW (instead: directly query via getAST()).
-	 * Method to get the project-data.
-	 * Overriden to prevent initiating a non-existing Generator-Table.
+	 * The table this model reads, which is the ProjectForm table.
 	 *
-	 * @param   integer  $pk  The id of the primary key.
+	 * This replaced a copy of AdminModel::getItem() whose only reason to
+	 * exist was the same one: without it, AdminModel asks for a table
+	 * named after the model - ERDTable, GenerateTable - and there is no
+	 * such thing. Saying so here is one line instead of thirty, and it
+	 * leaves getItem() to the parent, which is where the behaviour was
+	 * copied from in the first place.
 	 *
-	 * @return  mixed   Object on success, false on failure.
+	 * @param   string  $name     The table name.
+	 * @param   string  $prefix   The class prefix.
+	 * @param   array   $options  Configuration for the table.
+	 *
+	 * @return  \Joomla\CMS\Table\Table
 	 */
-	public function getItem($pk = null)
+	public function getTable($name = 'ProjectForm', $prefix = 'Administrator', $options = [])
 	{
-			$pk = (!empty($pk)) ? $pk : (int) $this->getState($this->getName() . '.id');
-
-			// get the Project table
-			$table = $this->getTable("Project");
-
-			if ($pk > 0) {
-				// Attempt to load the row.
-				$return = $table->load($pk);
-
-				// Check for a table object error.
-				if ($return === false) {
-					// If there was no underlying error, then the false means there simply was not a row in the db for this $pk.
-					if (!$table->getError()) {
-						$this->setError(Text::_('JLIB_APPLICATION_ERROR_NOT_EXIST'));
-					} else {
-						$this->setError($table->getError());
-					}
-
-					return false;
-				}
-			}
-
-			// Convert to \stdClass before adding other data.
-			$properties = get_object_vars($table);
-			$item = ArrayHelper::toObject($properties);
-
-			if (property_exists($item, 'params')) {
-				$registry = new Registry($item->params);
-				$item->params = $registry->toArray();
-			}
-
-			return $item;
+		return parent::getTable($name, $prefix, $options);
 	}
+
 
 	/**
 	 * NOT USED ATM. BUT MUST BE IMPLEMENTED. MIGHT USE IN FUTURE.
@@ -149,5 +125,4 @@ class FormsDiagramModel extends AdminModel
 	{
 		return false;
 	}
-
 }

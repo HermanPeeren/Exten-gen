@@ -374,9 +374,49 @@ body in verbatim can break.
 *Done when* code written in the model appears in the right place in the generated file,
 regenerating does not lose it, and an edit made in the output survives a regeneration.
 
-**1.11 Quality gate.** PHPStan clean at an agreed level, Cypress specs for the main flows,
-and a test that generated PHP actually parses.
-*Decision required:* the PHPStan level.
+**1.11 Quality gate.** PHPStan at **level 5**, no baseline, over `src/`, `tests/` and
+`build/`, with a Joomla 6 unpacked into `/joomla` as reference material - CI fetches its
+own. Level 6 was 76 further findings, almost all `array` in a parameter or return type on
+code written years before an analyser was pointed at it; 5 is where the findings are about
+whether the code works.
+
+159 findings went to zero. Most were repairs: `JPATH_PLATFORM` guards, undefined
+variables, a generator whose header had never been copied across, docblocks naming
+parameters that were not there. Four exceptions are recorded in `phpstan.neon` with
+reasons, and all four are Joomla's own shape rather than this project's: a return typed
+to a parent class, a docblock narrower than the body under it, and `setError()` /
+`setUseExceptions()`, which are the migration mechanism rather than debt - `setError()`
+throws when the caller has opted in.
+
+phpcs covers `src/` now. 7393 findings, of which 6060 were tab indentation, which Joomla
+mandates and PSR-12 forbids: Joomla wins, because this is a Joomla extension. 1202 more
+were auto-fixed. The rest are scoped with reasons: the `_JEXEC` guard is a side effect
+PSR-1 objects to and Joomla requires, `$_tbl` is a name a subclass does not get to change,
+and the generators' long lines are code being built as strings.
+
+`GeneratedSyntaxTest` parses everything the generators write - PHP through `token_get_all`
+with `TOKEN_PARSE`, XML and INI through the readers Joomla uses - and checks no template
+tag survived into the output.
+
+**Cypress runs against a real Joomla 6.** 13 specs: every view renders and throws no
+JavaScript error, the reference index reaches the page, an entity added and never saved is
+offered by a reference dropdown, and generation produces a package. `tools/seed-project.php`
+puts a golden fixture model into a site so the specs have something to open, and
+`composer install-local` builds and installs through Joomla's CLI, which needs no login.
+
+What that found, in one afternoon, on code that had passed every other gate for five
+steps: `defined('JPATH_PLATFORM') or die;` at the top of the component's Extension class -
+a constant Joomla 6 removed, so every request to the component returned 200 with an empty
+body and nothing in any log; `boot()` asking the container for a `SiteApplication` on every
+administrator request; `joomla.asset.json` missing from the manifest's `<media>` section,
+so the 1.9 reference script could not be found; a Twig extension constructed before the
+renderer that loads Twig; `JUri` in five layouts; and a placeholder view building a list
+toolbar whose `listCheck(true)` made Joomla's own script throw. None of those is visible to
+anything that reads source.
+
+*Not in CI:* the Cypress specs. They need a database, a Joomla install and the component
+installed into it - a job of its own rather than a step, and one this repository does not
+need before it can be released. They run locally with `npm run cypress`.
 
 **1.12 Release 1.0.0.** The update server moves to the new repository. The installed
 extension keeps the element name `com_extengen`.
@@ -474,7 +514,6 @@ Each is flagged at the step where it bites.
 | Step | Decision |
 |---|---|
 | 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
-| 1.11 | PHPStan level |
 | 1.12 | Front-end in v1.0, or deferred to v1.1 |
 
 ## Suggested entry point

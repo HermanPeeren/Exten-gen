@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -93,8 +94,7 @@ class ProjectModel extends AdminModel
 		// Get the form.
 		$form = $this->loadForm('com_extengen.project', 'project', array('control' => 'jform', 'load_data' => $loadData));
 
-		if (empty($form))
-		{
+		if (empty($form)) {
 			return false;
 		}
 
@@ -124,14 +124,10 @@ class ProjectModel extends AdminModel
 
 		$stored = null;
 
-		if (!empty($item->form_data))
-		{
-			try
-			{
+		if (!empty($item->form_data)) {
+			try {
 				$stored = Project::fromJson((string) $item->form_data)->raw();
-			}
-			catch (\JsonException | \InvalidArgumentException $e)
-			{
+			} catch (\JsonException | \InvalidArgumentException $e) {
 				// A model that will not decode is reported by loadFormData(),
 				// which runs for the same request. Saying it twice would put
 				// the same warning on screen twice.
@@ -156,20 +152,16 @@ class ProjectModel extends AdminModel
 
 		// A project that has never been saved has nothing stored yet, and the
 		// form renders from its own defaults.
-		if (empty($item->form_data))
-		{
+		if (empty($item->form_data)) {
 			return new \stdClass();
 		}
 
 		// Through the model type rather than a bare json_decode, so that every
 		// read of a stored project goes through one place. The form wants the
 		// values as stored, which is what raw() is.
-		try
-		{
+		try {
 			return Project::fromJson((string) $item->form_data)->raw();
-		}
-		catch (\JsonException | \InvalidArgumentException $e)
-		{
+		} catch (\JsonException | \InvalidArgumentException $e) {
 			// A model that cannot be read must not take down the page somebody
 			// needs in order to fix it. Enqueued rather than setError(), which
 			// nothing reads on this path: the form would come back empty with
@@ -194,16 +186,13 @@ class ProjectModel extends AdminModel
 		// Load associated extengen items
 		$assoc = Associations::isEnabled();
 
-		if ($assoc)
-		{
+		if ($assoc) {
 			$item->associations = array();
 
-			if ($item->id != null)
-			{
+			if ($item->id != null) {
 				$associations = Associations::getAssociations('com_extengen', '#__extengen_projects', 'com_extengen.item', $item->id, 'id', null);
 
-				foreach ($associations as $tag => $association)
-				{
+				foreach ($associations as $tag => $association) {
 					$item->associations[$tag] = $association->id;
 				}
 			}
@@ -230,20 +219,17 @@ class ProjectModel extends AdminModel
 	protected function preprocessForm(Form $form, $data, $group = 'content')
 	{
 		// Association contact items
-		if (Associations::isEnabled())
-		{
+		if (Associations::isEnabled()) {
 			$languages = LanguageHelper::getContentLanguages(false, true, null, 'ordering', 'asc');
 
-			if (count($languages) > 1)
-			{
+			if (count($languages) > 1) {
 				$addform = new \SimpleXMLElement('<form />');
 				$fields = $addform->addChild('fields');
 				$fields->addAttribute('name', 'associations');
 				$fieldset = $fields->addChild('fieldset');
 				$fieldset->addAttribute('name', 'item_associations');
 
-				foreach ($languages as $language)
-				{
+				foreach ($languages as $language) {
 					$field = $fieldset->addChild('field');
 					$field->addAttribute('name', $language->lang_code);
 					$field->addAttribute('type', 'modal_extengen');

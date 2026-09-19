@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -36,19 +37,15 @@ class DataTypeReferenceField extends ListField
 		$dataTypeNameMap[0] = '&nbsp;';
 
 		$AST = $this->initiateAST();
-		if (!is_null($AST))
-		{
+		if (!is_null($AST)) {
 			// Get the entities that are currently in the model.
 			// todo: cache this (in the AST) and in the project-model
-			foreach ($AST->languageEntities as $languageEntity)
-			{
+			foreach ($AST->languageEntities as $languageEntity) {
 				// Only use DataTypes TODO: key of the firstchild should be checked
-				if ($languageEntity->LIonWeb_key== 'LanguageEntity.DataType')
-				{
+				if ($languageEntity->LIonWeb_key == 'LanguageEntity.DataType') {
 					$dataTypeNameMap[$languageEntity->id] = ucfirst($languageEntity->dataType_name);
 				}
 			}
-
 		}
 
 		// Todo: sort
@@ -56,8 +53,7 @@ class DataTypeReferenceField extends ListField
 
         // use a for-each to iterate over the $classifierNameMap
 		$dataTypeOptions = [];
-        foreach($dataTypeNameMap as $key => $dataTypeName)
-        {
+        foreach ($dataTypeNameMap as $key => $dataTypeName) {
 	        // Set an array with the  value / text items.
 	        $dataTypeOptions[] = array("value" => $key, "text" => $dataTypeName);
         }
@@ -74,12 +70,11 @@ class DataTypeReferenceField extends ListField
 	 * @return object|null
 	 */
 	private function initiateAST(): ?object
-	{
+    {
+
 		// The id of the record being edited comes from the request: a reference
 		// field is rendered inside that record's own form.
 		$id = (int) Factory::getApplication()->getInput()->getInt('id');
-
-		return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-	}
-
+return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+    }
 }

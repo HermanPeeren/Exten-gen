@@ -82,7 +82,7 @@ final class Joomla6Target implements TargetInterface
      *
      * @since  0.9.0
      */
-    public function validator(): ?ValidatorInterface
+    public function validator(): ValidatorInterface
     {
         return new ProjectValidator();
     }
@@ -123,12 +123,21 @@ final class Joomla6Target implements TargetInterface
      */
     public function generators(): array
     {
+        // The renderer first, and not for tidiness: LanguageStringUtil is a Twig
+        // extension, so constructing it loads Twig\Extension\AbstractExtension
+        // - and on a Joomla site the only thing that puts Twig on the autoload
+        // path is TwigRenderer, which requires the library's own vendor
+        // autoloader when it is first asked for a renderer. Built the other way
+        // round, generation died with "Class Twig\Extension\AbstractExtension
+        // not found" on a real site while passing every test here, because the
+        // suite's autoloader has Twig in it from composer.
+        //
+        // With `strict_variables` on: a mistyped name is an error rather than
+        // an empty string in a generated file.
+        $renderer = TwigRenderer::forDirectories($this->templateSetRoot(), $this->cacheDirectory);
+
         $languageStringUtil = new LanguageStringUtil();
 
-        // The shared renderer, with `strict_variables` on: a mistyped name is
-        // an error rather than an empty string in a generated file. Getting
-        // here is what step 1.8 was for.
-        $renderer = TwigRenderer::forDirectories($this->templateSetRoot(), $this->cacheDirectory);
         $renderer->addExtension($languageStringUtil);
 
         return array_map(

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extesion Generator
 
@@ -12,9 +13,6 @@
 namespace Yepr\Component\Extengen\Administrator\View\GenerateForm;
 
 defined('_JEXEC') or die;
-
-// Get Twig: use the Composer autoloader todo: use the DIC and add this service
-require_once JPATH_LIBRARIES . '/yepr/vendor/autoload.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
@@ -32,7 +30,6 @@ use Joomla\CMS\Pagination\Pagination;
  */
 class HtmlView extends BaseHtmlView
 {
-
 	/**
 	 * Method to display the view.
 	 *
@@ -42,6 +39,7 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null): void
 	{
+        /** @var \Yepr\Component\Extengen\Administrator\Model\GenerateProjectFormModel $model */
         $model = $this->getModel();
 
 		// Get the project_id and put it in the model
@@ -57,5 +55,4 @@ class HtmlView extends BaseHtmlView
 
 		//parent::display($tpl);
 	}
-
 }

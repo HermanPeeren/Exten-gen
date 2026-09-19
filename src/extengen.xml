@@ -28,6 +28,7 @@
 	</update>
 	<!-- Front-end files. No component-frontend, only media. -->
 	<media folder="media/com_extengen" destination="com_extengen">
+		<filename>joomla.asset.json</filename>
 		<folder>js</folder>
 	</media>
 	<!-- Back-end files -->

@@ -73,6 +73,24 @@ final class JoomlaApiTest extends TestCase
                 'getApplication()->getInput(). AbstractWebApplication::$input is protected in '
                     . 'Joomla 6, so reading it from outside is a fatal, not a notice',
             ],
+            // Guard constants, not calls - which is why the 1.7 sweep walked
+            // straight past them. JPATH_PLATFORM was removed in Joomla 6 and
+            // survives only because the `behaviour - compat6` plugin defines
+            // it, exactly like \JHtmlSidebar. `defined('JPATH_PLATFORM') or
+            // die;` at the top of a class file is therefore just `die`, and
+            // ExtengenComponent.php carried one - so every request to the
+            // component returned 200 OK with an empty body, no error and
+            // nothing in any log.
+            // The J-prefixed names are Joomla 3's, and every one of them is an
+            // alias the compat6 plugin registers. `JUri` sat in five layouts.
+            'a J-prefixed class alias' => [
+                'JUri::',
+                'Joomla\CMS\Uri\Uri, the class the alias points at',
+            ],
+            'a guard on a constant Joomla 6 removed' => [
+                "defined('JPATH_PLATFORM')",
+                "defined('_JEXEC'), which is the guard Joomla 6 uses",
+            ],
             'the application input property, via a local' => [
                 '$app->input',
                 '$app->getInput(), for the same reason',

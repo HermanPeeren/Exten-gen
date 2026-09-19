@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extension Generator
  * @subpackage  Joomla6 Generator
@@ -30,7 +31,9 @@ class AdminEntities extends Generator
 		// Initialise variables
 		$project = $this->AST;
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
 
 		// The name of the component (without 'com_' prefix and possibly with capitals)
 		$componentName = ucfirst($this->componentName);
@@ -38,7 +41,7 @@ class AdminEntities extends Generator
 
 
 		// Path of generated file IN the directory for generated files of component
-		$generatedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
+		$generatedFilePath = 'administrator/components/com_' . strtolower($componentName) . '/';
 
 		// Where the sql files go inside the package. Nothing is opened here:
 		// the statements are collected below and the files added once complete,
@@ -67,8 +70,7 @@ class AdminEntities extends Generator
 		// Loop over the entities to make a map of entity_id to name and from entity_id to entity
 		$entityNameMap = [];
 		$entityMap     = [];
-		foreach ($project->datamodel as $entity)
-		{
+		foreach ($project->datamodel as $entity) {
 			$entityNameMap[$entity->entity_id] = ucfirst($entity->entity_name);
 			$entityMap[$entity->entity_id]     = $entity;
 		}
@@ -77,11 +79,9 @@ class AdminEntities extends Generator
 		$sqlCreateTable = [];
 		$sqlDropTable   = [];
 		$junctionTables = [];
-		foreach ($project->datamodel as $entity)
-		{
+		foreach ($project->datamodel as $entity) {
 			// Only Entities have their own table, not Embeddables / Value Objects.
-			if (!property_exists($entity, 'isvalueobject'))
-			{
+			if (!property_exists($entity, 'isvalueobject')) {
 				$entityName = ucfirst($entity->entity_name);
 				$templateVariables['entityName'] = $entityName;
 				$templateVariables['getFK'] = '';
@@ -109,12 +109,10 @@ class AdminEntities extends Generator
 				$attributeRows[] = "`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT";
 
 				// Add fields
-				foreach ($entity->field as $field)
-				{
-					switch($field->field_type)
-					{
+				foreach ($entity->field as $field) {
+					switch ($field->field_type) {
 						case "property":
-							$attributeRows[]= '`'
+							$attributeRows[] = '`'
 								. $field->field_name . '` '
 								. $this->standard2SqlTypes($field->property->type);
 							break;
@@ -123,14 +121,10 @@ class AdminEntities extends Generator
 							$refEntity = $entityMap[$field->reference->reference];
 
 							// For references to Embeddables: add a db-text-field with that reference-name
-							if (property_exists($refEntity, 'isvalueobject'))
-							{
-								$attributeRows[]= '`' . strtolower($field->field_name) . '` ' . "TEXT";
-							}
-							else
-							{
-								if (property_exists($field->reference, 'ismultiple'))
-								{
+							if (property_exists($refEntity, 'isvalueobject')) {
+								$attributeRows[] = '`' . strtolower($field->field_name) . '` ' . "TEXT";
+							} else {
+								if (property_exists($field->reference, 'ismultiple')) {
 									// Many-to-many relation
 									$fromEntityName = strtolower($entityName);
 									$toEntityName   = strtolower($entityNameMap[$field->reference->reference]);
@@ -144,27 +138,22 @@ class AdminEntities extends Generator
 											'toEntityName'   => $toEntityName,
 										];
 									// todo: skip the getter in the next line; will be in the model (via a template fragment)
-									//$templateVariables['getFK'] .= $this->getFK($fromEntityName, $field->field_name, $toEntityName);
 
 									$templateVariables['pivotTable'] =
 										$fromEntityName > $toEntityName ? $toEntityName . '_' . $fromEntityName : $fromEntityName . '_' . $toEntityName;
 
 									$subTemplates = ['m2m_bind', 'm2m_delete', 'm2m_localstore', 'm2m_relatedstore'];
-									foreach ($subTemplates as $subTemplate)
-									{
-										$templateVariables[$subTemplate] .= $this->renderTemplateFragment
-										(
+									foreach ($subTemplates as $subTemplate) {
+										$templateVariables[$subTemplate] .= $this->renderTemplateFragment(
 											$templateFilePath . 'fragments/',
 											$subTemplate . '.php.twig',
 											$templateVariables
 										);
 									}
 									// todo: also add this to the JTable of the other side!
-								}
-								else
-								{
+								} else {
 									// For references to a single entity (many-to-one relation): add the foreign key
-									$attributeRows[]= '`'
+									$attributeRows[] = '`'
 										. strtolower($entityNameMap[$field->reference->reference]) . '_id` '
 										. "bigint(20) UNSIGNED";
 								}
@@ -191,35 +180,32 @@ class AdminEntities extends Generator
 
 				$logAppend($this->generateFileWithTemplate($templateFilePath, $templateFileName, $generatedTablesPath, $generatedFileName, $templateVariables));
 			}
-
 		}
 
 		// Junction tables
-		if (!empty($junctionTables))
-		{
+		if (!empty($junctionTables)) {
 			// Get rid of duplicate junction tables (junction table fromEntity->toEntity == toEntity->fromEntity)
-			$sortedJunctions       = array_map(function(array $entityNames)
-										{
+			$sortedJunctions       = array_map(
+                function (array $entityNames) {
 											// Sort the two entityNames alphabetcally
 											$sortedJunction = $entityNames;
-											if($entityNames['fromEntityName'] > $entityNames['toEntityName'])
-											{
-
+											if ($entityNames['fromEntityName'] > $entityNames['toEntityName']) {
 												$sortedJunction['fromEntityName'] = $entityNames['toEntityName'];
 												$sortedJunction['toEntityName'] = $entityNames['fromEntityName'];
 											}
 											return $sortedJunction;
-										}
-				                    , $junctionTables);
+                },
+                $junctionTables
+            );
 
 			$uniqueJunctionStrings = array_unique(array_map(
 				fn(array $junction): string => $junction['fromEntityName'] . $junction['toEntityName'],
-				$sortedJunctions));
+                $sortedJunctions
+            ));
 			$uniqueJunctions       = array_intersect_key($sortedJunctions, $uniqueJunctionStrings);
 
 			// Create the junction tables from uniqueJunctions-array
-			foreach ($uniqueJunctions as $uniqueJunction)
-			{
+			foreach ($uniqueJunctions as $uniqueJunction) {
 				$tableName = '#__' . strtolower($componentName)
 					. "_" . strtolower($uniqueJunction['fromEntityName'])
 					. "_" . strtolower($uniqueJunction['toEntityName']);
@@ -232,8 +218,8 @@ class AdminEntities extends Generator
 				// Add both foreign keys for the junction
 				$id1 = '`' . strtolower($uniqueJunction['fromEntityName']) . '_id`';
 				$id2 = '`' . strtolower($uniqueJunction['toEntityName']) . '_id`';
-				$tableRows[]= $id1 . " bigint(20) UNSIGNED,";
-				$tableRows[]= $id2 . " bigint(20) UNSIGNED,";
+				$tableRows[] = $id1 . " bigint(20) UNSIGNED,";
+				$tableRows[] = $id2 . " bigint(20) UNSIGNED,";
 
 				// And make the combination the primary key of the junction table
 				$tableRows[] = "PRIMARY KEY ($id1, $id2)";
@@ -243,7 +229,6 @@ class AdminEntities extends Generator
 				$sqlCreateTable[] = implode("\n", $tableRows);
 				$logAppend(['generated CREATE TABLE sql statement for ' . $tableName . ' in sql-file']);
 			}
-
 		}
 
 		// Add the sql files, now that every statement has been collected.
@@ -286,8 +271,7 @@ class AdminEntities extends Generator
 	 */
 	private function standard2SqlTypes($standardType)
 	{
-		switch ($standardType)
-		{
+		switch ($standardType) {
 			case ('Integer'):
 				$sqlDef = "int NOT NULL DEFAULT 0";
 				break;
@@ -332,83 +316,5 @@ class AdminEntities extends Generator
 		}
 
 		return $sqlDef;
-
-	}
-
-	/**
-	 * Add methods to the Table object of an entity to get the n:n entities that are referenced to
-	 *
-	 * @param string $fromEntityName  (lowercase)
-	 * @param string $fieldName       The fieldName of the collection of foreign entities
-	 * @param string $toEntityName    (lowercase)
-	 *
-	 * @return string 2 methods: to retrieve the foreign entities and to only retrieve their ids
-	 *
-	 */
-	private function getFK(string $fromEntityName, string $fieldName, string $toEntityName)
-	{
-		$componentName  = strtolower($this->componentName);
-		$u1ToEntityName = ucfirst($toEntityName);
-		$combi          = $fromEntityName > $toEntityName ? $toEntityName . '_' . $fromEntityName : $fromEntityName . '_' . $toEntityName;
-		$junctionTable  = '#__' . $componentName . '_' . $combi;
-		$otherTable     = '#__' . $componentName . '_' . $toEntityName;
-
-		$getFK = [];
-
-		// Leave out a get of the other entity: will do that in the model
-		/*$getFK[] = '    ';
-		$getFK[] = '    public function get' . ucfirst($fieldName) . '()';
-		$getFK[] = '    {';
-		$getFK[] = '        $db    = $this->getDbo();';
-		$getFK[] = '        $query = $db->getQuery(true)';
-		$getFK[] = '            ->select($db->quoteName(\''. $toEntityName . '\') . \'.*\')';
-		$getFK[] = '            ->from($db->quoteName(\'' . $junctionTable . '\', \'junction\'))';
-		$getFK[] = '            ->join(\'LEFT\', 
-								    $db->quoteName(\'' . $otherTable . '\', \''. $toEntityName . '\'), 
-									$db->quoteName(\'junction.'. $toEntityName . '_id\') . \' = \' . $db->quoteName(\''. $toEntityName . '.id\'))';
-		$getFK[] = '            ->where($db->quoteName(\''. $fromEntityName . '_id\') . \' = :thisId\')';
-		$getFK[] = '            ->order($db->quoteName(\'id\') . \' ASC\')';
-		$getFK[] = '            ->bind(\':thisId\', $this->id, ParameterType::INTEGER);';
-		$getFK[] = '        ';
-		$getFK[] = '        $' . $fieldName . ' = $db->setQuery($query)->loadAssocList() ?: [];';
-		$getFK[] = '        ';
-		$getFK[] = '        return $' . $fieldName . ';';
-		$getFK[] = '    }';*/
-
-
-		$getFK[] = '    ';
-		$getFK[] = '    public function get' . ucfirst($fieldName) . '()';
-		$getFK[] = '    {';
-		$getFK[] = '        $db    = $this->getDbo();';
-		$getFK[] = '        $query = $db->getQuery(true)';
-		$getFK[] = '            ->select($db->quoteName(\''. $toEntityName . '\') . \'.*\')';
-		$getFK[] = '            ->from($db->quoteName(\'' . $junctionTable . '\', \'junction\'))';
-		$getFK[] = '            ->join(\'LEFT\', 
-								    $db->quoteName(\'' . $otherTable . '\', \''. $toEntityName . '\'), 
-									$db->quoteName(\'junction.'. $toEntityName . '_id\') . \' = \' . $db->quoteName(\''. $toEntityName . '.id\'))';
-		$getFK[] = '            ->where($db->quoteName(\''. $fromEntityName . '_id\') . \' = :thisId\')';
-		$getFK[] = '            ->order($db->quoteName(\'id\') . \' ASC\')';
-		$getFK[] = '            ->bind(\':thisId\', $this->id, ParameterType::INTEGER);';
-		$getFK[] = '        ';
-		$getFK[] = '        $' . $fieldName . ' = $db->setQuery($query)->loadAssocList() ?: [];';
-		$getFK[] = '        ';
-		$getFK[] = '        return $' . $fieldName . ';';
-		$getFK[] = '    }';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		return implode("\n", $getFK);
 	}
 }

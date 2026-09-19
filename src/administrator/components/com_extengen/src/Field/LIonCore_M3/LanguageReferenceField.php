@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -36,23 +37,24 @@ class LanguageReferenceField extends ListField
 		$languageNameMap[0] = '&nbsp;';
 
 		$AST = $this->initiateAST();
-		if (!is_null($AST))
-		{
+		if (!is_null($AST)) {
 			// TODO: GET ALL LANGUAGES IN THIS SYSTEM FROM DB
 			// Get the entities that are currently in the model.
 			// todo: cache this (in the AST) and in the project-model
-			foreach ($AST->languageEntities as $languageEntity)
-			{
-				//if ($languageEntity->) // TODO: how to check if it is a language (= concept or annotation)?
-				$languageNameMap[$language->language_id] = ucfirst($language->language_name);
-			}
-
+			// TODO: nothing here yet, and deliberately nothing rather than
+			// something wrong. This loop read $language, a variable that is
+			// never defined - the loop variable is $languageEntity - so every
+			// call was a fatal. The reason it was never finished is written
+			// on the line it replaced: there is no agreed way to tell whether
+			// a languageEntity is a language. Listing all of them would be a
+			// list of the wrong things, which reads as working and is not.
+			//
+			// Step 3.1 rebuilds the LionWeb model and decides this.
 		}
 
         // use a for-each to iterate over the $languageNameMap
 		$languageOptions = [];
-        foreach($languageNameMap as $key => $languageName)
-        {
+        foreach ($languageNameMap as $key => $languageName) {
 	        // Set an array with the  value / text items.
 	        $languageOptions[] = array("value" => $key, "text" => $languageName);
         }
@@ -69,12 +71,11 @@ class LanguageReferenceField extends ListField
 	 * @return object|null
 	 */
 	private function initiateAST(): ?object
-	{
+    {
+
 		// The id of the record being edited comes from the request: a reference
 		// field is rendered inside that record's own form.
 		$id = (int) Factory::getApplication()->getInput()->getInt('id');
-
-		return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-	}
-
+return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+    }
 }

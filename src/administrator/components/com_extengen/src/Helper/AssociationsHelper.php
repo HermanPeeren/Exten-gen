@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -15,7 +16,11 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Association\AssociationExtensionHelper;
 use Joomla\CMS\Language\Associations;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Table\Category;
 use Joomla\CMS\Table\Table;
+use Joomla\Database\DatabaseInterface;
+use Yepr\Component\Extengen\Administrator\Table\ProjectTable;
 //use Yepr\Component\Extengen\Site\Helper\AssociationHelper;
 
 /**
@@ -28,7 +33,7 @@ class AssociationsHelper extends AssociationExtensionHelper
 	/**
 	 * The extension name
 	 *
-	 * @var     array   $extension
+	 * @var     string  $extension
 	 */
 	protected $extension = 'com_extengen';
 
@@ -84,8 +89,7 @@ class AssociationsHelper extends AssociationExtensionHelper
 		$context    = $this->extension . '.item';
 		$catidField = 'catid';
 
-		if ($typeName === 'category')
-		{
+		if ($typeName === 'category') {
 			$context    = 'com_categories.item';
 			$catidField = '';
 		}
@@ -114,26 +118,23 @@ class AssociationsHelper extends AssociationExtensionHelper
 	 */
 	public function getItem($typeName, $id)
 	{
-		if (empty($id))
-		{
+		if (empty($id)) {
 			return null;
 		}
 
 		$table = null;
 
-		switch ($typeName)
-		{
+		switch ($typeName) {
 			case 'project':
-				$table = Table::getInstance('ProjectTable', 'Yepr\\Component\\Extengen\\Administrator\\Table\\');
+				$table = new ProjectTable(Factory::getContainer()->get(DatabaseInterface::class));
 				break;
 
 			case 'category':
-				$table = Table::getInstance('Category');
+				$table = new Category(Factory::getContainer()->get(DatabaseInterface::class));
 				break;
 		}
 
-		if (empty($table))
-		{
+		if (empty($table)) {
 			return null;
 		}
 
@@ -157,10 +158,8 @@ class AssociationsHelper extends AssociationExtensionHelper
 		$support = $this->getSupportTemplate();
 		$title   = '';
 
-		if (in_array($typeName, $this->itemTypes))
-		{
-			switch ($typeName)
-			{
+		if (in_array($typeName, $this->itemTypes)) {
+			switch ($typeName) {
 				case 'extengen':
 					$fields['title'] = 'a.name';
 					$fields['state'] = 'a.published';
@@ -231,4 +230,3 @@ class AssociationsHelper extends AssociationExtensionHelper
 		);
 	}
 }
-

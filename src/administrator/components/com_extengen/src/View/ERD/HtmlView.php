@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -13,8 +14,6 @@ namespace Yepr\Component\Extengen\Administrator\View\ERD;
 
 defined('_JEXEC') or die;
 
-// Get Twig: use the Composer autoloader todo: use the DIC and add this service
-//require_once JPATH_LIBRARIES . '/yepr/vendor/autoload.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
@@ -33,7 +32,6 @@ use Joomla\CMS\MVC\View\GenericDataException;
  */
 class HtmlView extends BaseHtmlView
 {
-
 	/**
 	 * Method to display the view.
 	 *
@@ -44,6 +42,7 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null): void
 	{
+		/** @var \Yepr\Component\Extengen\Administrator\Model\ERDModel $model */
 		$model = $this->getModel();
 
 		// Get the project_id and put it in the model
@@ -57,18 +56,17 @@ class HtmlView extends BaseHtmlView
 		// todo: make the PlantUML-diagram in the model and only query that here
 
 		// Open the test-uml-file for writing
-		$umlfile = fopen( 'test.puml', "w") or die("Unable to open file!"); // todo: cache this file
+		$umlfile = fopen('test.puml', "w") or die("Unable to open file!"); // todo: cache this file
 
         $component = $project->extensions->component;
-		
+
 		// Loop over the entities to make a map of entity_id to name.
 		// Plus indicate if it is a value object in embeddableMap.
 		$entityNameMap = [];
 		$embeddableMap = [];
-		foreach ($project->datamodel as $entity)
-		{
+		foreach ($project->datamodel as $entity) {
 			$entityNameMap[$entity->entity_id] = ucfirst($entity->entity_name);
-			$embeddableMap[$entity->entity_id] = property_exists($entity, 'isvalueobject')?true:false;
+			$embeddableMap[$entity->entity_id] = property_exists($entity, 'isvalueobject') ? true : false;
 		}
 
 		// Initiate the uml-file.
@@ -88,73 +86,67 @@ skinparam ClassBackgroundColor<<value object>> LightCyan
 		$umlRef = [];
 
 		// Loop over the entities to create the uml-file
-		foreach ($project->datamodel as $entity)
-		{
+		foreach ($project->datamodel as $entity) {
 			$entityName = $entity->entity_name;
 
 			// value object
 			$valueObject = '';
 			$id = '';
-			if (property_exists($entity, 'isvalueobject')) $valueObject = ' <<(V,DeepSkyBlue)value object>> ';
-			if (!property_exists($entity, 'isvalueobject')) $id = '
+			if (property_exists($entity, 'isvalueobject')) {
+$valueObject = ' <<(V,DeepSkyBlue)value object>> ';
+            }
+			if (!property_exists($entity, 'isvalueobject')) {
+$id = '
   *id : number <<generated>>
   --';
+            }
 			$umlCreate[] = '			
-			entity "' . $entityName . '" ' .$valueObject . ' {' . $id . '
+			entity "' . $entityName . '" ' . $valueObject . ' {' . $id . '
   ';
 			$references = [];
 			// Add fields
-			foreach ($entity->field as $field)
-			{
-				switch ($field->field_type)
-				{
+			foreach ($entity->field as $field) {
+				switch ($field->field_type) {
 					case "property":
-						$type=$field->property->type;
+						$type = $field->property->type;
 						break;
 					case "reference":
-						$type=$entityNameMap[$field->reference->reference] . '  <<FK>>';
+						$type = $entityNameMap[$field->reference->reference] . '  <<FK>>';
 						$isMultiple = property_exists($field->reference, 'ismultiple') ? $field->reference->ismultiple : false;
 						$isRequired = property_exists($field->reference, 'isrequired') ? $field->reference->isrequired : false;
 						$references[] = [
-							'name'=>$entityNameMap[$field->reference->reference],
-							'ismultiple'=>$isMultiple,
-							'isrequired'=>$isRequired,
-							'referencesValueobject'=>$embeddableMap[$field->reference->reference]
+							'name' => $entityNameMap[$field->reference->reference],
+							'ismultiple' => $isMultiple,
+							'isrequired' => $isRequired,
+							'referencesValueobject' => $embeddableMap[$field->reference->reference]
 						];
 						break;
 					default:
-						$type="";
+						$type = "";
 				}
 				$umlCreate[] = ' *' . strtolower($field->field_name) . ' : ' . $type;
 			}
 			// Add reference(s)
-			foreach ($references as $reference)
-			{
-				if($reference['referencesValueobject'])
-				{
+			foreach ($references as $reference) {
+				if ($reference['referencesValueobject']) {
 					// It refers to an embeddable, a value object
-					$multipleSymbol = $reference['ismultiple']?'n':'1';
-					$requiredSymbol = $reference['isrequired']?'1':'0';
+					$multipleSymbol = $reference['ismultiple'] ? 'n' : '1';
+					$requiredSymbol = $reference['isrequired'] ? '1' : '0';
 					$multiplicity = $requiredSymbol . '..' . $multipleSymbol;
 					$umlRef[] =  $entityName . ' *-- "' . $multiplicity . '" ' . $reference['name'];
-				}
-				else
-				{
+				} else {
 					// Only use this when this entity owns the reference, so many2one, but not one2many! (except with embeddables)
 					// todo: better model the relation from both sides
-					$multipleSymbol = $reference['ismultiple']?'}':'|';
-					$requiredSymbol = $reference['isrequired']?'|':'o';
+					$multipleSymbol = $reference['ismultiple'] ? '}' : '|';
+					$requiredSymbol = $reference['isrequired'] ? '|' : 'o';
 					// todo: BUG: doesn't work for NOT multiple AND required: || works online in PlantUML, but not here???
 					$referenceSide = $multipleSymbol . $requiredSymbol;
 					$umlRef[] =  $reference['name'] . ' ' . $referenceSide . '..o{ ' . $entityName;
 				}
-
-
 			}
 			$umlCreate[] = "}
 			
 			";
-
 		}
 
 		// Add the relationships
@@ -174,20 +166,22 @@ skinparam ClassBackgroundColor<<value object>> LightCyan
 		$erd = "http://www.plantuml.com/plantuml/png/{$encode}";
 		// todo: caching when datamodel is unchanged
 		// echo $erd ."\n";
-		echo "<h2>Entity Relationship Diagram for " . $project->name ."</h2>";
+		echo "<h2>Entity Relationship Diagram for " . $project->name . "</h2>";
 		echo '<p><img src="' . $erd . '" /></p>';
 
 		//parent::display($tpl);
 	}
 
 // functions to call plantuml
-	private function encodep($text) {
+	private function encodep($text)
+    {
 		$data = mb_convert_encoding($text, 'UTF-8');
 		$compressed = gzdeflate($data, 9);
 		return $this->encode64($compressed);
 	}
 
-	private function encode6bit($b) {
+	private function encode6bit($b)
+    {
 		if ($b < 10) {
 			return chr(48 + $b);
 		}
@@ -209,7 +203,8 @@ skinparam ClassBackgroundColor<<value object>> LightCyan
 		return '?';
 	}
 
-	private function append3bytes($b1, $b2, $b3) {
+	private function append3bytes($b1, $b2, $b3)
+    {
 		$c1 = $b1 >> 2;
 		$c2 = (($b1 & 0x3) << 4) | ($b2 >> 4);
 		$c3 = (($b2 & 0xF) << 2) | ($b3 >> 6);
@@ -222,20 +217,23 @@ skinparam ClassBackgroundColor<<value object>> LightCyan
 		return $r;
 	}
 
-	private function encode64($c) {
+	private function encode64($c)
+    {
 		$str = "";
 		$len = strlen($c);
-		for ($i = 0; $i < $len; $i+=3) {
-			if ($i+2==$len) {
-				$str .= $this->append3bytes(ord(substr($c, $i, 1)), ord(substr($c, $i+1, 1)), 0);
-			} else if ($i+1==$len) {
+		for ($i = 0; $i < $len; $i += 3) {
+			if ($i + 2 == $len) {
+				$str .= $this->append3bytes(ord(substr($c, $i, 1)), ord(substr($c, $i + 1, 1)), 0);
+			} elseif ($i + 1 == $len) {
 				$str .= $this->append3bytes(ord(substr($c, $i, 1)), 0, 0);
 			} else {
-				$str .= $this->append3bytes(ord(substr($c, $i, 1)), ord(substr($c, $i+1, 1)),
-					ord(substr($c, $i+2, 1)));
+				$str .= $this->append3bytes(
+                    ord(substr($c, $i, 1)),
+                    ord(substr($c, $i + 1, 1)),
+                    ord(substr($c, $i + 2, 1))
+                );
 			}
 		}
 		return $str;
 	}
-
 }

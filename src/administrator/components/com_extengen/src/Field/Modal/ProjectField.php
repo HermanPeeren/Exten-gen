@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -11,7 +12,7 @@
 
 namespace Yepr\Component\Extengen\Administrator\Field\Modal;
 
-defined('JPATH_BASE') or die;
+\defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormField;
@@ -53,23 +54,22 @@ class ProjectField extends FormField
 		HTMLHelper::_('script', 'system/fields/modal-fields.min.js', array('version' => 'auto', 'relative' => true));
 
 		// Script to proxy the select modal function to the modal-fields.js file.
-		if ($allowSelect)
-		{
+		if ($allowSelect) {
 			static $scriptSelect = null;
 
-			if (is_null($scriptSelect))
-			{
+			if (is_null($scriptSelect)) {
 				$scriptSelect = array();
 			}
 
-			if (!isset($scriptSelect[$this->id]))
-			{
-				Factory::getApplication()->getDocument()->addScriptDeclaration("
+			if (!isset($scriptSelect[$this->id])) {
+				/** @var \Joomla\CMS\Application\CMSWebApplicationInterface $app */
+			$app = Factory::getApplication();
+
+			$app->getDocument()->getWebAssetManager()->addInlineScript("
 				function jSelectProject_" . $this->id . "(id, title, object) {
 					window.processModalSelect('Project', '" . $this->id . "', id, title, '', object);
 				}
-				"
-				);
+				");
 
 				$scriptSelect[$this->id] = true;
 			}
@@ -80,8 +80,7 @@ class ProjectField extends FormField
 		$linkProject  = 'index.php?option=com_extengen&amp;view=project&amp;layout=modal&amp;tmpl=component&amp;' . Session::getFormToken() . '=1';
 		$modalTitle   = Text::_('COM_EXTENGEN_SELECT_A_PROJECT');
 
-		if (isset($this->element['language']))
-		{
+		if (isset($this->element['language'])) {
 			$linkProjects .= '&amp;forcedLanguage=' . $this->element['language'];
 			$linkProject   .= '&amp;forcedLanguage=' . $this->element['language'];
 			$modalTitle     .= ' &#8212; ' . $this->element['label'];
@@ -89,8 +88,7 @@ class ProjectField extends FormField
 
 		$urlSelect = $linkProjects . '&amp;function=jSelectProject_' . $this->id;
 
-		if ($value)
-		{
+		if ($value) {
 			$db    = $this->getDatabase();
 			$query = $db->getQuery(true)
 				->select($db->quoteName('name'))
@@ -98,12 +96,9 @@ class ProjectField extends FormField
 				->where($db->quoteName('id') . ' = ' . (int) $value);
 			$db->setQuery($query);
 
-			try
-			{
+			try {
 				$title = $db->loadResult();
-			}
-			catch (\RuntimeException $e)
-			{
+			} catch (\RuntimeException $e) {
 				Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
 			}
 		}
@@ -113,21 +108,18 @@ class ProjectField extends FormField
 		// The current project display field.
 		$html  = '';
 
-		if ($allowSelect || $allowNew || $allowEdit || $allowClear)
-		{
+		if ($allowSelect || $allowNew || $allowEdit || $allowClear) {
 			$html .= '<span class="input-group">';
 		}
 
 		$html .= '<input class="form-control" id="' . $this->id . '_name" type="text" value="' . $title . '" disabled="disabled" size="35">';
 
-		if ($allowSelect || $allowNew || $allowEdit || $allowClear)
-		{
+		if ($allowSelect || $allowNew || $allowEdit || $allowClear) {
 			$html .= '<span class="input-group-append">';
 		}
 
 		// Select project button
-		if ($allowSelect)
-		{
+		if ($allowSelect) {
 			$html .= '<button'
 				. ' class="btn btn-primary hasTooltip' . ($value ? ' hidden' : '') . '"'
 				. ' id="' . $this->id . '_select"'
@@ -140,8 +132,7 @@ class ProjectField extends FormField
 		}
 
 		// Clear project button
-		if ($allowClear)
-		{
+		if ($allowClear) {
 			$html .= '<button'
 				. ' class="btn btn-secondary' . ($value ? '' : ' hidden') . '"'
 				. ' id="' . $this->id . '_clear"'
@@ -151,14 +142,12 @@ class ProjectField extends FormField
 				. '</button>';
 		}
 
-		if ($allowSelect || $allowNew || $allowEdit || $allowClear)
-		{
+		if ($allowSelect || $allowNew || $allowEdit || $allowClear) {
 			$html .= '</span></span>';
 		}
 
 		// Select project modal
-		if ($allowSelect)
-		{
+		if ($allowSelect) {
 			$html .= HTMLHelper::_(
 				'bootstrap.renderModal',
 				'ModalSelect' . $modalId,

@@ -12,6 +12,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Installer\Installer;
 use Joomla\CMS\Installer\InstallerAdapter;
+use Joomla\CMS\Installer\InstallerHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
@@ -110,10 +111,23 @@ class Com_ExtengenInstallerScript
             return true;
         }
 
-        $package = $parent->getParent()->getPath('source') . '/library';
+        $directory = $parent->getParent()->getPath('source') . '/library';
+        $archives  = is_dir($directory) ? (glob($directory . '/*.zip') ?: []) : [];
 
-        if (!is_dir($package)) {
+        if ($archives === []) {
             $this->say('The Yepr Gen library is not in this package, so it could not be installed.', 'warning');
+
+            return true;
+        }
+
+        // The package carries the library as a zip, and Installer::install()
+        // wants a directory with a manifest in it - handed the zip it reports
+        // "Can't find XML setup file", which is true and unhelpful. Unpacking
+        // first is what Joomla does everywhere it installs from an archive.
+        $unpacked = InstallerHelper::unpack((string) $archives[0], true);
+
+        if ($unpacked === false) {
+            $this->say('The Yepr Gen library archive could not be unpacked.', 'warning');
 
             return true;
         }
@@ -121,7 +135,14 @@ class Com_ExtengenInstallerScript
         $installer = new Installer();
         $installer->setDatabase(Factory::getContainer()->get(DatabaseInterface::class));
 
-        if ($installer->install($package)) {
+        // Not named $installed: that already holds the version this site had,
+        // and the message below distinguishes an install from an update by it.
+        $success = $installer->install($unpacked['extractdir']);
+
+        // Whether it worked or not, the unpacked copy is temporary.
+        InstallerHelper::cleanupInstall((string) $archives[0], $unpacked['extractdir']);
+
+        if ($success) {
             $this->say(
                 $installed === null
                     ? 'The Yepr Gen library was installed.'

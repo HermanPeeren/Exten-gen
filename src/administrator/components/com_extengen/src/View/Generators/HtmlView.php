@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -30,6 +31,12 @@ use Joomla\CMS\MVC\View\GenericDataException;
  */
 class HtmlView extends BaseHtmlView
 {
+	/**
+	 * The HTML for the sidebar, which the layout prints when there is any.
+	 *
+	 * @var  string
+	 */
+	protected $sidebar;
 
 	/**
 	 * Method to display the view.
@@ -79,64 +86,17 @@ class HtmlView extends BaseHtmlView
 	{
 		//$canDo = ContentHelper::getActions('com_extengen', 'category', $this->state->get('filter.category_id'));
 
-		$user  = $this->getCurrentUser();
-
 		// Get the toolbar object instance
-		$toolbar = Toolbar::getInstance('toolbar');
+		$toolbar = $this->getDocument()->getToolbar();
 
 		ToolbarHelper::title(Text::_('COM_EXTENGEN_MANAGER_GENERATORS'), 'gnerators');
 
-		//if ($canDo->get('core.create') || count($user->getAuthorisedCategories('com_extengen', 'core.create')) > 0)
-		//{
-			$toolbar->addNew('generator.add');
-		//}
-
-		//if ($canDo->get('core.edit.state'))
-		//{
-			$dropdown = $toolbar->dropdownButton('status-group')
-				->text('JTOOLBAR_CHANGE_STATUS')
-				->toggleSplit(false)
-				->icon('fa fa-globe')
-				->buttonClass('btn btn-info')
-				->listCheck(true);
-
-			$childBar = $dropdown->getChildToolbar();
-
-			//$childBar->publish('projects.publish')->listCheck(true);
-
-			//$childBar->unpublish('projects.unpublish')->listCheck(true);
-
-			//$childBar->archive('projects.archive')->listCheck(true);
-
-			if ($user->authorise('core.admin'))
-			{
-				$childBar->checkin('generators.checkin')->listCheck(true);
-			}
-
-			//if ($this->state->get('filter.published') != -2)
-			//{
-				$childBar->trash('extengen.trash')->listCheck(true);
-			//}
-		//}
-
-		$toolbar->popupButton('batch')
-			->text('JTOOLBAR_BATCH')
-			->selector('collapseModal')
-			->listCheck(true);
-
-		//if ($this->state->get('filter.published') == -2 && $canDo->get('core.delete'))
-		//{
-			$toolbar->delete('projects.delete')
-				->text('JTOOLBAR_EMPTY_TRASH')
-				->message('JGLOBAL_CONFIRM_DELETE')
-				->listCheck(true);
-		//}
-
-		if ($user->authorise('core.admin', 'com_extengen') || $user->authorise('core.options', 'com_extengen'))
-		{
-			$toolbar->preferences('com_extengen');
-		}
-
+		// Nothing else. This page lists nothing yet - it says so in its own
+		// body - and the list toolbar it used to build was not harmless: every
+		// button carried listCheck(true), which makes Joomla's JavaScript
+		// require a form called adminForm, and there is no form on a page that
+		// shows a paragraph of text. The console said so on every visit.
+		// The buttons come back when there is a list for them to act on.
 		ToolbarHelper::divider();
 		ToolbarHelper::help('', false, 'https://yepr.nl');
 

@@ -2,8 +2,13 @@
   "name": "exten-gen",
   "private": true,
   "type": "module",
-  "description": "Test runner for the component's browser JavaScript. No dependencies: Node's own test runner is enough, and a Joomla extension has no build step.",
+  "description": "Browser tests for the component: node:test for the logic that needs no DOM, Cypress for what needs a running Joomla.",
   "scripts": {
-    "test": "node --test tests/js/"
+    "test": "node --test tests/js/",
+    "cypress": "cypress run",
+    "cypress:open": "cypress open"
+  },
+  "devDependencies": {
+    "cypress": "^15.21.1"
   }
 }

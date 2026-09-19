@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -21,7 +22,6 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\Database\DatabaseInterface;
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Extengen HTML class.
@@ -43,10 +43,8 @@ class AdministratorService
 		$html = '';
 
 		// Get the associations
-		if ($associations = Associations::getAssociations('com_extengen', '#__extengen_projects', 'com_extengen.item', $projectid, 'id', null))
-		{
-			foreach ($associations as $tag => $associated)
-			{
+		if ($associations = Associations::getAssociations('com_extengen', '#__extengen_projects', 'com_extengen.item', $projectid, 'id', null)) {
+			foreach ($associations as $tag => $associated) {
 				$associations[$tag] = (int) $associated->id;
 			}
 
@@ -65,19 +63,14 @@ class AdministratorService
 				->select('l.title as language_title');
 			$db->setQuery($query);
 
-			try
-			{
+			try {
 				$items = $db->loadObjectList('id');
-			}
-			catch (\RuntimeException $e)
-			{
+			} catch (\RuntimeException $e) {
 				throw new \Exception($e->getMessage(), 500, $e);
 			}
 
-			if ($items)
-			{
-				foreach ($items as &$item)
-				{
+			if ($items) {
+				foreach ($items as &$item) {
 					$text = strtoupper($item->lang_sef);
 					$url = Route::_('index.php?option=com_extengen&task=project.edit&id=' . (int) $item->id);
 					$tooltip = '<strong>' . htmlspecialchars($item->language_title, ENT_QUOTES, 'UTF-8') . '</strong><br>'
@@ -112,7 +105,7 @@ class AdministratorService
             0 => ['unfeatured', 'projects.featured', 'COM_CONTACT_UNFEATURED', 'JGLOBAL_ITEM_FEATURE'],
             1 => ['featured', 'projects.unfeatured', 'JFEATURED', 'JGLOBAL_ITEM_UNFEATURE'],
         ];
-        $state = ArrayHelper::getValue($states, (int) $value, $states[1]);
+        $state = $states[(int) $value] ?? $states[1];
         $icon = $state[0] === 'featured' ? 'star featured' : 'star';
 
         if ($canChange) {

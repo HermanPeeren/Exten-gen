@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extension Generator
  * @subpackage  Joomla6 Generator
@@ -31,14 +32,16 @@ class SiteMVC extends Generator
 		// Initialise variables (same as AdminMVC, can we combine that?)
 		$project = $this->AST;
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
 
 		// The name of the component (without 'com_' prefix and possibly with capitals)
 		$componentName = $this->componentName;
 
 
 		$templateFilePathRoot = 'component/components/com_componentname/';
-		$generatedFilePathRoot = 'components/com_'.strtolower($componentName).'/';
+		$generatedFilePathRoot = 'components/com_' . strtolower($componentName) . '/';
 
 		$templateVariables = ['componentName' => $componentName];
 		$manifest = $project->extensions->component->manifest;
@@ -53,19 +56,16 @@ class SiteMVC extends Generator
 		// todo: make this more general to use it when building generators in Extengen
 		$entityMap = [];
 		$fieldMap  = [];
-		foreach ($project->datamodel as $entity)
-		{
+		foreach ($project->datamodel as $entity) {
 			$entityMap[$entity->entity_id] = $entity;
-			foreach ($entity->field as $field)
-			{
+			foreach ($entity->field as $field) {
 				$fieldMap[$field->field_id] = $field;
 			}
 		}
 
 		// Loop over the pages to make a map of page_id to page-definition
 		$pageMap = [];
-		foreach ($project->pages as $page)
-		{
+		foreach ($project->pages as $page) {
 			$pageMap[$page->page_id] = $page;
 		}
 
@@ -81,16 +81,14 @@ class SiteMVC extends Generator
 		// --- until here is same as AdminMVC ---
 
 		// loop over the page-references for the backend
-		foreach ($project->extensions->component->Sections->frontendsection as $ref)
-		{
+		foreach ($project->extensions->component->Sections->frontendsection as $ref) {
 			// some properties of the page
 			$page = $pageMap[$ref->page_reference];
 			$pageName = ucfirst($page->page_name);
-			$pageType = (($page->page_type)=='indexpage')?'Index':'Details';// todo: switch, for there will be more page types
+			$pageType = (($page->page_type) == 'indexpage') ? 'Index' : 'Details';// todo: switch, for there will be more page types
 
 			// DefaultView = first index page in frontend. Todo: add a defaultview to the project/model
-			if (empty($templateVariables['defaultView']) && ($pageType=='Index'))
-			{
+			if (empty($templateVariables['defaultView']) && ($pageType == 'Index')) {
 				$templateVariables['defaultView'] = $pageName; // to be used in DisplayController
 			}
 
@@ -100,7 +98,7 @@ class SiteMVC extends Generator
 			// Only one link possible from a page. Todo: adjust model to only give one link (or use multiple links)
 			// If links is (still) empty? ==> check if links not empty! Otherwise: get another linkPageName: current pageName;
 			$linkPageName = $pageName;
-			if(!empty($page->links)) {
+			if (!empty($page->links)) {
 				$linkPageRef = $page->links->links0->target_page->page_reference;
 				$linkPage    = $pageMap[$linkPageRef];
 				$linkPageName = ucfirst($linkPage->page_name);
@@ -111,13 +109,13 @@ class SiteMVC extends Generator
 			// todo: get editFields/presentationFields from page to get the exact fields you want to use on this page
 			// todo: this only uses 1 entity.... what if multiple references??? How is this $entity used?
 			//N.B.: index- and detailspages should have at least 1 entity! But now possibly not => make it null
-			$entityRef = (property_exists($page,'entity_ref') && !empty($page->entity_ref))?$page->entity_ref->entity_ref0->reference:null;
-			$entity = $entityRef?$entityMap[$entityRef]:null;
+			$entityRef = (property_exists($page, 'entity_ref') && !empty($page->entity_ref)) ? $page->entity_ref->entity_ref0->reference : null;
+			$entity = $entityRef ? $entityMap[$entityRef] : null;
 
 			// deep casted to array, because Twig cann't loop over object attributes
 			$templateVariables['entity'] = json_decode(json_encode($entity), true);
 
-			$entityName = $entity?$entity->entity_name:"";
+			$entityName = $entity ? $entity->entity_name : "";
 			$templateVariables['entityName'] = $entityName;
 
 			// Joined entities n:1 relations // todo: other type of relations
@@ -125,15 +123,11 @@ class SiteMVC extends Generator
 			// todo: editFields for the detailspage and representationcolumns for the indexpage: they can overwrite the default fields from the entity.
 
 			// Per page-reference: make a Model, View and Controller
-			foreach ($MVCtypes as $MVCtype)
-			{
+			foreach ($MVCtypes as $MVCtype) {
 				// Create Model, View or Controller  // todo: reorganise for Views: in subfolder with different names...
-				if ($MVCtype!='View')
-				{
-
+				if ($MVCtype != 'View') {
 					// Filters, only for index-pages
-					if ($pageType=='Index')
-					{
+					if ($pageType == 'Index') {
 						// Per filter make an associative array for the template: [fieldName, columnName]
 						// Where
 						//      * fieldName  = the local field name of the entity
@@ -142,8 +136,7 @@ class SiteMVC extends Generator
 
 						// Loop over the filters in the AST and make variables for the SiteIndexModel-template
 						// Todo: make this more general for similar cases in generators, when building the generator in Extengen
-						foreach ($page->filters as $filter)
-						{
+						foreach ($page->filters as $filter) {
 							$entity_id = $filter->entity_reference;
 							$entity    = $entityMap[$entity_id];
 
@@ -155,18 +148,15 @@ class SiteMVC extends Generator
 							// ColumnName depends on this being a property of this entity or a reference (foreign key)
 
 							//    - Property: the fieldName and columnName are the same
-							if (($field->field_type) == "property")
-							{
+							if (($field->field_type) == "property") {
 								$filtersInTemplate[] = [
 									'fieldName'  => $fieldName,
 									'columnName' => $fieldName
 								];
-
 							}
 
 							//    - Reference (n:1): the columnName is the foreign key
-							if (($field->field_type) == "reference")
-							{
+							if (($field->field_type) == "reference") {
 								$reference = $field->reference;
 
 								$refEntity_id = $reference->reference_id;
@@ -187,15 +177,12 @@ class SiteMVC extends Generator
 						$propertyFieldNames = [];
 						// Add fields for joined tables
 						$foreign = [];
-						if (!empty($entity))
-						foreach ($entity->field as $field)
-						{
-							if (($field->field_type) == "property")
-							{
+						if (!empty($entity)) {
+						foreach ($entity->field as $field) {
+							if (($field->field_type) == "property") {
 								$propertyFieldNames[] = $field->field_name;
 							}
-							if ((($field->field_type) == "reference") && (!property_exists($field->reference,'ismultiple')))
-							{
+							if ((($field->field_type) == "reference") && (!property_exists($field->reference, 'ismultiple'))) {
 								$fieldName = $field->field_name;
 								$reference = $field->reference;
 
@@ -209,10 +196,8 @@ class SiteMVC extends Generator
 								// for now only take a default_ref_field of the foreign entity (or id if none is specified)
 
 								$refDisplayFieldName = 'id';
-								foreach ($refEntity->field as $foreignField)
-								{
-									if ((($foreignField->field_type)=="property") && property_exists($foreignField->property,'default_ref_display'))
-									{
+								foreach ($refEntity->field as $foreignField) {
+									if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display')) {
 										$refDisplayFieldName = $foreignField->field_name;
 										break;
 									}
@@ -226,19 +211,17 @@ class SiteMVC extends Generator
 								];
 							}
 						}
+                        }
 						$templateVariables['propertyFieldNames'] = $propertyFieldNames;
 						$templateVariables['foreign']            = $foreign;
 					}
 
 
 					// associate local field names (= field names in form) and foreign keys (= column name in db-table)
-					if ($pageType=='Details')
-					{
+					if ($pageType == 'Details') {
 						$foreign = [];
-						foreach ($entity->field as $field)
-						{
-							if (($field->field_type) == "reference")
-							{
+						foreach ($entity->field as $field) {
+							if (($field->field_type) == "reference") {
 								$fieldName = $field->field_name;
 								$reference = $field->reference;
 
@@ -264,14 +247,13 @@ class SiteMVC extends Generator
 					$generatedFilePath = $generatedFilePathRoot  . 'src/' . $MVCtype . '/';
 				}
 
-				if ($MVCtype=='View')
-				{
+				if ($MVCtype == 'View') {
 					// todo: filters for index view
 
 					$templateFileName = 'HtmlView.php.twig';
 					$generatedFileName = 'HtmlView.php';
-					$templateFilePath = $templateFilePathRoot . 'src/View/'. $pageType . '/';
-					$generatedFilePath = $generatedFilePathRoot  . 'src/View/'. $pageName . '/';
+					$templateFilePath = $templateFilePathRoot . 'src/View/' . $pageType . '/';
+					$generatedFilePath = $generatedFilePathRoot  . 'src/View/' . $pageName . '/';
 				}
 
 				// And generate the MVC-file
@@ -279,8 +261,7 @@ class SiteMVC extends Generator
 			}
 
 			// Create tmpl-file for the Index-View
-			if ($pageType=='Index')
-			{
+			if ($pageType == 'Index') {
 				$templateFileName = 'default.php.twig';
 				$generatedFileName = 'default.php';
 				$templateFilePath = $templateFilePathRoot . 'tmpl/index/';
@@ -291,8 +272,7 @@ class SiteMVC extends Generator
 			}
 
 			// Create tmpl-file for the Details-View
-			if ($pageType=='Details')
-			{
+			if ($pageType == 'Details') {
 				// The site has no edit template: a front-end details page shows a
 				// record, it does not edit one. This asked for the administrator's
 				// name, which exists nowhere under components/, so generating any
@@ -305,7 +285,6 @@ class SiteMVC extends Generator
 				// And generate the file
 				$logAppend($this->generateFileWithTemplate($templateFilePath, $templateFileName, $generatedFilePath, $generatedFileName, $templateVariables));
 			}
-
 		}
 
 		// Add a DisplayController

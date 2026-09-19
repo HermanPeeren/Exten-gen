@@ -13,6 +13,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Session\Session;
@@ -112,7 +113,7 @@ if ($saveOrder && !empty($this->items))
 
 								</th>
                                 <td class="text-center btns d-none d-md-table-cell">
-                                    <a class="btn btn-info dynbutton"  data-bs-toggle="modal"  href="#generationModal" data-href="<?php echo JUri::root(); ?>administrator/index.php?option=com_extengen&view=generate&tmpl=component&project_id=<?php echo $item->id; ?>">
+                                    <a class="btn btn-info dynbutton"  data-bs-toggle="modal"  href="#generationModal" data-href="<?php echo Uri::root(); ?>administrator/index.php?option=com_extengen&view=generate&tmpl=component&project_id=<?php echo $item->id; ?>">
 										<?php echo Text::_('COM_EXTENGEN_BUTTON_GENERATE'); ?>
                                     </a>
                                 </td>

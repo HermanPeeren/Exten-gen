@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -111,8 +112,7 @@ class ProjectFormModel extends AdminModel
 		// Get the form.
 		$form = $this->loadForm('com_extengen.projectform', 'projectform', array('control' => 'jform', 'load_data' => $loadData));
 
-		if (empty($form))
-		{
+		if (empty($form)) {
 			return false;
 		}
 
@@ -151,16 +151,13 @@ class ProjectFormModel extends AdminModel
 		// Load associated extengen items
 		$assoc = Associations::isEnabled();
 
-		if ($assoc)
-		{
+		if ($assoc) {
 			$item->associations = array();
 
-			if ($item->id != null)
-			{
+			if ($item->id != null) {
 				$associations = Associations::getAssociations('com_extengen', '#__extengen_projectforms', 'com_extengen.item', $item->id, 'id', null);
 
-				foreach ($associations as $tag => $association)
-				{
+				foreach ($associations as $tag => $association) {
 					$item->associations[$tag] = $association->id;
 				}
 			}
@@ -181,20 +178,17 @@ class ProjectFormModel extends AdminModel
 	protected function preprocessForm(Form $form, $data, $group = 'content')
 	{
 		// Association contact items
-		if (Associations::isEnabled())
-		{
+		if (Associations::isEnabled()) {
 			$languages = LanguageHelper::getContentLanguages(false, true, null, 'ordering', 'asc');
 
-			if (count($languages) > 1)
-			{
+			if (count($languages) > 1) {
 				$addform = new \SimpleXMLElement('<form />');
 				$fields = $addform->addChild('fields');
 				$fields->addAttribute('name', 'associations');
 				$fieldset = $fields->addChild('fieldset');
 				$fieldset->addAttribute('name', 'item_associations');
 
-				foreach ($languages as $language)
-				{
+				foreach ($languages as $language) {
 					$field = $fieldset->addChild('field');
 					$field->addAttribute('name', $language->lang_code);
 					$field->addAttribute('type', 'modal_extengen');

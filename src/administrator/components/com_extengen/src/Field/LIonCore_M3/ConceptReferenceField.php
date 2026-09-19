@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extengen
 
@@ -37,16 +38,15 @@ class ConceptReferenceField extends ListField
 		$classifierNameMap[0] = '&nbsp;';
 
 		$AST = $this->initiateAST();
-		if (!is_null($AST))
-		{
+		if (!is_null($AST)) {
 			// Get the entities that are currently in the model.
 			// todo: cache this (in the AST) and in the project-model
-			foreach ($AST->languageEntities as $languageEntity)
-			{
+			foreach ($AST->languageEntities as $languageEntity) {
 				// Only use Concepts
-				if (($languageEntity->languageEntity_type == 'Classifier')
-					&& ($languageEntity->classifier->classifier_type == 'Concept'))
-				{
+				if (
+                    ($languageEntity->languageEntity_type == 'Classifier')
+					&& ($languageEntity->classifier->classifier_type == 'Concept')
+                ) {
 					$classifierNameMap[$languageEntity->key] = ucfirst($languageEntity->name);
 				}
 			}
@@ -56,8 +56,7 @@ class ConceptReferenceField extends ListField
 
 		// use a for-each to iterate over the $classifierNameMap
 		$classifierOptions = [];
-        foreach($classifierNameMap as $key => $classifierName)
-        {
+        foreach ($classifierNameMap as $key => $classifierName) {
 	        // Set an array with the  value / text items.
 	        $classifierOptions[] = array("value" => $key, "text" => $classifierName);
         }
@@ -74,12 +73,11 @@ class ConceptReferenceField extends ListField
 	 * @return object|null
 	 */
 	private function initiateAST(): ?object
-	{
+    {
+
 		// The id of the record being edited comes from the request: a reference
 		// field is rendered inside that record's own form.
 		$id = (int) Factory::getApplication()->getInput()->getInt('id');
-
-		return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-	}
-
+return (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+    }
 }

@@ -36,6 +36,18 @@ jobs:
       - name: Browser JavaScript tests
         run: composer test-js
 
+      # PHPStan resolves the component's base classes against a real Joomla.
+      # Without it every `extends AdminModel` is an unknown class and the
+      # analysis says nothing. /joomla is git-ignored, so CI fetches its own.
+      - name: Fetch Joomla for static analysis
+        run: |
+          url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
+          curl -sSL -o joomla.tar.gz "$url"
+          mkdir -p joomla
+          tar -xzf joomla.tar.gz -C joomla
+        env:
+          JOOMLA_VERSION: 6.1.3
+
       - name: Static analysis
         run: composer analyse
 

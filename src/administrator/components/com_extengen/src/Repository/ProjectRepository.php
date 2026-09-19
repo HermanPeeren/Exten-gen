@@ -58,7 +58,7 @@ final class ProjectRepository
 
         try {
             return Project::fromJson($json);
-        } catch (\JsonException | \InvalidArgumentException) {
+        } catch (\JsonException) {
             return null;
         }
     }

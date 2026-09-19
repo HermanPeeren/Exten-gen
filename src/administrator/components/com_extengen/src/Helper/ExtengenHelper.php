@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Joomla.Administrator
  * @subpackage  COM_EXTENGEN
@@ -30,8 +31,7 @@ class ExtengenHelper extends ContentHelper
 	 */
 	public static function addSubmenu($vName)
 	{
-		if (ComponentHelper::isEnabled('com_fields') && ComponentHelper::getParams('com_extengen')->get('custom_fields_enable', '1'))
-		{
+		if (ComponentHelper::isEnabled('com_fields') && ComponentHelper::getParams('com_extengen')->get('custom_fields_enable', '1')) {
 			Sidebar::addEntry(
 				Text::_('JGLOBAL_FIELDS'),
 				'index.php?option=com_fields&context=com_extengen.extengen',

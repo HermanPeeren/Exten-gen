@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extension Generator
  * @subpackage  Joomla6 Generator
@@ -30,17 +31,19 @@ class AdminGeneral extends Generator
 		// Initialise variables
 		$project = $this->AST;
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
 
 		// The name of the component (without 'com_' prefix and capital first character)
 		$componentName = ucfirst($this->componentName);
-		
+
 		$manifest = $project->extensions->component->manifest;
 
 
 		$baseTemplateFilePath = 'component/administrator/components/com_componentname/';
 		$templateFilePath = $baseTemplateFilePath;
-		$baseGeneratedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
+		$baseGeneratedFilePath = 'administrator/components/com_' . strtolower($componentName) . '/';
 		$generatedFilePath = $baseGeneratedFilePath;
 		$templateVariables = ['componentName' => $componentName];
 
@@ -101,10 +104,20 @@ class AdminGeneral extends Generator
 		// --- add some general language strings ---
 
 		// back-end
-		$this->languageStringUtil->addLanguageString($componentName, '', '', '',
-			$componentName);
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'CONFIGURATION',
-			$templateVariables['projectName'] . ' options');
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            '',
+            $componentName
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'CONFIGURATION',
+            $templateVariables['projectName'] . ' options'
+        );
 		/*
 		    todo: items must be specified per type and not added in this general part of language strings
 		    todo: only (un)published, (un)featured etc.  if that is an option for this type of item
@@ -124,42 +137,129 @@ class AdminGeneral extends Generator
 			COM_FOOS_N_ITEMS_DELETED_1="%d foo deleted."
 			COM_FOOS_N_ITEMS_TRASHED="%d foos trashed."
 			COM_FOOS_N_ITEMS_TRASHED_1="%d foo trashed."*/
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_PUBLISHED',
-			'%d items published.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_PUBLISHED_1',
-			'%d item published.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_UNPUBLISHED',
-			'%d items unpublished.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_UNPUBLISHED_1',
-			'%d item unpublished.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_CHECKED_IN_1',
-			'%d item checked in.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_CHECKED_IN_MORE',
-			'%d items checked in.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_FEATURED',
-			'%d items featured.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_FEATURED_1',
-			'%d item featured.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_UNFEATURED',
-			'%d items unfeatured.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_UNFEATURED_1',
-			'%d item unfeatured.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_ARCHIVED',
-			'%d items archived.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_ARCHIVED_1',
-			'%d item archived.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_DELETED',
-			'%d items deleted.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_DELETED_1',
-			'%d item deleted.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_TRASHED',
-			'%d items trashed.');
-		$this->languageStringUtil->addLanguageString($componentName, '', '', 'N_ITEMS_TRASHED_1',
-			'%d item trashed.');
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_PUBLISHED',
+            '%d items published.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_PUBLISHED_1',
+            '%d item published.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_UNPUBLISHED',
+            '%d items unpublished.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_UNPUBLISHED_1',
+            '%d item unpublished.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_CHECKED_IN_1',
+            '%d item checked in.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_CHECKED_IN_MORE',
+            '%d items checked in.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_FEATURED',
+            '%d items featured.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_FEATURED_1',
+            '%d item featured.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_UNFEATURED',
+            '%d items unfeatured.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_UNFEATURED_1',
+            '%d item unfeatured.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_ARCHIVED',
+            '%d items archived.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_ARCHIVED_1',
+            '%d item archived.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_DELETED',
+            '%d items deleted.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_DELETED_1',
+            '%d item deleted.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_TRASHED',
+            '%d items trashed.'
+        );
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            'N_ITEMS_TRASHED_1',
+            '%d item trashed.'
+        );
 
 		// sys
-		$this->languageStringUtil->addLanguageString($componentName, '', '', '',
-			$componentName, 'Administrator', true);
+		$this->languageStringUtil->addLanguageString(
+            $componentName,
+            '',
+            '',
+            '',
+            $componentName,
+            'Administrator',
+            true
+        );
 
 		// front-end
 		/*$this->languageStringUtil->addLanguageString($componentName, '', '', '',

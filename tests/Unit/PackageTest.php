@@ -113,6 +113,166 @@ final class PackageTest extends TestCase
     }
 
     /**
+     * The media folder ships everything in it, both directions.
+     *
+     * `<media>` had `<folder>js</folder>` and nothing else, so
+     * `joomla.asset.json` beside it was never installed - and the first thing
+     * that asked for an asset by name, `useScript('com_extengen.reference')`,
+     * got "there is no such asset in the registry" and a 500 on the project
+     * edit form. The `<files>` rules above could not see it: they read the
+     * administration section, and this is a different one.
+     */
+    public function testTheMediaFolderShipsEverythingInIt(): void
+    {
+        $manifest = $this->manifest();
+        $base     = $this->root() . '/src/media/com_extengen/';
+
+        $listedFiles   = [];
+        $listedFolders = [];
+
+        foreach ($manifest->media->filename ?? [] as $file) {
+            $listedFiles[] = (string) $file;
+        }
+
+        foreach ($manifest->media->folder ?? [] as $folder) {
+            $listedFolders[] = (string) $folder;
+        }
+
+        $missing  = [];
+        $unlisted = [];
+
+        foreach ($listedFiles as $file) {
+            if (!is_file($base . $file)) {
+                $missing[] = $file;
+            }
+        }
+
+        foreach ($listedFolders as $folder) {
+            if (!is_dir($base . $folder)) {
+                $missing[] = $folder . '/';
+            }
+        }
+
+        foreach (scandir($base) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $known = is_dir($base . $entry) ? $listedFolders : $listedFiles;
+
+            if (!\in_array($entry, $known, true)) {
+                $unlisted[] = $entry;
+            }
+        }
+
+        $this->assertSame([], $missing, 'The media section claims these: ' . implode(', ', $missing));
+        $this->assertSame([], $unlisted, 'These are in media and no manifest ships them: ' . implode(', ', $unlisted));
+    }
+
+    /**
+     * Every asset the layouts ask for by name is one the media manifest declares.
+     *
+     * `useScript('com_extengen.reference')` is a promise about a file this
+     * repository also owns, and nothing at runtime checks it until somebody
+     * opens the page and gets a 500.
+     */
+    public function testEveryAssetALayoutUsesIsDeclared(): void
+    {
+        $assets = json_decode(
+            (string) file_get_contents($this->root() . '/src/media/com_extengen/joomla.asset.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        $declared = array_column($assets['assets'] ?? [], 'name');
+        $missing  = [];
+
+        $root     = $this->root() . '/src/administrator/components/com_extengen/tmpl';
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            preg_match_all(
+                "/use(?:Script|Style)\(\s*'([^']+)'/",
+                (string) file_get_contents($file->getPathname()),
+                $matches
+            );
+
+            foreach ($matches[1] as $name) {
+                if (!\in_array($name, $declared, true)) {
+                    $missing[] = basename($file->getPathname()) . ': ' . $name;
+                }
+            }
+        }
+
+        $this->assertSame([], $missing, 'Layouts ask for assets nothing declares: ' . implode(', ', $missing));
+    }
+
+    /**
+     * Every path the manifest names outside `<files>` is there too.
+     *
+     * `<files>` is not the only place a manifest points at the filesystem. The
+     * installer also reads `<install><sql><file>`, its uninstall counterpart,
+     * and `<update><schemas><schemapath>` - and it reads them without checking
+     * first, so a path that is not in the package is an error dialog during
+     * install rather than a missing feature afterwards.
+     *
+     * That is not hypothetical. `<schemapath type="mysql">sql/updates/mysql`
+     * was declared and the folder did not exist, and the first attempt to
+     * install the built package failed with "Path is not a folder". The
+     * `<files>` checks above passed the whole time, because `sql` itself is
+     * listed and does exist.
+     */
+    public function testEveryOtherPathTheManifestNamesIsThere(): void
+    {
+        $manifest = $this->manifest();
+        $base     = $this->root() . '/src/administrator/components/com_extengen/';
+        $missing  = [];
+
+        foreach (['install', 'uninstall'] as $stage) {
+            foreach ($manifest->{$stage}->sql->file ?? [] as $file) {
+                if (!is_file($base . (string) $file)) {
+                    $missing[] = $stage . ': ' . (string) $file;
+                }
+            }
+        }
+
+        foreach ($manifest->update->schemas->schemapath ?? [] as $path) {
+            if (!is_dir($base . (string) $path)) {
+                $missing[] = 'schemapath: ' . (string) $path;
+            }
+        }
+
+        $this->assertSame([], $missing, 'The manifest names these and they are not there: ' . implode(', ', $missing));
+    }
+
+    /**
+     * A declared schema path holds at least one version file.
+     *
+     * An empty folder passes the check above and is still wrong: Joomla reads
+     * the highest version in it to fill `#__schemas`, so with none, a site has
+     * no record of which schema it is on and no later update knows where to
+     * start.
+     */
+    public function testTheSchemaPathHasAVersionToStartFrom(): void
+    {
+        $manifest = $this->manifest();
+        $base     = $this->root() . '/src/administrator/components/com_extengen/';
+
+        foreach ($manifest->update->schemas->schemapath ?? [] as $path) {
+            $files = glob($base . (string) $path . '/*.sql') ?: [];
+
+            $this->assertNotSame([], $files, (string) $path . ' holds no version file.');
+        }
+    }
+
+    /**
      * The install script and the manifest agree about the environment.
      *
      * The script used to insist on Joomla 4.0 while the output targeted 6, so

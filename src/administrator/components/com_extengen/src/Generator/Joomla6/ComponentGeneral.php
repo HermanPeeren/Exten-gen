@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Extension Generator
  * @subpackage  Joomla6 Generator
@@ -30,11 +31,13 @@ class ComponentGeneral extends Generator
 		// Initialise variables
 		$project = $this->AST;
 		$log = [];
-		$logAppend = function ($append) use(&$log) {$log = array_merge($log, $append);};
+		$logAppend = function ($append) use (&$log) {
+$log = array_merge($log, $append);
+        };
 
 		// The name of the component (without 'com_' prefix and capital first character)
 		$componentName = ucfirst($this->componentName);
-		
+
 		$manifest = $project->extensions->component->manifest;
 
 
@@ -48,18 +51,15 @@ class ComponentGeneral extends Generator
 
 		// Loop over the pages to make a map of page_id to page-definition
 		$pageMap = [];
-		foreach ($project->pages as $page)
-		{
+		foreach ($project->pages as $page) {
 			$pageMap[$page->page_id] = $page;
 		}
 
 		// Backend index pages (for admin-menu-items) and the default view
 		$backendIndexViews = [];
-		foreach ($project->extensions->component->Sections->backendsection as $backendpageRef)
-		{
+		foreach ($project->extensions->component->Sections->backendsection as $backendpageRef) {
 			$page = $pageMap[$backendpageRef->page_reference];
-			if ($page->page_type == 'indexpage')
-			{
+			if ($page->page_type == 'indexpage') {
 				$backendIndexViews[] = $page->page_name;
 			}
 		}
@@ -70,7 +70,7 @@ class ComponentGeneral extends Generator
 
 		// --- create component manifest file ---
 		$templateFileName = 'componentManifest.xml';
-		$generatedFileName = strtolower($componentName).'.xml';
+		$generatedFileName = strtolower($componentName) . '.xml';
 
 		$templateVariables['author_name'] = $manifest->author_name;
 		$templateVariables['author_email'] = $manifest->author_email;
