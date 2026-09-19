@@ -21,10 +21,10 @@ use Yepr\Component\Extengen\Administrator\Generator\Joomla4\LanguageFiles;
 use Yepr\Component\Extengen\Administrator\Generator\Joomla4\SiteMVC;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\ProjectValidator;
-use Yepr\Component\Extengen\Administrator\Generator\Template\LegacyTwigRenderer;
 use Yepr\Gen\Core\GeneratorInterface;
 use Yepr\Gen\Core\Model\ValidatorInterface;
 use Yepr\Gen\Core\Target\TargetInterface;
+use Yepr\Gen\Core\Template\TwigRenderer;
 
 /**
  * A Joomla component, as the generators write one today.
@@ -123,11 +123,11 @@ final class Joomla4Target implements TargetInterface
     {
         $languageStringUtil = new LanguageStringUtil();
 
-        $renderer = new LegacyTwigRenderer(
-            rtrim($this->templateRoot, '/\\') . '/Joomla4',
-            $this->cacheDirectory,
-            [$languageStringUtil]
-        );
+        // The shared renderer, with `strict_variables` on: a mistyped name is
+        // an error rather than an empty string in a generated file. Getting
+        // here is what step 1.8 was for.
+        $renderer = TwigRenderer::forDirectories($this->templateSetRoot(), $this->cacheDirectory);
+        $renderer->addExtension($languageStringUtil);
 
         return array_map(
             static fn (string $class): GeneratorInterface

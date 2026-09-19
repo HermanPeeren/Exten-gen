@@ -150,7 +150,7 @@ class HtmlView extends BaseHtmlView
 
 		if ($canDo->get('core.create') || count($user->getAuthorisedCategories('com_eventschedule', 'core.create')) > 0)
 		{
-			$toolbar->addNew('.add');
+			$toolbar->addNew('schedule.add');
 		}
 
 		if ($canDo->get('core.edit.state'))

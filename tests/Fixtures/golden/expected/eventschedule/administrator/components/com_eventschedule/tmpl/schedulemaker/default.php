@@ -40,7 +40,7 @@ if ($saveOrder && !empty($this->items)) {
 						<?php echo Text::_('JGLOBAL_NO_MATCHING_RESULTS'); ?>
                     </div>
 				<?php else : ?>
-                    <table class="table" id="List">
+                    <table class="table" id="schedulemakerList">
                         <caption class="visually-hidden">
 							<?php echo Text::_('COM_EVENTSCHEDULE_SCHEDULEMAKER_TABLE_CAPTION'); ?>, <?php echo Text::_('JGLOBAL_SORTED_BY'); ?>
                         </caption>

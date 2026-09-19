@@ -277,7 +277,6 @@ class TrackTable extends Table implements TaggableTableInterface
 		$db->setQuery($query);
 		$db->execute();
 
-
 		// Delete the track.
 		$query->clear()
 			->delete($db->quoteName($this->_tbl))

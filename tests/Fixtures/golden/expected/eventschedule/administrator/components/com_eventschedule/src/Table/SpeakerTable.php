@@ -277,7 +277,6 @@ class SpeakerTable extends Table implements TaggableTableInterface
 		$db->setQuery($query);
 		$db->execute();
 
-
 		// Delete the speaker.
 		$query->clear()
 			->delete($db->quoteName($this->_tbl))

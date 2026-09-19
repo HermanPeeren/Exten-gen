@@ -50,7 +50,7 @@ HTMLHelper::_('draggablelist.draggable');
                 <?php echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this)); ?>
 
                 <div class="clearfix"></div>
-                <table class="table table-striped" id="List">
+                <table class="table table-striped" id="flightsList">
                     <thead>
                     <tr>
                         <th class="w-1 text-center">

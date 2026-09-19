@@ -106,8 +106,8 @@ class SiteMVC extends Generator
 				$linkPageRef = $page->links->links0->target_page->page_reference;
 				$linkPage    = $pageMap[$linkPageRef];
 				$linkPageName = ucfirst($linkPage->page_name);
-				$templateVariables['linkPageName'] = $linkPageName;
 			}
+			$templateVariables['linkPageName'] = $linkPageName;
 
 			// Main entity on this page
 			// todo: get editFields/presentationFields from page to get the exact fields you want to use on this page

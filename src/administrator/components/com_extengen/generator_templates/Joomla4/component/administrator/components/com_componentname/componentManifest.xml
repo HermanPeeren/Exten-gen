@@ -98,6 +98,6 @@
 
 	<!-- Update servers -->
 	<!--<updateservers>
-		<server type="extension" priority="1" name="{{ projectName }}">{{ updateServerURL }}/{{ componentName|lower }}</server>
+		<server type="extension" priority="1" name="{{ projectName }}">{{ updateServerURL|default('') }}/{{ componentName|lower }}</server>
 	</updateservers>-->
 </extension>

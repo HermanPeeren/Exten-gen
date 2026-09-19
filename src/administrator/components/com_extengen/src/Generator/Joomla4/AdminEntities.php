@@ -69,7 +69,7 @@ class AdminEntities extends Generator
 		$manifest = $project->extensions->component->manifest;
 		$templateVariables['copyright'] = $manifest->copyright;
 		$templateVariables['license'] = $manifest->license;
-		$templateVariables['companyNamepace'] = $manifest->company_namespace;
+		$templateVariables['company_namespace'] = $manifest->company_namespace;
 		$templateVariables['version'] = $manifest->version;
 
 		// Loop over the entities to make a map of entity_id to name and from entity_id to entity

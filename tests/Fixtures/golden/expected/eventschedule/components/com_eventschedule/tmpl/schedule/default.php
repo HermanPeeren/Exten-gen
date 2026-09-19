@@ -50,7 +50,7 @@ HTMLHelper::_('draggablelist.draggable');
                 <?php echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this)); ?>
 
                 <div class="clearfix"></div>
-                <table class="table table-striped" id="List">
+                <table class="table table-striped" id="scheduleList">
                     <thead>
                     <tr>
                         <th class="w-1 text-center">
@@ -114,7 +114,7 @@ HTMLHelper::_('draggablelist.draggable');
 
                                                                                     <td>
                                     <a class="hasTooltip" href="<?php
-                                    echo Route::_('index.php?option=com_eventschedule&task=.edit&id=' . (int) $item->id); ?>"
+                                    echo Route::_('index.php?option=com_eventschedule&task=schedule.edit&id=' . (int) $item->id); ?>"
                                        title="<?php echo Text::_('JACTION_EDIT'); ?> <?php echo $this->escape(addslashes($item->presentation_name)); ?>">
                                         <?php //echo $editIcon; ?><?php echo $this->escape($item->presentation_name); ?></a>
                                 </td>

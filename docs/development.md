@@ -169,7 +169,6 @@ solve it.
 src/Generator/
   Model/Project.php              one project, as stored
   Target/Joomla4Target.php       which generators run, in what order
-  Template/LegacyTwigRenderer.php  the templates, with the settings they were written under
   Generator.php                  what every generator shares
   Joomla4/*.php                  seven generators, one concern each
 ```
@@ -185,13 +184,25 @@ set is only complete once they have finished. That generator was lifted out of
 `GenerateModel`, where it had been the one piece of generated output produced
 outside any generator.
 
-**`LegacyTwigRenderer` is temporary.** The shared library's renderer turns
-`strict_variables` on; these templates have never run that way and would not
-survive it — nineteen read `company_namespace` while one reads
-`companyNamepace`, and each generator hands a different set of variables to
-templates that share a directory. Turning it on would throw where today an empty
-string is rendered, which is a change to the output. Step 1.8 sweeps the
-templates and deletes this class.
+**The renderer is the shared one, with `strict_variables` on.** A mistyped name
+is an error rather than an empty string in a generated file. `LegacyTwigRenderer`
+existed only to hold that flag off until the templates could survive it, and was
+deleted in 1.8.
+
+Three names did not survive, and each was a bug rather than a style:
+`pageNamelower` for `pageName|lower`, which gave every generated list table
+`id="List"`; `linkPageName`, which `SiteMVC` computed a fallback for and then
+assigned only inside the branch that did not need it, so a page with no links
+got `addNew('.add')` and `task=.edit`; and `updateServerURL`, for a feature the
+model does not have, in a block the manifest comments out — that one is written
+`|default('')` now, which renders what it always rendered and says out loud that
+it may be absent.
+
+`strict_variables` did not catch the `companyNamepace` typo, and could not:
+`AdminEntities` supplied it and `Table.php.twig` read it, both misspelled the
+same way, so the two agreed. The flag catches a template asking for a name
+nobody supplies, not a name that is simply wrong. Both sides say
+`company_namespace` now; the output is identical.
 
 **What did not change: the generators themselves.** They still build strings and
 still read the decoded project. Separating the transformation from the

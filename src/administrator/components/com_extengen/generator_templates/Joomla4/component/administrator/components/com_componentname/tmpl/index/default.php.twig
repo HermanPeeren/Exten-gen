@@ -43,7 +43,7 @@ if ($saveOrder && !empty($this->items)) {
 						<?php echo Text::_('JGLOBAL_NO_MATCHING_RESULTS'); ?>
                     </div>
 				<?php else : ?>
-                    <table class="table" id="{{ pageNamelower }}List">
+                    <table class="table" id="{{ pageName|lower }}List">
                         <caption class="visually-hidden">
 							<?php echo Text::_('{{ addLanguageString(componentName, pageName, '', "pageName_TABLE_CAPTION", '%pageName%') }}'); ?>, <?php echo Text::_('JGLOBAL_SORTED_BY'); ?>
                         </caption>

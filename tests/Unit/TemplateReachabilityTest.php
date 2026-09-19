@@ -8,10 +8,10 @@ use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla4Target;
-use Yepr\Component\Extengen\Administrator\Generator\Template\LegacyTwigRenderer;
 use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Component\Extengen\Tests\Support\RecordingRenderer;
 use Yepr\Gen\Core\Output\FileCollection;
+use Yepr\Gen\Core\Template\TwigRenderer;
 
 /**
  * Every file in the template set is one some generator asks for.
@@ -88,9 +88,10 @@ final class TemplateReachabilityTest extends TestCase
         $target             = new Joomla4Target($this->templateRoot());
         $languageStringUtil = new LanguageStringUtil();
 
-        $recorder = new RecordingRenderer(
-            new LegacyTwigRenderer($target->templateSetRoot(), null, [$languageStringUtil])
-        );
+        $inner = TwigRenderer::forDirectories($target->templateSetRoot());
+        $inner->addExtension($languageStringUtil);
+
+        $recorder = new RecordingRenderer($inner);
 
         // The generator list comes from the target, so this cannot drift out of
         // step with what the component actually runs.
