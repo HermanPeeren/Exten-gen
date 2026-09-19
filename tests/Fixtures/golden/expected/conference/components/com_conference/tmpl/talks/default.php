@@ -21,13 +21,14 @@ use Joomla\CMS\Session\Session;
 HTMLHelper::_('bootstrap.tooltip');
 HTMLHelper::_('behavior.multiselect');
 
-// Import CSS
-$wa =  $this->document->getWebAssetManager();
-$wa->useStyle('com_conference.admin')
-->useScript('com_conference.admin');
+// No stylesheet and no script: this component generates neither, and a
+// front-end layout used to ask the asset manager for `com_x.admin` - an
+// administrator asset, on the site, that no generated component declares.
+// Joomla throws for an asset it does not know, so every generated front
+// end was a 500 on its first page.
 
 $user      = Factory::getApplication()->getIdentity();
-$userId    = $user->get('id');
+$userId    = $user->id;
 $listOrder = $this->state->get('list.ordering');
 $listDirn  = $this->state->get('list.direction');
 $canOrder  = $user->authorise('core.edit.state', 'com_conference');
@@ -47,31 +48,23 @@ HTMLHelper::_('draggablelist.draggable');
     <div class="row">
         <div class="col-md-12">
             <div id="j-main-container" class="j-main-container">
-                <?php echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this)); ?>
-
+                <?php // No search tools. That layout reads a filter form and a set of
+                     // active filters off the view, and a front-end list model builds
+                     // neither - so rendering it was "Call to a member function
+                     // getGroup() on null" on the first page anybody visited. ?>
                 <div class="clearfix"></div>
                 <table class="table table-striped" id="talksList">
                     <thead>
                     <tr>
-                        <th class="w-1 text-center">
-                            <input type="checkbox" autocomplete="off" class="form-check-input" name="checkall-toggle" value=""
-                                   title="<?php echo Text::_('JGLOBAL_CHECK_ALL'); ?>" onclick="Joomla.checkAll(this)"/>
-                        </th>
 
-                                            <th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
-                            <?php echo HTMLHelper::_('searchtools.sort',
-                            'COM_CONFERENCE_TABLE_TALK_TABLEHEAD_TITLE', $listDirn, $listOrder);
-                            ?>
+                                            <th scope="col">
+                            <?php echo Text::_('COM_CONFERENCE_TABLE_TALK_TABLEHEAD_TITLE'); ?>
                         </th>
-                                            <th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
-                            <?php echo HTMLHelper::_('searchtools.sort',
-                            'COM_CONFERENCE_TABLE_TALK_TABLEHEAD_DESCRIPTION', $listDirn, $listOrder);
-                            ?>
+                                            <th scope="col">
+                            <?php echo Text::_('COM_CONFERENCE_TABLE_TALK_TABLEHEAD_DESCRIPTION'); ?>
                         </th>
-                                            <th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
-                            <?php echo HTMLHelper::_('searchtools.sort',
-                            'COM_CONFERENCE_TABLE_TALK_TABLEHEAD_SPEAKER', $listDirn, $listOrder);
-                            ?>
+                                            <th scope="col">
+                            <?php echo Text::_('COM_CONFERENCE_TABLE_TALK_TABLEHEAD_SPEAKER'); ?>
                         </th>
                     
                                         </tr>
@@ -92,14 +85,10 @@ HTMLHelper::_('draggablelist.draggable');
                     $canChange  = $user->authorise('core.edit.state', 'com_conference');
                     ?>
                     <tr class="row<?php echo $i % 2; ?>" data-draggable-group='1' data-transition>
-                        <td class="text-center">
-                            <?php echo HTMLHelper::_('grid.id', $i, $item->id); ?>
-                        </td>
-
 
                                                                                     <td>
                                     <a class="hasTooltip" href="<?php
-                                    echo Route::_('index.php?option=com_conference&task=talk.edit&id=' . (int) $item->id); ?>"
+                                    echo Route::_('index.php?option=com_conference&view=talk&id=' . (int) $item->id); ?>"
                                        title="<?php echo Text::_('JACTION_EDIT'); ?> <?php echo $this->escape(addslashes($item->title)); ?>">
                                         <?php //echo $editIcon; ?><?php echo $this->escape($item->title); ?></a>
                                 </td>

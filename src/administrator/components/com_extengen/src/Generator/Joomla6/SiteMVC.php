@@ -269,6 +269,11 @@ $log = array_merge($log, $append);
 
 				// And generate the file
 				$logAppend($this->generateFileWithTemplate($templateFilePath, $templateFileName, $generatedFilePath, $generatedFileName, $templateVariables));
+
+				// And what makes the view choosable as a menu item. Without it the
+				// front end installs and is reachable by url only, which is to say
+				// not reachable by anybody using the site.
+				$logAppend($this->generateFileWithTemplate($templateFilePath, 'default.xml.twig', $generatedFilePath, 'default.xml', $templateVariables));
 			}
 
 			// Create tmpl-file for the Details-View
@@ -284,6 +289,9 @@ $log = array_merge($log, $append);
 
 				// And generate the file
 				$logAppend($this->generateFileWithTemplate($templateFilePath, $templateFileName, $generatedFilePath, $generatedFileName, $templateVariables));
+
+				// And its menu item type, which carries the id of the record to show.
+				$logAppend($this->generateFileWithTemplate($templateFilePath, 'default.xml.twig', $generatedFilePath, 'default.xml', $templateVariables));
 			}
 		}
 

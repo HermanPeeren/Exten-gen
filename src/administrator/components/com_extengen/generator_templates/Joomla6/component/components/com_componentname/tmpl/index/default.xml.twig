@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	What makes this view choosable as a menu item.
+
+	Without a default.xml beside the layout, Joomla does not offer the view in
+	the menu item type list at all, so a generated front end can be installed
+	and still be unreachable by anybody using the site.
+-->
+<metadata>
+	<layout title="{{ addLanguageString(componentName, pageName, '', "pageName_VIEW_DEFAULT_TITLE", '%pageName%', 'Site') }}">
+		<message>
+			<![CDATA[{{ addLanguageString(componentName, pageName, '', "pageName_VIEW_DEFAULT_DESC", 'A list of %pageName%.', 'Site') }}]]>
+		</message>
+	</layout>
+</metadata>

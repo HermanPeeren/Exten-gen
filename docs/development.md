@@ -202,6 +202,19 @@ script will refuse. Commit it, tag `v<version>`, and attach
 `build/com_extengen-<version>.zip` to the GitHub release - that is the URL the
 generated file points at. `UpdateServerTest` fails if any of those disagree.
 
+**Driving a whole generated component.** The last spec leaves Exten-gen: it
+generates a component, installs it, and visits its front end.
+
+```
+php tools/install-generated.php BalloonPlanning
+php tools/seed-menu-item.php com_balloonplanning flights Flights
+```
+
+A generated component has no Router service, so `index.php?option=...` lands on
+the default menu item and `/component/<name>/` is a 404. A menu item is the
+supported way in, which is what the generated `tmpl/<view>/default.xml` exists
+for.
+
 **What each gate can and cannot see.** Everything above `npm run cypress` reads
 source or runs generation with two constants standing in for Joomla. None of it
 boots the framework, and for five steps that was enough to miss a component

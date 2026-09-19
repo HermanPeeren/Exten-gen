@@ -418,13 +418,41 @@ anything that reads source.
 installed into it - a job of its own rather than a step, and one this repository does not
 need before it can be released. They run locally with `npm run cypress`.
 
-**1.12 Release 1.0.0.** The update server moves to the new repository. The installed
-extension keeps the element name `com_extengen`.
+**1.12 Release 1.0.0.** Version 1.0.0 in `src/extengen.xml`, which is the only place it
+lives; `composer build` regenerates `updates.xml` from it. The update server points at this
+repository. The installed extension keeps the element name `com_extengen`, so a site
+running the old one updates in place.
+
+**The front end is in 1.0**, and getting there was not a flag. The generators already
+produced site controllers, models, views, layouts and language files with the right
+namespaces - and none of it had ever run. Five things were wrong, each hidden behind the
+one before it:
+
+- the generated manifest's front-end `<files>` block was commented out, so nothing
+  installed;
+- no `tmpl/<view>/default.xml`, so no site view could be put on a menu at all;
+- the list layout asked the asset manager for `com_x.admin`, an administrator asset no
+  generated component declares, which Joomla throws for;
+- it rendered Joomla's search tools, which read a filter form a front-end list model does
+  not build;
+- its language strings were registered into the administrator language file, so a visitor
+  saw `COM_X_TABLE_...` rather than a column heading.
+
+The layout was a copy of the administrator's, down to the selection checkboxes and the
+`task=x.edit` links. It is a front-end list now: plain headings, no checkboxes, and links
+to the details view.
+
+`cypress/e2e/generated-front-end.cy.js` is what makes that a claim rather than a hope. It
+generates a component, installs it with `tools/install-generated.php`, points a menu item
+at one of its views with `tools/seed-menu-item.php`, and looks at the page a visitor gets.
+Nothing else in this repository leaves Exten-gen.
+
+*Not in 1.0:* a Router service, so generated front-end URLs are the ones Joomla builds from
+a menu item rather than paths of their own. `/component/<name>/` is a 404 without one.
 
 **Scope of v1.** Entities with properties, n:1 and n:n relations, embeddables, index pages
 with filters, detail pages with edit fields, language files, an installable package.
-*Decision required:* admin-only for 1.0 with the front-end at 1.1, or both from the start.
-Admin-only is a real scope cut.
+Both, from the start: see 1.12 for what that cost and what now proves it.
 
 **Named gaps in the v1 model.** Three things the model cannot express, written down here
 because each is invisible until something needs it and then blocks a whole line of work.
@@ -514,7 +542,6 @@ Each is flagged at the step where it bites.
 | Step | Decision |
 |---|---|
 | 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
-| 1.12 | Front-end in v1.0, or deferred to v1.1 |
 
 ## Suggested entry point
 

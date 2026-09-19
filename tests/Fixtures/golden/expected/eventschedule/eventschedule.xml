@@ -54,13 +54,11 @@
 	</media>
 
 	<!-- Front-end files -->
-	<!--<files folder="components/com_eventschedule">-->
-		<!--<folder>language</folder>-->
-		<!--<folder>forms</folder>
-		<folder>layouts</folder>
+	<files folder="components/com_eventschedule">
+		<folder>language</folder>
 		<folder>src</folder>
-		<folder>tmpl</folder>-->
-	<!--</files>-->
+		<folder>tmpl</folder>
+	</files>
 
 	<!-- Back-end files -->
 	<administration>

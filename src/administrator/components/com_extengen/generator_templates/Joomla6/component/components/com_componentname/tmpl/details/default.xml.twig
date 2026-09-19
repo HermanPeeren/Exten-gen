@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	What makes this view choosable as a menu item.
+
+	A details page shows one record, so the menu item has to carry which one:
+	the id goes in the request variables, where Joomla puts it into the link.
+-->
+<metadata>
+	<layout title="{{ addLanguageString(componentName, pageName, '', "pageName_VIEW_DEFAULT_TITLE", '%pageName%', 'Site') }}">
+		<message>
+			<![CDATA[{{ addLanguageString(componentName, pageName, '', "pageName_VIEW_DEFAULT_DESC", 'One %pageName%.', 'Site') }}]]>
+		</message>
+	</layout>
+
+	<fields name="request">
+		<fieldset name="request">
+			<field
+				name="id"
+				type="number"
+				label="{{ addLanguageString(componentName, pageName, 'id', "pageName_FIELD_ID_LABEL", '%pageName% id', 'Site') }}"
+				required="true"
+			/>
+		</fieldset>
+	</fields>
+</metadata>

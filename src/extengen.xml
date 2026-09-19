@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <extension type="component" method="upgrade">
 	<name>com_extengen</name>
-	<creationDate>26-12-2021</creationDate>
+	<creationDate>19-09-2026</creationDate>
 	<author>Herman Peeren</author>
 	<authorEmail>herman@yepr.nl</authorEmail>
 	<authorUrl>https://yepr.nl</authorUrl>
 	<copyright>Yepr, Herman Peeren, 2022</copyright>
 	<license>GNU General Public License version 3 or later;</license>
-	<version>0.8.0</version>
+	<version>1.0.0</version>
 	<description>COM_EXTENGEN_XML_DESCRIPTION</description>
 	<namespace path="src">Yepr\Component\Extengen</namespace>
 	<scriptfile>script.php</scriptfile>

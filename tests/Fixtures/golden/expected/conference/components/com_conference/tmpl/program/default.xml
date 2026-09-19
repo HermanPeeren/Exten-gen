@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	What makes this view choosable as a menu item.
+
+	Without a default.xml beside the layout, Joomla does not offer the view in
+	the menu item type list at all, so a generated front end can be installed
+	and still be unreachable by anybody using the site.
+-->
+<metadata>
+	<layout title="COM_CONFERENCE_PROGRAM_VIEW_DEFAULT_TITLE">
+		<message>
+			<![CDATA[COM_CONFERENCE_PROGRAM_VIEW_DEFAULT_DESC]]>
+		</message>
+	</layout>
+</metadata>

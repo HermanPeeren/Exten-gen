@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	What makes this view choosable as a menu item.
+
+	A details page shows one record, so the menu item has to carry which one:
+	the id goes in the request variables, where Joomla puts it into the link.
+-->
+<metadata>
+	<layout title="COM_CONFERENCE_PARTICIPANT_VIEW_DEFAULT_TITLE">
+		<message>
+			<![CDATA[COM_CONFERENCE_PARTICIPANT_VIEW_DEFAULT_DESC]]>
+		</message>
+	</layout>
+
+	<fields name="request">
+		<fieldset name="request">
+			<field
+				name="id"
+				type="number"
+				label="COM_CONFERENCE_PARTICIPANT_FIELD_ID_LABEL"
+				required="true"
+			/>
+		</fieldset>
+	</fields>
+</metadata>
