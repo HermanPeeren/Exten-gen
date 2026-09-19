@@ -144,8 +144,10 @@ final class ResolvableNamesTest extends TestCase
                 // Not if it is already qualified: `Bar\Foo::` or `\Foo::`.
                 $previous = $this->previousMeaningful($tokens, $i);
 
-                if ($previous === T_NAME_QUALIFIED || $previous === T_NAME_FULLY_QUALIFIED
-                    || $previous === T_OBJECT_OPERATOR || $previous === T_DOUBLE_COLON) {
+                if (
+                    $previous === T_NAME_QUALIFIED || $previous === T_NAME_FULLY_QUALIFIED
+                    || $previous === T_OBJECT_OPERATOR || $previous === T_DOUBLE_COLON
+                ) {
                     continue;
                 }
 
