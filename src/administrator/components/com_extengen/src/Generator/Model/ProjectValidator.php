@@ -94,8 +94,139 @@ final class ProjectValidator implements ValidatorInterface
             }
         }
 
+        $errors = [...$errors, ...$this->duplicates($model)];
+
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
+    }
+
+    /**
+     * Anything a repeating group names twice.
+     *
+     * Every one of these means the same file, table or column is produced
+     * twice, and the second one wins. That used to be invisible: the generator
+     * opened each file with `fopen(..., 'w')`, and a second write to the same
+     * path is just a write. Two real stored models turned out to contain one -
+     * a page listed twice among the back-end pages, and a language listed twice
+     * - and neither had ever been noticed.
+     *
+     * The rule is about repeating groups rather than about pages or languages
+     * in particular, because that is the shape of the mistake: a subform where
+     * the same entry was added twice. Both known cases are instances of it, and
+     * so is the next one.
+     *
+     * @return string[]
+     *
+     * @since  0.9.0
+     */
+    private function duplicates(Project $model): array
+    {
+        $errors = [];
+
+        $groups = [
+            'entity'   => array_map(
+                static fn (object $e): string => trim((string) ($e->entity_name ?? '')),
+                $model->entities()
+            ),
+            'page'     => array_map(
+                static fn (object $p): string => trim((string) ($p->page_name ?? '')),
+                $model->pages()
+            ),
+            'language' => array_map(
+                static fn (object $l): string => trim((string) ($l->language_code ?? ''))
+                    . '-' . trim((string) ($l->country_code ?? '')),
+                $model->languages()
+            ),
+        ];
+
+        // A section holds references, and a reference is a uuid. Reported as
+        // one, it tells the reader nothing they can act on, so it is resolved
+        // back to the page name they chose in the form.
+        $pageNames = [];
+
+        foreach ($model->pages() as $page) {
+            $pageNames[(string) ($page->page_id ?? '')] = trim((string) ($page->page_name ?? ''));
+        }
+
+        $labels = ['backendsection' => 'back-end page', 'frontendsection' => 'front-end page'];
+
+        foreach ($model->sections() as $section => $references) {
+            $groups[$labels[$section] ?? $section] = array_map(
+                static function (object $reference) use ($pageNames): string {
+                    $id = (string) ($reference->page_reference ?? '');
+
+                    return $pageNames[$id] ?? $id;
+                },
+                $references
+            );
+        }
+
+        foreach ($groups as $what => $names) {
+            foreach ($this->repeated($names) as $name => $count) {
+                $errors[] = \sprintf(
+                    'the %s list names "%s" %d times; each entry has to be distinct',
+                    $what,
+                    $name,
+                    $count
+                );
+            }
+        }
+
+        // Fields belong to their entity, so the same name in two entities is
+        // two different columns and perfectly fine.
+        foreach ($model->entities() as $entity) {
+            $fields = \is_object($entity->field ?? null) ? get_object_vars($entity->field) : (array) ($entity->field ?? []);
+
+            $names = array_map(
+                static fn (mixed $f): string => \is_object($f) ? strtolower(trim((string) ($f->field_name ?? ''))) : '',
+                array_values($fields)
+            );
+
+            foreach ($this->repeated($names) as $name => $count) {
+                $errors[] = \sprintf(
+                    'entity "%s" names the field "%s" %d times',
+                    (string) ($entity->entity_name ?? '?'),
+                    $name,
+                    $count
+                );
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * The values that occur more than once, ignoring empty ones.
+     *
+     * An empty name is somebody else's error - the checks above report it - and
+     * reporting it twice helps nobody.
+     *
+     * @param  string[]  $values
+     *
+     * @return array<string, int>  value => how many times
+     *
+     * @since  0.9.0
+     */
+    private function repeated(array $values): array
+    {
+        $counts = [];
+        $seen   = [];
+
+        foreach ($values as $value) {
+            if ($value === '' || $value === '-') {
+                continue;
+            }
+
+            // Compared without regard to case, because two entities called
+            // Flight and flight are one table; reported with the case the user
+            // typed, because that is what they will be looking for.
+            $key = strtolower($value);
+
+            $seen[$key] ??= $value;
+            $counts[$seen[$key]] = ($counts[$seen[$key]] ?? 0) + 1;
+        }
+
+        return array_filter($counts, static fn (int $count): bool => $count > 1);
     }
 }

@@ -91,13 +91,6 @@
 			</params>
 			</menu>
 			
-			<menu link="option=com_eventschedule&amp;view=tracks">COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS
-			<params>
-				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_TRACKS</menu-quicktask-title>
-				<menu-quicktask>index.php?option=com_eventschedule&amp;view=tracks</menu-quicktask>
-			</params>
-			</menu>
-			
 			<menu link="option=com_eventschedule&amp;view=schedulemaker">COM_EVENTSCHEDULE_SUBMENUNAME_SCHEDULEMAKER
 			<params>
 				<menu-quicktask-title>COM_EVENTSCHEDULE_SUBMENUNAME_SCHEDULEMAKER</menu-quicktask-title>

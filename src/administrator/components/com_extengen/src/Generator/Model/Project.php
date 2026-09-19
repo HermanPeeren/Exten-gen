@@ -195,6 +195,33 @@ final class Project implements ModelInterface
     }
 
     /**
+     * The page references per section, keyed by section name.
+     *
+     * A section says which pages appear where: `backendsection`,
+     * `frontendsection`, and the single-page defaults beside them. Only the
+     * repeating ones are returned - a default page is one reference and cannot
+     * repeat.
+     *
+     * @return array<string, object[]>
+     *
+     * @since  0.9.0
+     */
+    public function sections(): array
+    {
+        $sections = [];
+
+        foreach (['backendsection', 'frontendsection'] as $name) {
+            $references = self::listOf($this->component()->Sections->{$name} ?? null);
+
+            if ($references !== []) {
+                $sections[$name] = $references;
+            }
+        }
+
+        return $sections;
+    }
+
+    /**
      * The project exactly as stored.
      *
      * Transitional: the generators walk this directly. See the class comment.

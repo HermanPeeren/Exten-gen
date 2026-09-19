@@ -241,25 +241,33 @@ the very thing they pin.
 
 ### Duplicated entries in a model
 
-`KnownBreakageTest` records something a golden file cannot: a file written
-twice. The second write wins and the file looks ordinary afterwards, so this was
-invisible until generation started going into a collection.
+A repeating group must not name the same thing twice. Every duplicate means the
+same file, table or column produced twice, with the second one winning — which
+used to be invisible, because the generator opened every file with
+`fopen(..., 'w')` and a second write to the same path is just a write.
 
-Two stored models contain a repeated entry in a repeating group:
+The rule covers entities, pages, languages, the page references in each section,
+and the fields within one entity. Not fields *across* entities: `name` and `id`
+appear in almost every table, and a rule that could not tell those apart would
+refuse nearly every real model.
 
-| Model | Repeated | Costs |
-|---|---|---|
-| `eventschedule` | `Tracks` listed twice among back-end pages | the four Tracks MVC files written twice, and a duplicated submenu entry in the manifest |
-| `conference` | `en-GB` listed twice among languages | each en-GB language file written twice |
+Two things make the message usable. A section stores a uuid, so the duplicate is
+reported by the page name somebody chose rather than by the reference; and
+comparison ignores case — `Flight` and `flight` are one table — while the report
+uses the spelling that was typed, because that is what they will search the form
+for.
 
-Neither is fixed. The models say something contradictory, so the repair belongs
-in the model rather than in a generator that quietly tidies up after it — and
-which of those to do is a decision about stored data. A validator rule refusing
-any repeating group that names the same thing twice is the candidate, and it
-would catch both.
+```
+the back-end page list names "Tracks" 2 times; each entry has to be distinct
+the language list names "en-GB" 2 times; each entry has to be distinct
+```
 
-The measurement is in the test: generating `eventschedule` with the second
-reference removed changes exactly one file.
+Both of those come from real stored models, kept in `tests/Fixtures/invalid/`
+exactly as they were saved, so the rule is tested against the data that
+motivated it rather than against something written to pass. The same two models
+appear in the golden set with the duplicate removed, which is what made them
+valid input again — and the entire difference in generated output was one
+duplicated submenu entry in `eventschedule.xml`.
 
 ## Building
 
