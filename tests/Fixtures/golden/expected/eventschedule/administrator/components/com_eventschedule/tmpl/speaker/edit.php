@@ -20,7 +20,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 
 $app = Factory::getApplication();
-$input = $app->input; // todo: really???
+$input = $app->getInput(); // todo: really???
 
 $assoc = Associations::isEnabled();
 

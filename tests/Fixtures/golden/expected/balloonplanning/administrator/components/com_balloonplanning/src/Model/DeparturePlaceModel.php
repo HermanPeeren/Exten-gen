@@ -93,7 +93,7 @@ class DeparturePlaceModel extends AdminModel
 			// Prime some default values. Todo: categories
 			/*if ($this->getState('departureplace.id') == 0)
 			{
-				$data->set('catid', $app->input->get('catid', $app->getUserState('com_balloonplanning.departureplace.filter.category_id'), 'int')); // todo: for categories the plural entityname or pagename (?) is used; 'foos' in examples
+				$data->set('catid', $app->getInput()->get('catid', $app->getUserState('com_balloonplanning.departureplace.filter.category_id'), 'int')); // todo: for categories the plural entityname or pagename (?) is used; 'foos' in examples
 			}*/
 		}
 

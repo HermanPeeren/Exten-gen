@@ -93,7 +93,7 @@ class SpeakerModel extends AdminModel
 			// Prime some default values. Todo: categories
 			/*if ($this->getState('speaker.id') == 0)
 			{
-				$data->set('catid', $app->input->get('catid', $app->getUserState('com_eventschedule.speaker.filter.category_id'), 'int')); // todo: for categories the plural entityname or pagename (?) is used; 'foos' in examples
+				$data->set('catid', $app->getInput()->get('catid', $app->getUserState('com_eventschedule.speaker.filter.category_id'), 'int')); // todo: for categories the plural entityname or pagename (?) is used; 'foos' in examples
 			}*/
 		}
 

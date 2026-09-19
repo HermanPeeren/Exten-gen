@@ -98,7 +98,7 @@ class TicketTable extends Table implements TaggableTableInterface
 		}
 /*
 		// Check the publish down date is not earlier than publish up.
-		if ($this->publish_down > $this->_db->getNullDate() && $this->publish_down < $this->publish_up) {
+		if ($this->publish_down > $this->getDatabase()->getNullDate() && $this->publish_down < $this->publish_up) {
 			$this->setError(Text::_('JGLOBAL_START_PUBLISH_AFTER_FINISH'));
 
 			return false;
@@ -140,6 +140,8 @@ class TicketTable extends Table implements TaggableTableInterface
 			$this->params = (string) $registry;
 		}
 
+		$db = $this->getDatabase();
+
 		// Get the table key and key value.
 		$k   = $this->_tbl_key;
 		$key = $this->$k;
@@ -148,10 +150,10 @@ class TicketTable extends Table implements TaggableTableInterface
 		// Insert or update the object based on presence of a key value.
 		if ($key) {
 			// Already have a table key, update the row.
-			$this->_db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
+			$db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
 		} else {
 			// Don't have a table key, insert the row.
-			$this->_db->insertObject($this->_tbl, $this, $this->_tbl_key);
+			$db->insertObject($this->_tbl, $this, $this->_tbl_key);
 		}
 
 
@@ -171,6 +173,9 @@ class TicketTable extends Table implements TaggableTableInterface
 	 */
 	public function delete($ticketId = null):bool
 	{
+		$db    = $this->getDatabase();
+		$query = $db->getQuery(true);
+
 		// Set the primary key to delete.
 		$k = $this->_tbl_key;
 
@@ -184,11 +189,11 @@ class TicketTable extends Table implements TaggableTableInterface
 
 		// Delete the ticket.
 		$query->clear()
-			->delete($this->_db->quoteName($this->_tbl))
-			->where($this->_db->quoteName($this->_tbl_key) . ' = :key')
+			->delete($db->quoteName($this->_tbl))
+			->where($db->quoteName($this->_tbl_key) . ' = :key')
 			->bind(':key', $key, ParameterType::INTEGER);
-		$this->_db->setQuery($query);
-		$this->_db->execute();
+		$db->setQuery($query);
+		$db->execute();
 
 		return true;
 	}

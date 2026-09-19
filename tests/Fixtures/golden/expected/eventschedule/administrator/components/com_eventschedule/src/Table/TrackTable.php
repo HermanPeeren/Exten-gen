@@ -103,7 +103,7 @@ class TrackTable extends Table implements TaggableTableInterface
 		}
 /*
 		// Check the publish down date is not earlier than publish up.
-		if ($this->publish_down > $this->_db->getNullDate() && $this->publish_down < $this->publish_up) {
+		if ($this->publish_down > $this->getDatabase()->getNullDate() && $this->publish_down < $this->publish_up) {
 			$this->setError(Text::_('JGLOBAL_START_PUBLISH_AFTER_FINISH'));
 
 			return false;
@@ -145,6 +145,8 @@ class TrackTable extends Table implements TaggableTableInterface
 			$this->params = (string) $registry;
 		}
 
+		$db = $this->getDatabase();
+
 		// Get the table key and key value.
 		$k   = $this->_tbl_key;
 		$key = $this->$k;
@@ -157,17 +159,17 @@ class TrackTable extends Table implements TaggableTableInterface
 		// Insert or update the object based on presence of a key value.
 		if ($key) {
 			// Already have a table key, update the row.
-			$this->_db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
+			$db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
 		} else {
 			// Don't have a table key, insert the row.
-			$this->_db->insertObject($this->_tbl, $this, $this->_tbl_key);
+			$db->insertObject($this->_tbl, $this, $this->_tbl_key);
 		}
 
 
 		// Reset dayscheduleIds to the local object.
 		$this->dayschedule_ids = $dayscheduleIds;
 
-		$query = $this->_db->getQuery(true);
+		$query = $db->getQuery(true);
 
 		// Store the dayscheduleId data if the track data was saved.
 		if (\is_array($this->dayschedule_ids) && \count($this->dayschedule_ids)) {
@@ -175,14 +177,14 @@ class TrackTable extends Table implements TaggableTableInterface
 
 			// Grab all dayscheduleIds for the track, as is stored in the junction table
 			$query->clear()
-				->select($this->_db->quoteName('dayschedule_id'))
-				->from($this->_db->quoteName('#__eventschedule_dayschedule_track'))
-				->where($this->_db->quoteName('track_id') . ' = :trackid')
-				->order($this->_db->quoteName('dayschedule_id') . ' ASC')
+				->select($db->quoteName('dayschedule_id'))
+				->from($db->quoteName('#__eventschedule_dayschedule_track'))
+				->where($db->quoteName('track_id') . ' = :trackid')
+				->order($db->quoteName('dayschedule_id') . ' ASC')
 				->bind(':trackid', $trackId, ParameterType::INTEGER);
 
-			$this->_db->setQuery($query);
-			$dayscheduleIdsInDb = $this->_db->loadColumn();
+			$db->setQuery($query);
+			$dayscheduleIdsInDb = $db->loadColumn();
 
 			// Loop through them and check if database contains something $this->dayscheduleIds does not
 			if (\count($dayscheduleIdsInDb)) {
@@ -199,13 +201,13 @@ class TrackTable extends Table implements TaggableTableInterface
 
 				if (\count($deleteDayScheduleIds)) {
 					$query->clear()
-						->delete($this->_db->quoteName('#__eventschedule_dayschedule_track'))
-						->where($this->_db->quoteName('track_id') . ' = :trackId')
-						->whereIn($this->_db->quoteName('dayschedule_id'), $deleteDayScheduleIds)
+						->delete($db->quoteName('#__eventschedule_dayschedule_track'))
+						->where($db->quoteName('track_id') . ' = :trackId')
+						->whereIn($db->quoteName('dayschedule_id'), $deleteDayScheduleIds)
 						->bind(':trackId', $trackId, ParameterType::INTEGER);
 
-					$this->_db->setQuery($query);
-					$this->_db->execute();
+					$db->setQuery($query);
+					$db->execute();
 				}
 
 				unset($deleteDayScheduleIds);
@@ -215,8 +217,8 @@ class TrackTable extends Table implements TaggableTableInterface
 			if (\count($dayscheduleIds)) {
 				// Set the new actor dayscheduleIds in the db junction table.
 				$query->clear()
-					->insert($this->_db->quoteName('#__eventschedule_dayschedule_track'))
-					->columns([$this->_db->quoteName('track_id'), $this->_db->quoteName('dayschedule_id')]);
+					->insert($db->quoteName('#__eventschedule_dayschedule_track'))
+					->columns([$db->quoteName('track_id'), $db->quoteName('dayschedule_id')]);
 
 				foreach ($dayscheduleIds as $dayscheduleId) {
 					$query->values(
@@ -230,8 +232,8 @@ class TrackTable extends Table implements TaggableTableInterface
 					);
 				}
 
-				$this->_db->setQuery($query);
-				$this->_db->execute();
+				$db->setQuery($query);
+				$db->execute();
 			}
 
 			unset($dayscheduleIds);
@@ -253,6 +255,9 @@ class TrackTable extends Table implements TaggableTableInterface
 	 */
 	public function delete($trackId = null):bool
 	{
+		$db    = $this->getDatabase();
+		$query = $db->getQuery(true);
+
 		// Set the primary key to delete.
 		$k = $this->_tbl_key;
 
@@ -265,21 +270,21 @@ class TrackTable extends Table implements TaggableTableInterface
 
 
 		// Delete the track from the dayschedule_track junction table.
-		$query = $this->_db->getQuery(true)
-			->delete($this->_db->quoteName('#__eventschedule_dayschedule_track'))
-			->where($this->_db->quoteName('track_id') . ' = :key')
+		$query->clear()
+			->delete($db->quoteName('#__eventschedule_dayschedule_track'))
+			->where($db->quoteName('track_id') . ' = :key')
 			->bind(':key', $key, ParameterType::INTEGER);
-		$this->_db->setQuery($query);
-		$this->_db->execute();
+		$db->setQuery($query);
+		$db->execute();
 
 
 		// Delete the track.
 		$query->clear()
-			->delete($this->_db->quoteName($this->_tbl))
-			->where($this->_db->quoteName($this->_tbl_key) . ' = :key')
+			->delete($db->quoteName($this->_tbl))
+			->where($db->quoteName($this->_tbl_key) . ' = :key')
 			->bind(':key', $key, ParameterType::INTEGER);
-		$this->_db->setQuery($query);
-		$this->_db->execute();
+		$db->setQuery($query);
+		$db->execute();
 
 		return true;
 	}

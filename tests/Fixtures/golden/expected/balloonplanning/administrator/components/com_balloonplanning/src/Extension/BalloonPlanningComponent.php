@@ -77,10 +77,6 @@ class BalloonPlanningComponent extends MVCComponent implements
 	 */
 	public function boot(ContainerInterface $container)
 	{
-		// In ATS the db is injected into the ATS-Html-object (=???)
-		//$db = $container->get('DatabaseDriver');
-		//$this->getRegistry()->register('ats', new ATS($db));
-
 		//$this->getRegistry()->register('balloonplanningadministrator', new AdministratorService());
 		// todo: shouldn't that be an icon per entity or per page/view?
 		//$this->getRegistry()->register('balloonplanningicon', new Icon($container->get(SiteApplication::class)));

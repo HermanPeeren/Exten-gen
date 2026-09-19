@@ -103,7 +103,7 @@ class SpeakerTable extends Table implements TaggableTableInterface
 		}
 /*
 		// Check the publish down date is not earlier than publish up.
-		if ($this->publish_down > $this->_db->getNullDate() && $this->publish_down < $this->publish_up) {
+		if ($this->publish_down > $this->getDatabase()->getNullDate() && $this->publish_down < $this->publish_up) {
 			$this->setError(Text::_('JGLOBAL_START_PUBLISH_AFTER_FINISH'));
 
 			return false;
@@ -145,6 +145,8 @@ class SpeakerTable extends Table implements TaggableTableInterface
 			$this->params = (string) $registry;
 		}
 
+		$db = $this->getDatabase();
+
 		// Get the table key and key value.
 		$k   = $this->_tbl_key;
 		$key = $this->$k;
@@ -157,17 +159,17 @@ class SpeakerTable extends Table implements TaggableTableInterface
 		// Insert or update the object based on presence of a key value.
 		if ($key) {
 			// Already have a table key, update the row.
-			$this->_db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
+			$db->updateObject($this->_tbl, $this, $this->_tbl_key, $updateNulls);
 		} else {
 			// Don't have a table key, insert the row.
-			$this->_db->insertObject($this->_tbl, $this, $this->_tbl_key);
+			$db->insertObject($this->_tbl, $this, $this->_tbl_key);
 		}
 
 
 		// Reset presentationIds to the local object.
 		$this->presentation_ids = $presentationIds;
 
-		$query = $this->_db->getQuery(true);
+		$query = $db->getQuery(true);
 
 		// Store the presentationId data if the speaker data was saved.
 		if (\is_array($this->presentation_ids) && \count($this->presentation_ids)) {
@@ -175,14 +177,14 @@ class SpeakerTable extends Table implements TaggableTableInterface
 
 			// Grab all presentationIds for the speaker, as is stored in the junction table
 			$query->clear()
-				->select($this->_db->quoteName('presentation_id'))
-				->from($this->_db->quoteName('#__eventschedule_presentation_speaker'))
-				->where($this->_db->quoteName('speaker_id') . ' = :speakerid')
-				->order($this->_db->quoteName('presentation_id') . ' ASC')
+				->select($db->quoteName('presentation_id'))
+				->from($db->quoteName('#__eventschedule_presentation_speaker'))
+				->where($db->quoteName('speaker_id') . ' = :speakerid')
+				->order($db->quoteName('presentation_id') . ' ASC')
 				->bind(':speakerid', $speakerId, ParameterType::INTEGER);
 
-			$this->_db->setQuery($query);
-			$presentationIdsInDb = $this->_db->loadColumn();
+			$db->setQuery($query);
+			$presentationIdsInDb = $db->loadColumn();
 
 			// Loop through them and check if database contains something $this->presentationIds does not
 			if (\count($presentationIdsInDb)) {
@@ -199,13 +201,13 @@ class SpeakerTable extends Table implements TaggableTableInterface
 
 				if (\count($deletePresentationIds)) {
 					$query->clear()
-						->delete($this->_db->quoteName('#__eventschedule_presentation_speaker'))
-						->where($this->_db->quoteName('speaker_id') . ' = :speakerId')
-						->whereIn($this->_db->quoteName('presentation_id'), $deletePresentationIds)
+						->delete($db->quoteName('#__eventschedule_presentation_speaker'))
+						->where($db->quoteName('speaker_id') . ' = :speakerId')
+						->whereIn($db->quoteName('presentation_id'), $deletePresentationIds)
 						->bind(':speakerId', $speakerId, ParameterType::INTEGER);
 
-					$this->_db->setQuery($query);
-					$this->_db->execute();
+					$db->setQuery($query);
+					$db->execute();
 				}
 
 				unset($deletePresentationIds);
@@ -215,8 +217,8 @@ class SpeakerTable extends Table implements TaggableTableInterface
 			if (\count($presentationIds)) {
 				// Set the new actor presentationIds in the db junction table.
 				$query->clear()
-					->insert($this->_db->quoteName('#__eventschedule_presentation_speaker'))
-					->columns([$this->_db->quoteName('speaker_id'), $this->_db->quoteName('presentation_id')]);
+					->insert($db->quoteName('#__eventschedule_presentation_speaker'))
+					->columns([$db->quoteName('speaker_id'), $db->quoteName('presentation_id')]);
 
 				foreach ($presentationIds as $presentationId) {
 					$query->values(
@@ -230,8 +232,8 @@ class SpeakerTable extends Table implements TaggableTableInterface
 					);
 				}
 
-				$this->_db->setQuery($query);
-				$this->_db->execute();
+				$db->setQuery($query);
+				$db->execute();
 			}
 
 			unset($presentationIds);
@@ -253,6 +255,9 @@ class SpeakerTable extends Table implements TaggableTableInterface
 	 */
 	public function delete($speakerId = null):bool
 	{
+		$db    = $this->getDatabase();
+		$query = $db->getQuery(true);
+
 		// Set the primary key to delete.
 		$k = $this->_tbl_key;
 
@@ -265,21 +270,21 @@ class SpeakerTable extends Table implements TaggableTableInterface
 
 
 		// Delete the speaker from the presentation_speaker junction table.
-		$query = $this->_db->getQuery(true)
-			->delete($this->_db->quoteName('#__eventschedule_presentation_speaker'))
-			->where($this->_db->quoteName('speaker_id') . ' = :key')
+		$query->clear()
+			->delete($db->quoteName('#__eventschedule_presentation_speaker'))
+			->where($db->quoteName('speaker_id') . ' = :key')
 			->bind(':key', $key, ParameterType::INTEGER);
-		$this->_db->setQuery($query);
-		$this->_db->execute();
+		$db->setQuery($query);
+		$db->execute();
 
 
 		// Delete the speaker.
 		$query->clear()
-			->delete($this->_db->quoteName($this->_tbl))
-			->where($this->_db->quoteName($this->_tbl_key) . ' = :key')
+			->delete($db->quoteName($this->_tbl))
+			->where($db->quoteName($this->_tbl_key) . ' = :key')
 			->bind(':key', $key, ParameterType::INTEGER);
-		$this->_db->setQuery($query);
-		$this->_db->execute();
+		$db->setQuery($query);
+		$db->execute();
 
 		return true;
 	}
