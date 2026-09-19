@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" version="4.3" method="upgrade">
+	<name>com_conference</name>
+	<creationDate>2023-04-07</creationDate>
+	<author>Herman Peeren</author>
+	<authorEmail>herman @yepr.nl</authorEmail>
+	<authorUrl>https://yepr.nl</authorUrl>
+	<copyright>Herman Peeren - Yepr - 2023</copyright>
+	<license>GPL 3.0</license>
+	<version>1.0.0</version>
+	<description>COM_CONFERENCE_DESCRIPTION</description>
+	<namespace path="src">Yepr\Component\Conference</namespace>
+
+	<!-- Scripts to run on installation -->
+	<scriptfile>script.php</scriptfile>
+
+	<!-- Runs on install -->
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<!-- Runs on uninstall -->
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<!-- Runs on update -->
+	<update>
+		<schemas>
+			<!--todo: <schemapath type="mysql">sql/updates/mysql</schemapath>-->
+		</schemas>
+	</update>
+
+	<!-- Media files -->
+	<media folder="media/com_conference" destination="com_conference">
+
+		<!--<folder>attachments</folder>
+		<folder>css</folder>
+		<folder>fonts</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+
+		<filename>joomla.asset.json</filename>-->
+	</media>
+
+	<!-- Front-end files -->
+	<!--<files folder="components/com_conference">-->
+		<!--<folder>language</folder>-->
+		<!--<folder>forms</folder>
+		<folder>layouts</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>-->
+	<!--</files>-->
+
+	<!-- Back-end files -->
+	<administration>
+		<!-- Menu entries --><!--todo: sys-language-string?  , '', 'Administrator', true-->
+		<menu view="program">COM_CONFERENCE_MENUNAME</menu>
+		<submenu>
+			<!-- all backend index pages as submenu item -->
+			
+			<menu link="option=com_conference&amp;view=participants">COM_CONFERENCE_SUBMENUNAME_PARTICIPANTS
+			<params>
+				<menu-quicktask-title>COM_CONFERENCE_SUBMENUNAME_PARTICIPANTS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_conference&amp;view=participants</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_conference&amp;view=talks">COM_CONFERENCE_SUBMENUNAME_TALKS
+			<params>
+				<menu-quicktask-title>COM_CONFERENCE_SUBMENUNAME_TALKS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_conference&amp;view=talks</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_conference&amp;view=rooms">COM_CONFERENCE_SUBMENUNAME_ROOMS
+			<params>
+				<menu-quicktask-title>COM_CONFERENCE_SUBMENUNAME_ROOMS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_conference&amp;view=rooms</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_conference&amp;view=program">COM_CONFERENCE_SUBMENUNAME_PROGRAM
+			<params>
+				<menu-quicktask-title>COM_CONFERENCE_SUBMENUNAME_PROGRAM</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_conference&amp;view=program</menu-quicktask>
+			</params>
+			</menu>
+					</submenu>
+
+		<!-- Core files -->
+		<files folder="administrator/components/com_conference">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<!--<filename>version.php</filename>-->
+			<filename>LICENSE.txt</filename>
+
+			<folder>forms</folder>
+			<folder>language</folder>
+			<!--<folder>layouts</folder>-->
+			<folder>services</folder>
+			<folder>sql</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+		</files>
+	</administration>
+
+	<!-- Update servers -->
+	<!--<updateservers>
+		<server type="extension" priority="1" name="MyConference">/conference</server>
+	</updateservers>-->
+</extension>

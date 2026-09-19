@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Conference\Administrator\Rule" addfieldprefix="Yepr\Component\Conference\Administrator\Field">
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_PARTICIPANT_FIELD_NAME_LABEL" description="COM_CONFERENCE_PARTICIPANT_FIELD_NAME_DESC"/>
+    <field name="organisation" type="editor" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_PARTICIPANT_FIELD_ORGANISATION_LABEL" description="COM_CONFERENCE_PARTICIPANT_FIELD_ORGANISATION_DESC"/>
+    <field name="nationality" type="list" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_PARTICIPANT_FIELD_NATIONALITY_LABEL" description="COM_CONFERENCE_PARTICIPANT_FIELD_NATIONALITY_DESC">
+      <option value="0">&amp;nbsp;</option>
+      <option value="en">English</option>
+      <option value="de">German</option>
+      <option value="other">Other</option>
+    </field>
+    <field name="address" type="textarea" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_PARTICIPANT_FIELD_ADDRESS_LABEL" description="COM_CONFERENCE_PARTICIPANT_FIELD_ADDRESS_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

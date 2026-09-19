@@ -2,8 +2,8 @@
 <!-- "Language" in LIonCore-M3-->
 <form>
 	<fieldset name="general"
-		addruleprefix="Yepr\\Component\\Extengen\\\Administrator\\MetaProjectForm\\LIonCore_M3\\Rule"
-		addfieldprefix="Yepr\\Component\\Extengen\\\Administrator\\MetaProjectForm\\LIonCore_M3\\Field"
+		addruleprefix="Yepr\Component\Extengen\Administrator\Rule"
+		addfieldprefix="Yepr\Component\Extengen\Administrator\Field\LIonCore_M3"
 	>
 		<field
 			name="id"

@@ -32,7 +32,7 @@ class {{ pageName }}Controller extends AdminController
 	 *
 	 * @return  \Joomla\CMS\MVC\Model\BaseDatabaseModel
 	 */
-	public function getModel($name = '{{ pageName }}', $prefix = 'Administrator', $config = ['ignore_request' => true])
+	public function getModel($name = '{{ pageName }}', $prefix = 'Site', $config = ['ignore_request' => true])
 	{
 		return parent::getModel($name, $prefix, $config);
 	}

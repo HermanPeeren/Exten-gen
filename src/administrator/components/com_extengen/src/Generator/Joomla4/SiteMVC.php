@@ -295,8 +295,12 @@ class SiteMVC extends Generator
 			// Create tmpl-file for the Details-View
 			if ($pageType=='Details')
 			{
-				$templateFileName = 'edit.php.twig';
-				$generatedFileName = 'edit.php';
+				// The site has no edit template: a front-end details page shows a
+				// record, it does not edit one. This asked for the administrator's
+				// name, which exists nowhere under components/, so generating any
+				// project with a details page in its front-end section threw.
+				$templateFileName = 'default.php.twig';
+				$generatedFileName = 'default.php';
 				$templateFilePath = $templateFilePathRoot . '/tmpl/details/';
 				$generatedFilePath = $generatedFilePathRoot  . '/tmpl/' . strtolower($pageName) . '/';
 

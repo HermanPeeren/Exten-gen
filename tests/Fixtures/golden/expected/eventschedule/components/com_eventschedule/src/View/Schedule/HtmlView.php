@@ -9,7 +9,7 @@
  * @license    GPL vs3+
  */
 
-namespace Yepr\Component\eventschedule\Administrator\View\Schedule;
+namespace Yepr\Component\eventschedule\Site\View\Schedule;
 
 \defined('_JEXEC') or die;
 
@@ -22,7 +22,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\GenericDataException;
 use Exception;
 
-use Yepr\Component\eventschedule\Administrator\Model\ScheduleModel;
+use Yepr\Component\eventschedule\Site\Model\ScheduleModel;
 
 /**
  * View class for a list of Schedule.

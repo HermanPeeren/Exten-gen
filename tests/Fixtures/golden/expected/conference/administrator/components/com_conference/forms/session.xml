@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Conference\Administrator\Rule" addfieldprefix="Yepr\Component\Conference\Administrator\Field">
+    <field name="title" type="text" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_SESSION_FIELD_TITLE_LABEL" description="COM_CONFERENCE_SESSION_FIELD_TITLE_DESC"/>
+    <field name="time" type="calendar" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_SESSION_FIELD_TIME_LABEL" description="COM_CONFERENCE_SESSION_FIELD_TIME_DESC"/>
+    <field name="talk" type="sql" query="SELECT id, `title` FROM `#__conference_talk`" header="&amp;nbsp;" key_field="id" value_field="title" label="COM_CONFERENCE_SESSION_FIELD_TALK_LABEL" description="COM_CONFERENCE_SESSION_FIELD_TALK_DESC"/>
+    <field name="room" type="sql" query="SELECT id, `room_name` FROM `#__conference_room`" header="&amp;nbsp;" key_field="id" value_field="room_name" label="COM_CONFERENCE_SESSION_FIELD_ROOM_LABEL" description="COM_CONFERENCE_SESSION_FIELD_ROOM_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

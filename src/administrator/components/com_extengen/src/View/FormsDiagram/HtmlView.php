@@ -44,12 +44,6 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null): void
 	{
-        // Temporary, test
-		/*$filepath = JPATH_ROOT . '/administrator/components/com_extengen/test.json'; // GetFormdata - Dit uit db halen!
-        $json_string = file_get_contents($filepath);
-        $project = json_decode($json_string);*/
-
-
 		$model = $this->getModel();
 
 		// Get the project_id and put it in the model

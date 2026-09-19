@@ -32,7 +32,7 @@ class ScheduleController extends AdminController
 	 *
 	 * @return  \Joomla\CMS\MVC\Model\BaseDatabaseModel
 	 */
-	public function getModel($name = 'Schedule', $prefix = 'Administrator', $config = ['ignore_request' => true])
+	public function getModel($name = 'Schedule', $prefix = 'Site', $config = ['ignore_request' => true])
 	{
 		return parent::getModel($name, $prefix, $config);
 	}

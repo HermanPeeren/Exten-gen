@@ -9,7 +9,7 @@
  * @license    GPL3
  */
 
-namespace Yepr\Component\BalloonPlanning\Administrator\View\Flights;
+namespace Yepr\Component\BalloonPlanning\Site\View\Flights;
 
 \defined('_JEXEC') or die;
 
@@ -22,7 +22,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\GenericDataException;
 use Exception;
 
-use Yepr\Component\BalloonPlanning\Administrator\Model\FlightsModel;
+use Yepr\Component\BalloonPlanning\Site\Model\FlightsModel;
 
 /**
  * View class for a list of Flights.

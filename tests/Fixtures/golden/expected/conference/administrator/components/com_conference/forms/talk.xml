@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Conference\Administrator\Rule" addfieldprefix="Yepr\Component\Conference\Administrator\Field">
+    <field name="title" type="text" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_TALK_FIELD_TITLE_LABEL" description="COM_CONFERENCE_TALK_FIELD_TITLE_DESC"/>
+    <field name="description" type="textarea" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_TALK_FIELD_DESCRIPTION_LABEL" description="COM_CONFERENCE_TALK_FIELD_DESCRIPTION_DESC"/>
+    <field name="speaker" type="sql" query="SELECT id, `name` FROM `#__conference_speaker`" header="&amp;nbsp;" key_field="id" value_field="name" label="COM_CONFERENCE_TALK_FIELD_SPEAKER_LABEL" description="COM_CONFERENCE_TALK_FIELD_SPEAKER_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

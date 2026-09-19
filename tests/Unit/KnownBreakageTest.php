@@ -8,71 +8,47 @@ use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 
 /**
- * Bugs the baseline cannot hold, written down so they are not rediscovered.
+ * Things the golden files cannot hold, written down so they are not rediscovered.
  *
  * A golden file records output. It cannot record a generator that throws before
- * producing any, and that is exactly what happens to a model whose front-end
- * section contains a details page — so it is recorded here instead.
+ * producing any, and it cannot record a file written twice — the second write
+ * simply wins, and the file looks ordinary afterwards.
  *
- * These tests pass while the bug is present. Fixing it turns them red, which is
- * the point: the failure is the reminder to capture the newly working output and
- * delete the test. Step 1.5 is where that happens.
+ * These tests pass while the behaviour is present. Fixing one turns its test
+ * red, which is the reminder to capture the newly correct output and delete it.
+ * That is how the front-end crash left: recorded here at 1.2, fixed at 1.5, and
+ * the test went with it.
  */
 final class KnownBreakageTest extends TestCase
 {
-    private function model(string $name): object
-    {
-        $path = \dirname(__DIR__) . '/Fixtures/known-breakage/' . $name . '.json';
-
-        return json_decode((string) file_get_contents($path), false, 512, JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * SiteMVC asks for a template the site side does not have.
-     *
-     * `SiteMVC::generate()` renders `tmpl/details/edit.php.twig`, which exists
-     * for the administrator and not for the site, where the equivalent is
-     * `default.php.twig`. It is a copy-paste from `AdminMVC`, and it means front
-     * end generation has never worked for a details page: every committed
-     * example under `generated/` has index pages only.
-     *
-     * The fix is one template name, but it is not made here — 1.2 changes no
-     * code, so that the port at 1.4 is measured against today's behaviour rather
-     * than a version of it nobody has run.
-     */
-    public function testAFrontEndDetailsPageStillCrashesGeneration(): void
-    {
-        $this->expectException(\Twig\Error\LoaderError::class);
-        $this->expectExceptionMessageMatches('/Unable to find template "edit\.php\.twig"/');
-
-        GenerationHarness::run($this->model('conference'));
-    }
-
     /**
      * A page listed twice in a section is generated twice, silently.
      *
      * `eventschedule` lists `Tracks` twice among its back-end pages, and does
-     * not list `Track` at all. The generator loops over the *references* in the
-     * section rather than over the pages, so it produced the whole Tracks
+     * not list `Track` at all. The generator loops over the *references* in a
+     * section rather than over the pages, so it produces the whole Tracks
      * quartet twice and the Track details page never.
      *
-     * Both halves of that were invisible. The generator called
+     * Both halves were invisible until 1.4. The generator called
      * `fopen(..., 'w')` for every file, and a second write to the same path is
      * just a write; nothing counted references, so nothing noticed the missing
-     * page either. It surfaced only when generation started going into a
-     * collection that refuses a path it already holds.
+     * page either. Generating into a collection that refuses a path it already
+     * holds made both visible at once.
      *
-     * So this is a model that has drifted rather than a generator that is
-     * wrong - but a generator that cannot tell the difference is worth fixing
-     * too. Step 1.5: the validator should refuse a section that names a page
-     * twice, which turns a silent overwrite into a sentence.
+     * What it costs is small and real: the four MVC files are overwritten with
+     * identical content, and the manifest gets a **duplicated submenu entry**
+     * for Tracks. Measured rather than assumed — generating the same model with
+     * the second reference removed changes exactly one file.
      *
-     * Until then the last write wins, exactly as before, so that moving the
-     * writing changed no output.
+     * Deliberately not fixed here. The model says something contradictory, so
+     * the repair belongs in the model rather than in a generator that quietly
+     * tidies up after it — and which of those to do is a decision about stored
+     * data, not about this code. A validator rule refusing a section that names
+     * a page twice is the candidate.
      */
     public function testAPageListedTwiceIsStillGeneratedTwice(): void
     {
-        $collisions = GenerationHarness::collisions($this->goldenModel('eventschedule'));
+        $collisions = GenerationHarness::collisions($this->model('eventschedule'));
 
         $this->assertSame(
             [
@@ -86,32 +62,41 @@ final class KnownBreakageTest extends TestCase
         );
     }
 
-    public function testAModelWithoutCollidingPageNamesHasNone(): void
+    /**
+     * The same data problem, in a different repeating group.
+     *
+     * `conference` lists `en-GB` twice among its languages, so each en-GB file
+     * is written twice. Found by the counter rather than by anybody looking:
+     * this one had never been suspected, and it is the reason the rule worth
+     * having is about duplicates in a repeating group generally, not about page
+     * references in particular.
+     */
+    public function testADuplicatedLanguageWritesTheSameFilesTwice(): void
     {
-        $this->assertSame([], GenerationHarness::collisions($this->goldenModel('balloonplanning')));
+        $this->assertSame(
+            [
+                'administrator/components/com_conference/language/en-GB/com_conference.ini'     => 2,
+                'administrator/components/com_conference/language/en-GB/com_conference.sys.ini' => 2,
+                'components/com_conference/language/en-GB/com_conference.ini'                   => 2,
+            ],
+            GenerationHarness::collisions($this->model('conference'))
+        );
     }
 
-    /** A model from the golden set, which generates cleanly. */
-    private function goldenModel(string $name): object
+    /**
+     * And a model without a duplicated entry anywhere produces none, so the
+     * counter is reporting something real rather than firing on every run.
+     */
+    public function testACleanModelHasNoCollisions(): void
+    {
+        $this->assertSame([], GenerationHarness::collisions($this->model('balloonplanning')));
+    }
+
+    /** A model from the golden set. */
+    private function model(string $name): object
     {
         $path = \dirname(__DIR__) . '/Fixtures/golden/models/' . $name . '.json';
 
         return json_decode((string) file_get_contents($path), false, 512, JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * And the template really is missing, rather than merely unfound.
-     *
-     * Without this, the test above would keep passing if the loader broke for
-     * some entirely different reason.
-     */
-    public function testTheSiteSideHasNoEditTemplate(): void
-    {
-        $siteTemplates = \dirname(__DIR__, 2)
-            . '/src/administrator/components/com_extengen/generator_templates/Joomla4'
-            . '/component/components/com_componentname/tmpl/details';
-
-        $this->assertFileExists($siteTemplates . '/default.php.twig');
-        $this->assertFileDoesNotExist($siteTemplates . '/edit.php.twig');
     }
 }

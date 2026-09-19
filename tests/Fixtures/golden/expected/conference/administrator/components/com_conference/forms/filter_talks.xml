@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fields name="filter">
+    <field name="search" type="text" inputmode="search" label="COM_CONFERENCE_TALKS_FIELD_SEARCH_LABEL" description="COM_CONFERENCE_TALKS_FIELD_SEARCH_DESC" hint="JSEARCH_FILTER"/>
+    <field name="title" type="sql" query="SELECT DISTINCT `title` AS value, `title` AS text FROM `#__conference_talk`" header="COM_CONFERENCE_TALKS_FILTER_FIELD_TITLE_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_CONFERENCE_TALKS_FILTER_FIELD_TITLE_LABEL" description="COM_CONFERENCE_TALKS_FILTER_FIELD_TITLE_DESC"/>
+    <field name="speaker" type="sql" query="SELECT `id` AS value, `name` AS text FROM `#__conference_speaker`" header="COM_CONFERENCE_TALKS_FILTER_FIELD_SPEAKER_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_CONFERENCE_TALKS_FILTER_FIELD_SPEAKER_LABEL" description="COM_CONFERENCE_TALKS_FILTER_FIELD_SPEAKER_DESC"/>
+  </fields>
+</form>

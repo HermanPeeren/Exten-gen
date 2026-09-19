@@ -20,10 +20,10 @@ use Joomla\CMS\Factory;
 
 // The class name must always be the same as the filename (in camel case)
 // extend the list field type
-class EntityReferenceField extends ListField
+class LanguageReferenceField extends ListField
 {
 	//The field class must know its own type through the variable $type.
-	protected $type = 'ClassifierReference';
+	protected $type = 'LanguageReference';
 
 	/**
 	 * Get the options for the list field: all Qualifiers (= Concepts + Annotations)  currently in the project

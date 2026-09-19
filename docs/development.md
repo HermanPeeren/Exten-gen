@@ -239,14 +239,27 @@ are generated Joomla code: analysing them says whether the *generator* is right,
 which the golden comparison already answers, and reformatting them would break
 the very thing they pin.
 
-### A model that cannot be pinned
+### Duplicated entries in a model
 
-`tests/Fixtures/known-breakage/conference.json` has a details page in its
-front-end section, and generation throws: `SiteMVC` renders
-`tmpl/details/edit.php.twig`, which exists for the administrator and not for the
-site. A golden file cannot record a generator that produces nothing, so
-`KnownBreakageTest` records it instead. Fixing it turns that test red, which is
-the reminder to capture the newly working output and delete it. Step 1.5.
+`KnownBreakageTest` records something a golden file cannot: a file written
+twice. The second write wins and the file looks ordinary afterwards, so this was
+invisible until generation started going into a collection.
+
+Two stored models contain a repeated entry in a repeating group:
+
+| Model | Repeated | Costs |
+|---|---|---|
+| `eventschedule` | `Tracks` listed twice among back-end pages | the four Tracks MVC files written twice, and a duplicated submenu entry in the manifest |
+| `conference` | `en-GB` listed twice among languages | each en-GB language file written twice |
+
+Neither is fixed. The models say something contradictory, so the repair belongs
+in the model rather than in a generator that quietly tidies up after it — and
+which of those to do is a decision about stored data. A validator rule refusing
+any repeating group that names the same thing twice is the candidate, and it
+would catch both.
+
+The measurement is in the test: generating `eventschedule` with the second
+reference removed changes exactly one file.
 
 ## Building
 

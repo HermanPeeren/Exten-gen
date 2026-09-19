@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fields name="filter">
+    <field name="search" type="text" inputmode="search" label="COM_CONFERENCE_ROOMS_FIELD_SEARCH_LABEL" description="COM_CONFERENCE_ROOMS_FIELD_SEARCH_DESC" hint="JSEARCH_FILTER"/>
+    <field name="room_name" type="sql" query="SELECT DISTINCT `room_name` AS value, `room_name` AS text FROM `#__conference_room`" header="COM_CONFERENCE_ROOMS_FILTER_FIELD_ROOM_NAME_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_CONFERENCE_ROOMS_FILTER_FIELD_ROOM_NAME_LABEL" description="COM_CONFERENCE_ROOMS_FILTER_FIELD_ROOM_NAME_DESC"/>
+    <field name="position" type="sql" query="SELECT DISTINCT `position` AS value, `position` AS text FROM `#__conference_room`" header="COM_CONFERENCE_ROOMS_FILTER_FIELD_POSITION_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_CONFERENCE_ROOMS_FILTER_FIELD_POSITION_LABEL" description="COM_CONFERENCE_ROOMS_FILTER_FIELD_POSITION_DESC"/>
+  </fields>
+</form>

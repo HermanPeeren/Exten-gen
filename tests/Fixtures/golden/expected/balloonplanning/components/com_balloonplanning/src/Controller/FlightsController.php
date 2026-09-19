@@ -32,7 +32,7 @@ class FlightsController extends AdminController
 	 *
 	 * @return  \Joomla\CMS\MVC\Model\BaseDatabaseModel
 	 */
-	public function getModel($name = 'Flights', $prefix = 'Administrator', $config = ['ignore_request' => true])
+	public function getModel($name = 'Flights', $prefix = 'Site', $config = ['ignore_request' => true])
 	{
 		return parent::getModel($name, $prefix, $config);
 	}

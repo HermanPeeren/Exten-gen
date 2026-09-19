@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Conference\Administrator\Rule" addfieldprefix="Yepr\Component\Conference\Administrator\Field">
+    <field name="room_name" type="text" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_ROOM_FIELD_ROOM_NAME_LABEL" description="COM_CONFERENCE_ROOM_FIELD_ROOM_NAME_DESC"/>
+    <field name="position" type="textarea" format="%Y-%m-%d %H:%M" label="COM_CONFERENCE_ROOM_FIELD_POSITION_LABEL" description="COM_CONFERENCE_ROOM_FIELD_POSITION_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>
