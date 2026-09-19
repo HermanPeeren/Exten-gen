@@ -193,6 +193,38 @@ final class ProjectValidator implements ValidatorInterface
             }
         }
 
+        // A slot is one place in one generated file. Two bodies aimed at it
+        // means one of them is emitted and the other is not, and the model
+        // gives no hint which - the last one wins only because it was stored
+        // later.
+        $owners = [];
+
+        foreach ($model->entities() as $entity) {
+            $owners['entity "' . (string) ($entity->entity_name ?? '?') . '"'] = $entity;
+        }
+
+        foreach ($model->pages() as $page) {
+            $owners['page "' . (string) ($page->page_name ?? '?') . '"'] = $page;
+        }
+
+        foreach ($owners as $what => $node) {
+            $entries = \is_object($node->customcode ?? null) ? get_object_vars($node->customcode) : [];
+
+            $slots = array_map(
+                static fn (mixed $e): string => \is_object($e) ? trim((string) ($e->slot ?? '')) : '',
+                array_values($entries)
+            );
+
+            foreach ($this->repeated($slots) as $slot => $count) {
+                $errors[] = \sprintf(
+                    '%s has %d pieces of custom code for the slot "%s"; a slot holds one',
+                    $what,
+                    $count,
+                    $slot
+                );
+            }
+        }
+
         return $errors;
     }
 

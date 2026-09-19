@@ -170,4 +170,6 @@ class {{ pageName }}Model extends AdminModel
 	return parent::getTable($name, $prefix, $options);
 	}
 
+{{ slots['detailsmodel.methods']|raw }}
+
 }

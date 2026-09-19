@@ -74,8 +74,13 @@ class PresentationsModel extends ListModel
 			$db->quoteName('#__eventschedule_presentation_type', 'presentation_type'),
 				$db->quoteName('presentation_type.id') . ' = ' . $db->quoteName('presentation.presentation_type_id')
 		);
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

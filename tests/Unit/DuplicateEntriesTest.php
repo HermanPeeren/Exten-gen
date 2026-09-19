@@ -163,6 +163,62 @@ final class DuplicateEntriesTest extends TestCase
     }
 
     /**
+     * A slot holds one body.
+     *
+     * Two aimed at the same place means one is emitted and the other is not,
+     * and the model gives no hint which: the later one wins only because it was
+     * stored later.
+     */
+    public function testTwoPiecesOfCustomCodeForOneSlotIsADuplicate(): void
+    {
+        $project = Project::fromJson(json_encode([
+            'extensions' => ['component' => ['component_name' => 'X']],
+            'datamodel'  => [
+                'datamodel0' => [
+                    'entity_name' => 'Flight',
+                    'customcode'  => [
+                        'customcode0' => ['slot' => 'table.check', 'code' => 'one'],
+                        'customcode1' => ['slot' => 'table.check', 'code' => 'the other'],
+                    ],
+                ],
+            ],
+            'pages' => ['pages0' => ['page_name' => 'Flights']],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            (new ProjectValidator())->assertValid($project);
+            $this->fail('One slot cannot hold two bodies.');
+        } catch (ValidationException $e) {
+            $this->assertContains(
+                'entity "Flight" has 2 pieces of custom code for the slot "table.check"; a slot holds one',
+                $e->getErrors()
+            );
+        }
+    }
+
+    /**
+     * Two different slots on one entity are two different places.
+     */
+    public function testTwoSlotsOnOneEntityIsFine(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        (new ProjectValidator())->assertValid(Project::fromJson(json_encode([
+            'extensions' => ['component' => ['component_name' => 'X']],
+            'datamodel'  => [
+                'datamodel0' => [
+                    'entity_name' => 'Flight',
+                    'customcode'  => [
+                        'customcode0' => ['slot' => 'table.check', 'code' => 'one'],
+                        'customcode1' => ['slot' => 'table.methods', 'code' => 'the other'],
+                    ],
+                ],
+            ],
+            'pages' => ['pages0' => ['page_name' => 'Flights']],
+        ], JSON_THROW_ON_ERROR)));
+    }
+
+    /**
      * And the models the suite generates from are clean, both ways: the
      * validator accepts them, and nothing is written twice when they run.
      */

@@ -162,4 +162,7 @@ class PresentationModel extends AdminModel
 	return parent::getTable($name, $prefix, $options);
 	}
 
+	// <extengen id="detailsmodel.methods">
+	// </extengen>
+
 }

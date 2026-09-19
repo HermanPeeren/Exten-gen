@@ -67,8 +67,13 @@ class DeparturePlacesModel extends ListModel
 		]);
 		$query->from($db->quoteName('#__balloonplanning_departureplace', 'departureplace'));
 
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

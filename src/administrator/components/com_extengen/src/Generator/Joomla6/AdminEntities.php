@@ -90,6 +90,10 @@ class AdminEntities extends Generator
 				$templateVariables['m2m_localstore'] = '';
 				$templateVariables['m2m_relatedstore'] = '';
 
+				// Code written against this entity in the model, as regions the
+				// Table template emits. See CustomCode and SlotCatalogue.
+				$templateVariables['slots'] = $this->slots($entity, 'Entity');
+
 				// --- CREATE TABLE sql statement for this entity and write to sql-file ---
 				// N.B.: I now name the table singular. It might be nicer to do it in plural (but inflector only works for English names)
 				// Maybe stick to English names for the entities. But for now: use entityName for the tableName

@@ -115,8 +115,13 @@ class ProgramModel extends ListModel
 				->where($db->quoteName('program.title') . ' LIKE :title')
 				->bind(':title', $title, ParameterType::STRING);
 		}
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

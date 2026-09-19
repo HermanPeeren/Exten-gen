@@ -17,7 +17,10 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+// The suite's bootstrap, not the autoloader on its own: a Joomla source
+// file opens with `defined('_JEXEC') or die`, so loading one without that
+// constant ends the script with no output and no error at all.
+require __DIR__ . '/../tests/bootstrap.php';
 
 use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Gen\Core\Testing\GoldenFiles;

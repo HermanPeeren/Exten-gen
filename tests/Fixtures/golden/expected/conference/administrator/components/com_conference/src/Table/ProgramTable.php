@@ -113,6 +113,9 @@ class ProgramTable extends Table implements TaggableTableInterface
 			$this->publish_down = null;
 		}*/
 
+		// <extengen id="table.check">
+		// </extengen>
+
 		return true;
 	}
 
@@ -197,5 +200,8 @@ class ProgramTable extends Table implements TaggableTableInterface
 
 		return true;
 	}
+
+	// <extengen id="table.methods">
+	// </extengen>
 
 }

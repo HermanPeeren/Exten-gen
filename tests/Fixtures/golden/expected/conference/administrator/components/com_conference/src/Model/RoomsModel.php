@@ -84,8 +84,13 @@ class RoomsModel extends ListModel
 				->where($db->quoteName('room.position') . ' LIKE :position')
 				->bind(':position', $position, ParameterType::STRING);
 		}
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

@@ -64,8 +64,13 @@ class TracksModel extends ListModel
 		]);
 		$query->from($db->quoteName('#__eventschedule_track', 'track'));
 
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

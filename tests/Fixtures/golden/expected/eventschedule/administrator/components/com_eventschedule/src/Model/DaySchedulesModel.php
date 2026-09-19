@@ -64,8 +64,13 @@ class DaySchedulesModel extends ListModel
 		]);
 		$query->from($db->quoteName('#__eventschedule_dayschedule', 'dayschedule'));
 
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

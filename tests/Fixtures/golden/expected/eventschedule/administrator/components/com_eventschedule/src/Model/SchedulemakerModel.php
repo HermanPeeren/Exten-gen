@@ -78,8 +78,13 @@ class SchedulemakerModel extends ListModel
 			$db->quoteName('#__eventschedule_dayschedule', 'dayschedule'),
 				$db->quoteName('dayschedule.id') . ' = ' . $db->quoteName('locator.dayschedule_id')
 		);
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

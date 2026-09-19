@@ -91,8 +91,13 @@ class TalksModel extends ListModel
 				->where($db->quoteName('talk.speaker_id') . ' LIKE :speaker')
 				->bind(':speaker', $speaker, ParameterType::STRING);
 		}
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

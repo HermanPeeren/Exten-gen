@@ -197,6 +197,45 @@ reason: `composer test-js` runs it under `node --test` with no dependencies and
 no browser. What is left in the element is reading and writing the DOM, and that
 waits for the Cypress spec in 1.11.
 
+## How custom code works
+
+```
+src/CustomCode/SlotCatalogue.php   the closed list of places, and what is in scope at each
+src/CustomCode/CustomCode.php      one object's code, as regions a template emits
+src/Field/SlotField.php            the dropdown, whose options are the catalogue
+forms/customcode*.xml              a repeating group on an entity and on each kind of page
+```
+
+A generator that covers everything does not exist. The two usual answers are
+both bad: telling people to edit the output means the next run destroys their
+work, and letting the generator write anything at all means the model stops
+describing the extension.
+
+**Slots are the mechanism.** A slot is a named point in one generated file. The
+code lives in the model, so it survives a regeneration by construction rather
+than by rescue, it is in the same version history as the rest of the model, and
+it can later be replaced by a nested sub-model that generates the same body - at
+which point the slot disappears and nothing else moves.
+
+The list is closed on purpose. Somebody reading a model can see every place the
+generator was overruled, and code stored against a slot that no longer exists is
+reported instead of quietly going nowhere.
+
+**The merger is the safety net.** `ProtectedRegionMerger` lifts the regions out
+of the previous run's unpacked tree and puts them into the new files, so an edit
+made in the output despite all of the above is not eaten. A region the new
+output no longer has is reported by path and id, because its content is then
+only in the file on disk.
+
+**One place writes a marker.** Templates emit `{{ slots['table.check']|raw }}`
+and never see a body. A template that wrote its own markers could drift from the
+pattern the merger matches, and the drift would show up only as somebody's code
+failing to come back.
+
+Adding a slot means adding it to `SlotCatalogue` and emitting it from one
+template. `SlotContractTest` then checks the two agree, against the generated
+output rather than against a list written beside it.
+
 ## How generation works
 
 ```

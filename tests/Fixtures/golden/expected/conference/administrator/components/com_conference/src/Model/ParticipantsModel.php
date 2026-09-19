@@ -86,8 +86,13 @@ class ParticipantsModel extends ListModel
 				->where($db->quoteName('speaker.organisation') . ' LIKE :organisation')
 				->bind(':organisation', $organisation, ParameterType::STRING);
 		}
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

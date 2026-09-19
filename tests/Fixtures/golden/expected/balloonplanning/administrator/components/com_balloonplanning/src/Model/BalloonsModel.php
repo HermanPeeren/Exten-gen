@@ -67,8 +67,13 @@ class BalloonsModel extends ListModel
 		]);
 		$query->from($db->quoteName('#__balloonplanning_balloon', 'balloon'));
 
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

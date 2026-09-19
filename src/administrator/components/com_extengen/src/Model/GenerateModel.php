@@ -43,7 +43,9 @@ use Joomla\Utilities\ArrayHelper;
 
 use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
+use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
+use Yepr\Gen\Core\Output\ProtectedRegionMerger;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
 use Yepr\Gen\Core\Model\ValidationException;
 use Yepr\Gen\Core\Output\FileCollection;
@@ -156,6 +158,11 @@ class GenerateModel extends AdminModel
 			throw new \RuntimeException('Cannot create ' . $root);
 		}
 
+		// Carry back anything somebody wrote into the last run's output.
+		// Slots in the model are how custom code is meant to survive; this is
+		// the net under that, for edits made in the generated files anyway.
+		$this->carryOverEdits($files, $root);
+
 		$writer = new ZipWriter();
 
 		// The archive is the deliverable: it is what somebody installs, and it
@@ -181,6 +188,76 @@ class GenerateModel extends AdminModel
 		$this->log[] = '<b>' . count($files) . ' files</b>';
 		$this->log[] = 'package: ' . $archive;
 		$this->log[] = 'unpacked: ' . $root;
+	}
+
+	/**
+	 * Merge the previous run's protected regions into the new file set.
+	 *
+	 * The safety net, not the mechanism. Custom code belongs in the model,
+	 * where regenerating cannot touch it; this is for the edit somebody made
+	 * directly in a generated file, which otherwise disappears the next time
+	 * anyone presses generate. Losing somebody's work without telling them is
+	 * the worst thing a generator can do, so a region the new output no
+	 * longer has is reported rather than dropped quietly.
+	 *
+	 * It reads the unpacked tree from the last run, which is the only copy of
+	 * the output this component keeps - the zip is the deliverable and may
+	 * have been installed and edited somewhere else entirely, where nothing
+	 * here can see it.
+	 *
+	 * @param   FileCollection  $files  What was generated, changed in place.
+	 * @param   string          $root   Where the previous run was unpacked.
+	 *
+	 * @return  void
+	 */
+	private function carryOverEdits(FileCollection $files, string $root): void
+	{
+		if (!is_dir($root))
+		{
+			// Nothing has been generated here before.
+			return;
+		}
+
+		$merger  = new ProtectedRegionMerger(SlotCatalogue::TAG);
+		$carried = 0;
+		$orphans = [];
+
+		foreach ($files->all() as $path => $contents)
+		{
+			$previous = $root . '/' . $path;
+
+			if (!is_file($previous))
+			{
+				continue;
+			}
+
+			$existing = (string) file_get_contents($previous);
+			$merged   = $merger->merge($existing, $contents);
+
+			foreach ($merger->orphanedRegions() as $id)
+			{
+				$orphans[] = $path . ' : ' . $id;
+			}
+
+			if ($merged !== $contents)
+			{
+				$files->replace($path, $merged);
+				$carried++;
+			}
+		}
+
+		if ($carried > 0)
+		{
+			$this->log[] = 'kept hand-written regions in ' . $carried . ' file(s) from the previous run';
+		}
+
+		foreach ($orphans as $orphan)
+		{
+			// Its content is still in the file on disk and nowhere else, so
+			// saying where is the whole of the warning.
+			$this->log[] = '<b>not carried over, and only in the previous output: ' .
+			htmlspecialchars($orphan, ENT_QUOTES, 'UTF-8') . '</b>';
+		}
 	}
 
 	/**

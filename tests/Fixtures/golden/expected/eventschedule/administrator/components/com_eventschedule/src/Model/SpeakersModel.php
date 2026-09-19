@@ -65,8 +65,13 @@ class SpeakersModel extends ListModel
 		]);
 		$query->from($db->quoteName('#__eventschedule_speaker', 'speaker'));
 
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

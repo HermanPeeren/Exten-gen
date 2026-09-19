@@ -116,6 +116,8 @@ class {{ entityName }}Table extends Table implements TaggableTableInterface
 			$this->publish_down = null;
 		}*/
 
+{{ slots['table.check']|raw }}
+
 		return true;
 	}
 
@@ -203,5 +205,7 @@ class {{ entityName }}Table extends Table implements TaggableTableInterface
 
 		return true;
 	}
+
+{{ slots['table.methods']|raw }}
 
 }

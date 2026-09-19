@@ -75,8 +75,13 @@ class TicketsModel extends ListModel
 			$db->quoteName('#__balloonplanning_passenger', 'passenger'),
 				$db->quoteName('passenger.id') . ' = ' . $db->quoteName('ticket.passenger_id')
 		);
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

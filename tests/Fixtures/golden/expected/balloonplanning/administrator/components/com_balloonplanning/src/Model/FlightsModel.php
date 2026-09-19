@@ -79,8 +79,13 @@ class FlightsModel extends ListModel
 			$db->quoteName('#__balloonplanning_departureplace', 'departureplace'),
 				$db->quoteName('departureplace.id') . ' = ' . $db->quoteName('plannedflight.departureplace_id')
 		);
+		// <extengen id="listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="listmodel.methods">
+	// </extengen>
 
 }

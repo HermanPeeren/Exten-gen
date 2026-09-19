@@ -94,6 +94,11 @@ class AdminMVC extends Generator
 
 			$templateVariables['pageName'] = $pageName;
 
+			// Code written against this page in the model. The slots on offer
+			// depend on the kind of page: an index page has no save() to extend
+			// and a details page has no list query.
+			$templateVariables['slots'] = $this->slots($page, 'Page', (string) $page->page_type);
+
 			// Get links.
 			// Only one link possible from a page. Todo: adjust model to only give one link (or use multiple links)
 			// Todo: what if links is (still) empty? ==> check if links not empty! Otherwise: get another linkPageName: current pageName;

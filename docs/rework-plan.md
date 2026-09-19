@@ -347,9 +347,32 @@ Joomla 6. What is proven here is `ReferenceIndex` against the three stored model
 markup contract, and every rule in `referenceOptions` under Node's test runner - 22 cases,
 no dependencies. The browser wiring itself is unverified until 1.11.
 
-**1.10 Custom code.** Model-side slots as the primary mechanism, with
-`ProtectedRegionMerger` as a safety net for edits made in generated output. Designed so
-that a slot can later be replaced by a nested sub-model that generates its content.
+**1.10 Custom code.** `SlotCatalogue` is a closed list of named points in generated
+files; `CustomCode` turns what a model object stores into regions; templates emit
+`{{ slots['table.check']|raw }}` and never see a body, so one place writes a marker and
+cannot drift from the pattern the merger matches. Five slots to start: two on an entity's
+table, two on a list model, one on a details model. An entity and each kind of page carry
+a `customcode` repeating group, and the dropdown's options are the catalogue rather than a
+list in the form XML that would drift from it.
+
+`ProtectedRegionMerger` runs over the previous run's unpacked tree before anything is
+written, so an edit made in the output despite the model-side mechanism is carried back.
+A region the new output no longer has is reported by path and id, because its content is
+then only in the file on disk.
+
+Back end only. Every slot names exactly one generated file per object, which is what lets
+a person say where their code will end up; the site templates generate a second list model
+with the same method names, so a shared slot would put one body in two files without
+saying so. Site slots would be their own ids, and wait on 1.12.
+
+`ProjectValidator` refuses two bodies for one slot. `SlotContractTest` checks the
+catalogue, the templates, the forms and the generated output against each other, and
+`CustomCodeGenerationTest` runs a real model with custom code through the real generators
+and reads the file back - including that it still parses, which is the one thing pasting a
+body in verbatim can break.
+
+*Done when* code written in the model appears in the right place in the generated file,
+regenerating does not lose it, and an edit made in the output survives a regeneration.
 
 **1.11 Quality gate.** PHPStan clean at an agreed level, Cypress specs for the main flows,
 and a test that generated PHP actually parses.
