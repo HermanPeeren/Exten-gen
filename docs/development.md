@@ -105,6 +105,32 @@ Run the gates against a fresh clone, not the working tree. Git does not track
 empty directories, and a working tree that passes says nothing about what a
 runner checks out.
 
+### Long paths on Windows
+
+Clone into a short directory. The deepest file here is 169 characters:
+
+```
+src/administrator/components/com_extengen/generator_templates/Joomla4/component/
+administrator/components/com_componentname/src/Controller/AdminDetailsController.php.twig
+```
+
+That is inherent — the generator templates mirror a Joomla component, inside a
+repository that mirrors a Joomla installation, so the two layouts nest. Windows
+stops at 260 characters unless `core.longpaths` is on, which it is not by
+default, so a clone into a directory more than about ninety characters deep fails
+part way through with `Filename too long` and leaves a repository that looks
+cloned but is missing files.
+
+Either keep the clone shallow in the filesystem, or:
+
+```
+git config --global core.longpaths true
+```
+
+Linux CI never sees this, so it will not be caught for you. The flattening in 1.1
+took fourteen characters off every one of these paths, which helps and does not
+solve it.
+
 ## Building
 
 ```
