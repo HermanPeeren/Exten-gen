@@ -35,12 +35,17 @@ use Yepr\Gen\Core\Rule\RuleSet;
 abstract class RuleDrivenGenerator extends Generator
 {
     /**
-     * The parsed rule set, once per process.
+     * Parsed rule sets, by file, once per process.
      *
-     * @var    ?RuleSet
+     * Keyed by path rather than held as one, because a generator produced by
+     * Gen-gen carries its own rule file and has to be runnable beside the
+     * committed one - which is how 2.3 checks that a modelled generator and a
+     * hand-written one produce the same bytes.
+     *
+     * @var    array<string, RuleSet>
      * @since  1.1.0
      */
-    private static ?RuleSet $rules = null;
+    private static array $rules = [];
 
     /**
      * Which rules this generator runs: the prefix of their ids.
@@ -50,6 +55,23 @@ abstract class RuleDrivenGenerator extends Generator
      * @since   1.1.0
      */
     abstract public function rulePrefix(): string;
+
+    /**
+     * Where this generator's rules are written down.
+     *
+     * The committed rule file, for every generator in this component. A
+     * generated one overrides it and nothing else changes, which is the point:
+     * the difference between a hand-written generator and a modelled one is a
+     * path.
+     *
+     * @return  string
+     *
+     * @since   1.1.0
+     */
+    protected function ruleFile(): string
+    {
+        return self::defaultRuleFile();
+    }
 
     /**
      * Files this generator produces that no rule can express.
@@ -84,7 +106,7 @@ abstract class RuleDrivenGenerator extends Generator
         );
 
         $log = $engine->run(
-            self::rules()->withPrefix($this->rulePrefix()),
+            self::rules($this->ruleFile())->withPrefix($this->rulePrefix()),
             $this->AST,
             function (string $path, string $contents): void {
                 // Through addFile, not the collection directly, so that two
@@ -99,19 +121,34 @@ abstract class RuleDrivenGenerator extends Generator
     }
 
     /**
-     * The rule set, parsed once and shared by every generator in the run.
+     * The component's own rule file.
+     *
+     * @return  string
+     *
+     * @since   1.1.0
+     */
+    public static function defaultRuleFile(): string
+    {
+        return __DIR__ . '/Rules/joomla6.rules.json';
+    }
+
+    /**
+     * A rule set, parsed once and shared by every generator in the run.
+     *
+     * @param   string  $path  The rule file.
      *
      * @return  RuleSet
      *
      * @since   1.1.0
      */
-    private static function rules(): RuleSet
+    private static function rules(string $path): RuleSet
     {
-        return self::$rules ??= RuleSet::fromFile(__DIR__ . '/Rules/joomla6.rules.json');
+        return self::$rules[$path] ??= RuleSet::fromFile($path);
     }
 
     /**
-     * Every rule in the set, for the tests that check it against the template set.
+     * Every rule in the committed set, for the tests that check it against the
+     * template set.
      *
      * @return  Rule[]
      *
@@ -119,6 +156,6 @@ abstract class RuleDrivenGenerator extends Generator
      */
     public static function allRules(): array
     {
-        return iterator_to_array(self::rules());
+        return iterator_to_array(self::rules(self::defaultRuleFile()));
     }
 }
