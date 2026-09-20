@@ -798,6 +798,17 @@ looked for one directory too deep, is not found, and is dropped without a word: 
 exception, no tag, and every dropdown keeps whatever the server rendered. The same silent
 failure 3.1 spent a step on, by a new route, and the browser specs are what found it.
 
+**The split is deliberately unreleased.** `src/extengen.xml` was bumped to 1.1.0 while this
+was being written, and `updates.xml` is generated from it - so `main` spent a few hours
+offering every site running 1.0.0 an update whose download 404s, which is the failure 1.12
+added that file's test for, arriving from the other direction. It says 1.0.0 again.
+
+Tagging 1.1.0 is held until 3.3 and 3.4, and not for tidiness: the 1.1.0 update script
+drops `#__extengen_projectforms`, Meta-gen has no release, and nothing can export or import
+a metalanguage yet. An update that removes a feature *and* the data behind it, with no way
+to move that data first, is not one to offer. The version goes back up when there is
+somewhere for the data to go.
+
 *Done:* generator-core 0.4.0 with 135 unit and 27 browser-JavaScript tests; Meta-gen with
 132 unit tests and 12 Cypress specs against its own Joomla; Exten-gen with 228 unit tests
 and 16 Cypress specs, and every static gate green in all three.
