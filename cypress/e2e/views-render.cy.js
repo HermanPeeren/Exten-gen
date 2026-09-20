@@ -35,6 +35,43 @@ describe('the component renders', () => {
     cy.shouldHaveRendered();
   });
 
+  /**
+   * Every link the administrator menu carries for this component opens.
+   *
+   * The test above visits `option=com_extengen` with no view, which falls back
+   * to DisplayController's default. The menu does not: Joomla writes its links
+   * into `#__menu` from the manifest at install time, and the component's own
+   * entry said `view=extengen` for as long as this component has existed - a
+   * `View\Extengen` that was never written, so the one link a person clicks to
+   * reach it returned "View not found [name, type, prefix]: extengen, html,
+   * Administrator". A submenu entry pointed at `view=projectforms` for as long
+   * as it took that view to move to Meta-gen.
+   *
+   * **The hrefs are read and visited, not clicked**, and that is not a
+   * shortcut. The component's own entry renders with `class="has-arrow"`,
+   * because it has a submenu - so Joomla's menu script swallows the click to
+   * open the dropdown and the browser never goes anywhere. A spec that clicked
+   * it passed against a manifest that was broken, which is how this test came
+   * to be written twice.
+   */
+  it('opens every link the administrator menu carries', () => {
+    cy.loginToAdmin();
+    cy.visit('/administrator/index.php');
+
+    cy.get('#sidebarmenu a[href*="option=com_extengen"]').then(($links) => {
+      const urls = [...new Set([...$links].map((a) => a.getAttribute('href')))];
+
+      expect(urls, 'the menu carries links for this component').to.not.be.empty;
+
+      urls.forEach((url) => {
+        cy.visit(`/administrator/${url}`, { failOnStatusCode: false });
+        cy.get('body').should('not.contain', 'View not found');
+        cy.get('body').should('not.contain', 'An error has occurred');
+        cy.shouldHaveRendered();
+      });
+    });
+  });
+
   it('renders its views without a JavaScript error', () => {
     // A page that renders can still be broken in the browser. The generators
     // view built a full list toolbar - every button with listCheck(true) -

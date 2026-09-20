@@ -762,10 +762,32 @@ nothing in the core may import the Joomla half, and the Joomla half has to exist
 
 **Two naming rules, found on the way, that apply to every component here.** A view class
 directory is `ucfirst` of the view name exactly; a tmpl directory is `strtolower` of it
-exactly, because `AbstractView::getName()` lowercases the last namespace segment. Exten-gen
-has `tmpl/projectForms/` and links saying `view=projectforms` - those two rules broken in
-opposite directions, both of which resolve on a case-insensitive filesystem and 404 on a
-Linux server. Fixing Exten-gen's own is outstanding.
+exactly, because `AbstractView::getName()` lowercases the last namespace segment. Both broken
+here, in opposite directions, and both resolve on a case-insensitive filesystem and 404 on a
+Linux server - the third time this family has turned up, after `HtmltypesField` at 3.1 and
+`RuleselectorField` in Gen-gen at 2.2.
+
+**Applying the rule found something worse than a casing defect.** `src/extengen.xml` opened
+with `<menu view="extengen">`, and that attribute is what Joomla writes into `#__menu` at
+install time - so the component's own entry in the administrator sidebar had pointed at a
+`View\Extengen` that was never written, since before this plan. Clicking it returned *"View
+not found [name, type, prefix]: extengen, html, Administrator"*. The submenu still offered
+`view=projectforms` as well, which is a 500 behind a link nothing opened once that view had
+moved to Meta-gen. Both are gone, with the forty-two language strings the project-form
+screens used and nothing names any more.
+
+`ViewNamesTest` is the rule, and it was checked by breaking things rather than by passing:
+a link naming a view that is not there, a link to a view that moved, and `view=erd` against
+a `View/ERD` directory each fail it. It reads directories with `scandir` rather than
+`is_dir`, because `is_dir` answers yes to the wrong case on the machine this was written on
+and no on the one it will run on, which is the whole defect.
+
+**And the browser spec that should have caught it had to be written twice.** The first
+version clicked the menu link, and passed against a manifest that was broken - the
+component's entry renders with `class="has-arrow"` because it has a submenu, so Joomla's own
+menu script swallows the click to open the dropdown and the browser never goes anywhere. It
+reads the hrefs and visits them now. A spec that exercises the thing a person does is worth
+nothing if the thing it does is not that.
 
 **And one about loading a shared script.** A library's asset file is not registered the way
 the active component's is, so a layout asks for it by name - and the `uri` inside it must
