@@ -1002,6 +1002,19 @@ changes that format.
 site can hold several metalanguages at once. A project records which language it is written
 in; a generator records which language it is *for*, and Exten-gen refuses to run one over a
 project in a different language.
+
+*Decided: they sit beside each other, and a project binds to one when it is created.* A
+site holds as many metalanguages as have been imported, and starting a new model means
+choosing one from a dropdown of them - so the binding is made once, visibly, by the person
+making the model, rather than inferred from whatever the component happens to ship. ER1 is
+one entry in that list like any other; until 3.5 turns it into a package, the entry is the
+forms Exten-gen ships, which is what keeps every existing project openable while the
+mechanism lands.
+
+Two things follow. A project row has to carry its language - key and version - because
+nothing else can say which forms to open it with. And the dropdown is the join 3.5 needs:
+once ER1 arrives as a generated package it becomes another row in the same list, and
+nothing above it changes.
 *Done when* Exten-gen edits a project through imported forms rather than through forms it
 ships, and Gen-gen offers an imported language's concepts when a rule names what to select.
 
@@ -1052,7 +1065,6 @@ Each is flagged at the step where it bites.
 | Step | Decision |
 |---|---|
 | 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
-| 3.4 | Whether an imported metalanguage replaces Exten-gen's shipped ER1 forms or sits beside them until 3.5 |
 
 ## Suggested entry point
 
