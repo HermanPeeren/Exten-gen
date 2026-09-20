@@ -18,8 +18,7 @@ src/
   script.php                                install script: minimum PHP and Joomla checks
   administrator/components/com_extengen/
     extengen.xml                            a second copy, installed with the component
-    forms/                                  the model language, as Joomla form XML
-    forms/metaProjectForms/LIonCore_M3/     the LionWeb meta-model
+    forms/                                  ER1, as Joomla form XML
     generator_templates/Joomla6/            Twig templates for the generated extension
     src/                                    the component's PHP
     tmpl/ language/ services/ sql/
@@ -75,7 +74,6 @@ A stored project is a type, not a decoded stdClass passed around by hand:
 src/Generator/Model/Project.php           one project, as the component stores it
 src/Generator/Model/ProjectValidator.php  what it must contain before generating
 src/Repository/ProjectRepository.php      the one place that knows where it lives
-src/Repository/ProjectFormRepository.php  the same, for project forms
 ```
 
 There were **thirteen** copies of "load a project": the same five-line query and
@@ -167,7 +165,6 @@ solve it.
 
 ```
 composer test           # PHPUnit
-composer test-js        # the browser logic that needs no DOM, under node --test
 composer analyse        # PHPStan level 5, needs /joomla
 composer cs             # coding standard
 composer install-local  # build the package and install it into ./joomla
@@ -264,29 +261,18 @@ descriptions, one in PHP and one in a hand-written script, is what drifts - and
 Meta-gen is meant to generate this table from a concept model, which it could
 not do if half of it lived in JavaScript.
 
-**Two models, two tables.** `ReferenceIndex::project()` describes a project in
-ER1 - entities, pages, fields, in three different places.
-`ReferenceIndex::projectForm()` describes a projectForm in LionCore M3, where
-every object is a row of one repeating group and they differ only by what the
-row says it is: a language entity is a Classifier or a DataType, and a
-Classifier is a Concept, a ConceptInterface or an Annotation.
+**One model here, and the mechanism is not here at all.**
+`Yepr\Gen\Core\Reference\ReferenceIndex` in the shared library reads a *table*,
+and `src/Reference/Er1.php` is this component's: entities, pages and fields, in
+three different repeating groups, with a field carrying which entity it belongs
+to so a scoped dropdown can filter before anything is saved.
 
-So the M3 table needs one thing the ER1 table does not: **conditions**. They are
-written twice, once as a path through the stored JSON
-(`classifier.classifier_type`) and once as a token in an element id
-(`classifier__classifier_type`), because neither spelling can be derived from
-the other without knowing how Joomla builds element ids. `liveEntries` applies
-the same conditions in the browser, reading a radio group through the fieldset
-Joomla puts the id on rather than the numbered inputs inside it.
-
-Until 3.1 the meta-model had six field classes of its own - one per reference
-kind - and each loaded the stored projectForm from the database and walked it.
-That is the defect 1.9 fixed for projects and left here: the dropdowns described
-what had been *saved*, so a concept added a minute ago could not be extended and
-a concept renamed on screen kept its old name in every list until the form was
-saved and reopened. All six are gone, and with them the whole
-`Field\LIonCore_M3` namespace; the M3 forms use the same
-`type="Reference" objecttype="..."` as everything else.
+The mechanism used to be here, carrying two tables — this one and LionCore M3's
+— and saying in its own docblock that they were a map rather than a method per
+type *because Meta-gen generates this from a concept model*. Meta-gen does now,
+and Meta-gen is [its own component](https://github.com/HermanPeeren/Meta-gen).
+Three components edit models with reference dropdowns, so what is shared is the
+mechanism and what stays is the table.
 
 **The select is a real form control.** The server renders the held value as a
 selected option before any script runs. A reference is a uuid nobody can retype,
@@ -294,17 +280,11 @@ so a form that posts an empty one because a module failed to load has destroyed
 something.
 
 **Testing it.** `referenceOptions()` and `liveEntries()` are functions over
-plain objects for one reason: `composer test-js` runs them under `node --test`
-with no dependencies and no browser. What is left in the element is reading and
-writing the DOM, and `cypress/e2e/reference-fields.cy.js` and
-`projectform-references.cy.js` cover that against a real Joomla - one per model.
-
-The M3 spec needs something to open, and there was no stored projectForm
-anywhere before 3.1: not on this machine, not in the repository. So
-`tests/Fixtures/projectforms/er1.json` is one, seeded with
-`php tools/seed-projectform.php`, and it is the same fixture
-`ProjectFormReferenceTest` indexes - what the browser asserts is what those
-tests describe.
+plain objects for one reason: they run under `node --test` with no dependencies
+and no browser. They live in generator-core now, with the script they describe,
+and `composer test-js` is a gate there rather than here. What is left in the
+element is reading and writing the DOM, and `cypress/e2e/reference-fields.cy.js`
+covers that against a real Joomla.
 
 **What only the browser could see.** Everything above passed with the meta-model
 dropdowns still holding nothing but a raw uuid, because the view never put the
@@ -312,58 +292,6 @@ index in the page and the layout never loaded the script. Two lines, in two
 files that no unit test reads. The spec caught it on the first run: the
 dropdowns contained `['c-entity']` where they should have contained
 `['Entity', 'Field']`.
-
-## How the forms generator works
-
-```
-src/Generator/Model/ConceptModel.php   a modelled language, as the component stores one
-src/Generator/Model/Classifier.php     a concept, a concept interface or an annotation
-src/Generator/Model/Feature.php        a property, or a link that is a containment or a reference
-src/Generator/Model/DataType.php       a primitive type or an enumeration
-src/Generator/Meta/LanguageStructure.php  the language, laid out as Joomla forms
-src/Generator/Meta/FormXml.php         one classifier's form, built through DOM
-src/Generator/Meta/ReferenceTable.php  what `<extengen-reference>` reads
-src/Generator/Meta/Naming.php          which property is the key, and which is the label
-src/Generator/Target/MetaFormsTarget.php  what runs
-```
-
-A project is *written in* a language; a concept model **is** one. Generating from a
-project produces a component, which is Stage 1. Generating from a concept model produces
-the forms a project in that language is edited with, which is 3.2.
-
-**Subtyping becomes nesting, containment becomes a path.** A classifier that others extend
-does not hand them its fields — it gets a radio saying which one this row is, and a
-subform each. That is how the hand-written meta-model is arranged, and it is what lets one
-`languageEntities` group hold five kinds of thing. A repeating containment is a repeating
-subform, which is a group a reader walks into; a single one is stored as the group itself
-rather than as one keyed row, so it is read as a dotted path and never walked.
-
-Those two facts are the whole of the reference table. `path` is the containments, `when`
-is the subtyping, and both halves — the server's path through stored JSON and the
-browser's token in an element id — come from one walk, so they cannot disagree.
-
-**Three conventions, all read off the hand-written meta-model rather than invented.** A
-subtype's subform group is `lcfirst` of its name (`concept`, `conceptInterface`); a
-discriminator radio is `lcfirst` of what it discriminates plus `_type`
-(`languageEntity_type`, `dataType_type`, `link_type` — all five follow it); and a
-classifier's qualified name is its extends chain joined with dots, which reproduces all
-fifteen of the `LIonWeb_key` values those files spell out by hand.
-
-**One convention stands in for something the meta-model cannot say**, and it is in
-`Naming` on its own for that reason: which property is a row's identity and which is its
-label. M3 has no way to mark either, so they are found by name — `key`, `id`, `*_id`;
-`name`, `*_name`. It reads M3's `key`/`name` and ER1's `entity_id`/`entity_name` without
-being tuned to either. Marking them in the model is 4.2's business.
-
-**How it is checked.** `tests/Fixtures/projectforms/lioncore-m3.json` is LionCore M3
-modelled in LionCore M3, so the expected output is already in this repository as fifteen
-hand-written form files and one hand-written table. `MetaReferenceTableTest` runs the
-generated table through `ReferenceIndex::fromTable()` and asserts it indexes a stored
-projectForm into the same answers as `ReferenceIndex::projectForm()` — by behaviour, not
-by comparing two arrays, because two arrays matching proves nothing if both are nonsense.
-
-It is not byte-identical to the hand-written forms; 3.2 in the plan has the table of what
-differs and which side is right. Reconciling them is 3.3.
 
 ## How custom code works
 
@@ -627,15 +555,9 @@ Generating the forms of a modelled language writes the same two things, beside
 those:
 
 ```
-generated/projectForms/<Name>/<Name>-forms.zip    the forms and their reference table
-generated/projectForms/<Name>/tree/...            the same files, unpacked
+(Generating the forms of a modelled language is Meta-gen's job now, and it
+writes its output the same way, in its own repository.)
 ```
-
-**Not into the component's own `forms/` directory**, which is where the generator
-before 3.2 wrote them, one `mkdir` and `save()` at a time as it went — so
-generating forms edited the running component from inside itself, and a run that
-failed half way left a language half replaced. Installing a generated language is
-3.4.
 
 ## The site this is developed against
 

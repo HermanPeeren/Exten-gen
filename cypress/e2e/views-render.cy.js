@@ -16,7 +16,6 @@
 describe('the component renders', () => {
   const views = [
     ['projects', 'the list of projects'],
-    ['projectforms', 'the list of project forms'],
     ['generators', 'the generators page'],
     ['info', 'the info page'],
   ];

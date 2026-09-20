@@ -170,11 +170,18 @@ final class PackageTest extends TestCase
     }
 
     /**
-     * Every asset the layouts ask for by name is one the media manifest declares.
+     * Every asset the layouts ask for by name is one somebody declares.
      *
-     * `useScript('com_extengen.reference')` is a promise about a file this
-     * repository also owns, and nothing at runtime checks it until somebody
-     * opens the page and gets a 500.
+     * `useScript(...)` is a promise about a file, and nothing at runtime checks
+     * it: an asset Joomla cannot resolve raises nothing at all and simply never
+     * reaches the page, so the script is missing and the form looks fine until
+     * somebody uses it.
+     *
+     * Two declarers now. The reference dropdown moved into the shared library
+     * when Meta-gen was split out - three components edit models with one, and
+     * this one was carrying the mechanism for all three - so an asset named
+     * `lib_yepr_gen.*` is checked against the library's own manifest in
+     * `vendor/`, which is the copy this repository actually resolves against.
      */
     public function testEveryAssetALayoutUsesIsDeclared(): void
     {
@@ -186,7 +193,16 @@ final class PackageTest extends TestCase
         );
 
         $declared = array_column($assets['assets'] ?? [], 'name');
-        $missing  = [];
+
+        // The shared library declares its own, and ships them as library media.
+        $libraryManifest = $this->root() . '/vendor/yepr/generator-core/media/joomla.asset.json';
+
+        $this->assertFileExists($libraryManifest, 'The shared library has no asset manifest.');
+
+        $library  = json_decode((string) file_get_contents($libraryManifest), true, 512, JSON_THROW_ON_ERROR);
+        $declared = [...$declared, ...array_column($library['assets'] ?? [], 'name')];
+
+        $missing = [];
 
         $root     = $this->root() . '/src/administrator/components/com_extengen/tmpl';
         $iterator = new \RecursiveIteratorIterator(

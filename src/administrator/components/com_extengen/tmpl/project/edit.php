@@ -22,7 +22,16 @@ use Joomla\CMS\Router\Route;
 HTMLHelper::_('behavior.formvalidator');
 HTMLHelper::_('script', 'com_extengen/admin-extengen-letter.js', array('version' => 'auto', 'relative' => true));
 // <extengen-reference>, and the reference index the view put in the page.
-$this->getDocument()->getWebAssetManager()->useScript('com_extengen.reference');
+// <yepr-reference>, and the reference index the view put in the page.
+//
+// The script is the shared library's now: Exten-gen, Meta-gen and Gen-gen all
+// edit models with reference dropdowns, and this component was carrying the
+// mechanism for all three. A library's asset file is not registered the way
+// the active component's is, so it is asked for by name.
+$wa = $this->getDocument()->getWebAssetManager();
+
+$wa->getRegistry()->addExtensionRegistryFile('lib_yepr_gen');
+$wa->useScript('lib_yepr_gen.reference');
 
 $app = Factory::getApplication();
 $input = $app->getInput();

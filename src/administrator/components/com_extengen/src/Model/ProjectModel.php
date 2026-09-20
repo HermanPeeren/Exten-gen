@@ -40,7 +40,8 @@ use Joomla\CMS\Workflow\Workflow;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
-use Yepr\Component\Extengen\Administrator\Reference\ReferenceIndex;
+use Yepr\Component\Extengen\Administrator\Reference\Er1;
+use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
@@ -115,12 +116,11 @@ class ProjectModel extends AdminModel
 	 * stored model, and reading the stored model happens here or in the
 	 * repository and nowhere else.
 	 *
-	 * @return  array  index and types, as <extengen-reference> expects them.
+	 * @return  array  index and types, as <yepr-reference> expects them.
 	 */
 	public function getReferenceIndex(): array
 	{
-		$item  = $this->getItem();
-		$index = ReferenceIndex::project();
+		$item = $this->getItem();
 
 		$stored = null;
 
@@ -135,10 +135,10 @@ class ProjectModel extends AdminModel
 			}
 		}
 
-		return [
-			'index' => $index->index($stored),
-			'types' => $index->clientTypes(),
-		];
+		// The mechanism is the shared library's, because Meta-gen and Gen-gen
+		// ask the same question of their own models; the table is this
+		// component's, because that is the only thing that differs between them.
+		return ReferenceIndex::fromTable(Er1::TABLE)->payload($stored);
 	}
 
 	/**

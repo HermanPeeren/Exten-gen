@@ -6,7 +6,8 @@ namespace Yepr\Component\Extengen\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Yepr\Component\Extengen\Administrator\Reference\ReferenceIndex;
+use Yepr\Component\Extengen\Administrator\Reference\Er1;
+use Yepr\Gen\Core\Reference\ReferenceIndex;
 
 /**
  * The index says the same thing the three field classes used to say.
@@ -36,7 +37,7 @@ final class ReferenceIndexTest extends TestCase
     public function testEveryEntityFieldAndPageInTheModelIsThere(string $name): void
     {
         $model = $this->model($name);
-        $index = ReferenceIndex::project()->index($model);
+        $index = ReferenceIndex::fromTable(Er1::TABLE)->index($model);
 
         // Counted from the model directly rather than from a number written
         // here, so the rule survives somebody editing a fixture.
@@ -56,7 +57,7 @@ final class ReferenceIndexTest extends TestCase
     #[DataProvider('storedModels')]
     public function testEveryEntryHasAnIdAndAName(string $name): void
     {
-        foreach (ReferenceIndex::project()->index($this->model($name)) as $type => $entries) {
+        foreach (ReferenceIndex::fromTable(Er1::TABLE)->index($this->model($name)) as $type => $entries) {
             foreach ($entries as $entry) {
                 $this->assertNotSame('', $entry['id'], $type . ' has an entry with no id');
                 $this->assertNotSame('', $entry['name'], $type . ' has an entry with no name: ' . $entry['id']);
@@ -74,7 +75,7 @@ final class ReferenceIndexTest extends TestCase
     #[DataProvider('storedModels')]
     public function testEveryFieldPointsAtAnEntityThatIsThere(string $name): void
     {
-        $index      = ReferenceIndex::project()->index($this->model($name));
+        $index      = ReferenceIndex::fromTable(Er1::TABLE)->index($this->model($name));
         $entityIds  = array_column($index['Entity'], 'id');
         $orphans    = [];
 
@@ -95,7 +96,7 @@ final class ReferenceIndexTest extends TestCase
      */
     public function testTheConferenceEntitiesAreNamedAsAPersonWouldSeeThem(): void
     {
-        $index = ReferenceIndex::project()->index($this->model('conference'));
+        $index = ReferenceIndex::fromTable(Er1::TABLE)->index($this->model('conference'));
 
         $this->assertSame(
             ['Program', 'Room', 'Speaker', 'Talk'],
@@ -107,7 +108,7 @@ final class ReferenceIndexTest extends TestCase
     {
         // The edit form for a new project renders the same reference fields.
         // They need an empty list to work with, not a missing key.
-        $index = ReferenceIndex::project()->index(null);
+        $index = ReferenceIndex::fromTable(Er1::TABLE)->index(null);
 
         $this->assertSame(['Entity', 'Page', 'Field'], array_keys($index));
         $this->assertSame([[], [], []], array_values($index));
@@ -130,7 +131,7 @@ final class ReferenceIndexTest extends TestCase
             'pages' => [],
         ]), false, 512, JSON_THROW_ON_ERROR);
 
-        $index = ReferenceIndex::project()->index($project);
+        $index = ReferenceIndex::fromTable(Er1::TABLE)->index($project);
 
         $this->assertSame([['id' => 'abc', 'name' => 'Saved']], $index['Entity']);
     }

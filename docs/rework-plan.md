@@ -33,7 +33,7 @@ targets need not be Joomla versions at all.
 | `generator-core` *(new)* | framework-agnostic generation engine, at `Yepr\Gen\Core` | `yepr/generator-core` (composer) **+** `lib_yepr_gen` (Joomla library) |
 | `Exten-gen` *(new, from Extengen)* | `com_extengen` — models extensions, generates them | component package |
 | `Gen-gen` *(new, stage 2)* | models generators | component package |
-| `Meta-gen` *(new, stage 3)* | models the model language, generates forms | component package |
+| `Meta-gen` *(new, stage 3)* | `com_metagen` — models metalanguages, generates their forms | component package |
 | `plug-gen` *(exists)* | plugin types | adopts the core at 4.1 |
 
 ### Layers
@@ -46,6 +46,44 @@ source model  ──transformation──▶  target structure model  ──emitt
 
 A target is a structure metamodel plus emitters plus a template set. Nothing above the
 emitters knows what a Joomla is.
+
+### Three artefacts, and what binds them
+
+The shape the components have to agree on, settled before stage 3 could continue:
+
+```
+Meta-gen ──── metalanguage ────▶ Exten-gen ── runs a generator over a project ──▶ extension
+    │         (concept model +        ▲
+    │          forms + ref table)     │
+    └──── metalanguage ────▶ Gen-gen ─┘
+                              generator (rules, for ONE language → ONE target)
+```
+
+- **A project** is *written in* a metalanguage.
+- **A generator** maps *one metalanguage* to *one target*.
+- **Exten-gen** holds many projects, many metalanguages and many generators, and may run
+  generator G over project P only when they name the same language.
+
+A **metalanguage package** is what travels, and one payload serves both consumers:
+
+| Part | Who needs it |
+|---|---|
+| the concept model | Gen-gen, to know what a rule may select |
+| generated forms | Exten-gen, to edit a model written in that language |
+| the reference table | both, for the dropdowns |
+| a manifest: key, version, root classifier | both, to bind a project or a generator to it |
+
+Meta-gen is the only writer. Carrying the concept model *and* its derived forms means
+neither consumer needs Meta-gen installed.
+
+**Three consequences, named here because each is invisible until it blocks something.**
+ER1 stops being implicit: Exten-gen's own hand-written forms become the first
+metalanguage package, which makes 3.5 a migration rather than only a proof. Selectors
+have to become data, because `Joomla6Selectors::entities()` is PHP hard-keyed to ER1 and
+a generator written for an arbitrary language needs a path through *that* language - which
+reaches generator-core and Gen-gen, not just the two components. And a project must record
+which language it is in, while `Vocabulary` gains a source half: it publishes what a rule
+may say about a *target* and nothing yet about what it may select from.
 
 ### Why this order
 
@@ -686,6 +724,61 @@ self-hosting. Exten-gen could not have generated this component today.
 
 ## Stage 3 — Meta-gen
 
+**Read this before 3.1 and 3.2.** Both were built *inside Exten-gen*, which was wrong: the
+repository table at the top of this plan has always said Meta-gen is its own component
+package. "3.4 Repository, package, release" was read as permission to build in place and
+move it later, the way the old Extengen had everything in one component. It is its own
+repository now - [Meta-gen](https://github.com/HermanPeeren/Meta-gen) - and 3.0 below is
+that move. The two records that follow describe work that is now over there.
+
+**3.0 Meta-gen becomes its own component.** Everything about modelling a language left
+Exten-gen: the LionCore M3 forms, the CRUD around a stored language, the reference table
+for it, and the forms generator from 3.2. Exten-gen's own side referenced it exactly once,
+in a stale comment, so this was a move rather than an untangling.
+
+**The entity is a Metalanguage**, and getting there cost a rename. It was a
+`ModelLanguage` first, and Joomla would not have it: `BaseModel::getName()` matches
+`/Model(.*)/i` against the *fully qualified* class name - so it matches the `Model`
+namespace segment first - and then strips every lowercase `model` from what it captured.
+`...\Model\ModelLanguageModel` came out as `language`, so Joomla looked for a table by
+that name and the edit screen died with *"Table language not supported."*
+`ListModel::getFilterForm()` has its own version of the same assumption and asked for
+`filter_.xml`, so the list view died on a null `filterForm` inside Joomla's own searchtools
+layout. Neither failure names the class that caused it. **An entity name must not contain
+"model", in any case**, and `JoomlaNamingTest` over there is that rule written down.
+
+**The reference dropdown moved into the shared library**, released as 0.4.0. Three
+components edit models with one - Exten-gen a project, Meta-gen a metalanguage, Gen-gen a
+generator - and Exten-gen was carrying the mechanism for all three. What is shared is the
+mechanism; what stays with each component is its *table*, because that is the only thing
+that differs. `ReferenceIndex` said exactly this in its own docblock at 1.9, as the reason
+its types were a map rather than a method each.
+
+That needed a second half to the library. `Yepr\Gen\Core` imports no framework, ever, and
+a `FormField` subclass cannot live under it, so `Yepr\Gen\Joomla` is the rest of the
+library - which the plan anticipated when it called the engine the library's *first*
+occupant. `NoFrameworkDependencyTest` scopes its rules to `src/Core` and gains two more:
+nothing in the core may import the Joomla half, and the Joomla half has to exist.
+
+**Two naming rules, found on the way, that apply to every component here.** A view class
+directory is `ucfirst` of the view name exactly; a tmpl directory is `strtolower` of it
+exactly, because `AbstractView::getName()` lowercases the last namespace segment. Exten-gen
+has `tmpl/projectForms/` and links saying `view=projectforms` - those two rules broken in
+opposite directions, both of which resolve on a case-insensitive filesystem and 404 on a
+Linux server. Fixing Exten-gen's own is outstanding.
+
+**And one about loading a shared script.** A library's asset file is not registered the way
+the active component's is, so a layout asks for it by name - and the `uri` inside it must
+be `lib_yepr_gen/reference.js`, not `lib_yepr_gen/js/reference.js`, because Joomla's
+relative resolution inserts the `js/` folder itself. Spelled the long way the asset is
+looked for one directory too deep, is not found, and is dropped without a word: no
+exception, no tag, and every dropdown keeps whatever the server rendered. The same silent
+failure 3.1 spent a step on, by a new route, and the browser specs are what found it.
+
+*Done:* generator-core 0.4.0 with 135 unit and 27 browser-JavaScript tests; Meta-gen with
+132 unit tests and 12 Cypress specs against its own Joomla; Exten-gen with 228 unit tests
+and 16 Cypress specs, and every static gate green in all three.
+
 **3.1 Repair or rebuild the LionWeb model.** The concept forms work; the field classes and
 namespace prefixes around them do not (see 1.5). 1.9 left those six reference fields on
 their own mechanism and removed the inline handlers they called, three of which had no
@@ -851,10 +944,35 @@ green - five of them new, and the reason they exist is that the unit suite canno
 button. It found the one defect of this step that no other gate could: `writeToDirectory()`
 refuses a root that is not there, and the model created that root's *parent*.
 
-**3.3 Round-trip proof.** Model ER1 in LionWeb, regenerate Exten-gen's own forms, and
-compare against the hand-written ones as golden files.
+**3.3 The metalanguage package, and exporting one.** Meta-gen writes a zip: the concept
+model, the generated forms, the reference table and a manifest naming the language, its
+version and its root classifier. Nothing installs it yet.
+*Done when* a package round-trips - exported, read back, and the forms in it are the forms
+the generator produced.
 
-**3.4 Repository, package, release.**
+**3.4 Importing one.** Exten-gen and Gen-gen each grow an import screen and a store, so a
+site can hold several metalanguages at once. A project records which language it is written
+in; a generator records which language it is *for*, and Exten-gen refuses to run one over a
+project in a different language.
+*Done when* Exten-gen edits a project through imported forms rather than through forms it
+ships, and Gen-gen offers an imported language's concepts when a rule names what to select.
+
+**3.5 ER1 as a package, and the round-trip proof.** Model ER1 in LionCore M3, generate its
+forms, and compare against Exten-gen's hand-written ones as golden files - then keep the
+generated set, which makes this the migration rather than only a proof. The table of six
+differences under 3.2 is what has to be reconciled, and each one is a decision: presentation
+attributes the model cannot hold, the Joomla item chrome on a root form, how language
+strings are named, and three places where the hand-written files are internally
+inconsistent.
+
+**3.6 Selectors as data.** `Joomla6Selectors::entities()` is PHP hard-keyed to ER1. A
+generator written for an arbitrary metalanguage needs a selector that is a path through
+*that* language's concept model, so `Vocabulary` gains a source half and the rule engine
+learns to walk one. The largest item in this stage, and it reaches generator-core and
+Gen-gen rather than only the two components.
+
+**3.7 Package and release Meta-gen.** 0.1.0 is unreleased: the repository exists, the
+gates run, and nothing is published yet.
 
 ---
 
@@ -869,7 +987,8 @@ what is still missing.
 
 **4.3 Self-hosting.** Exten-gen generates Exten-gen. Everything it needs exists by now:
 the engine from Stage 0, working generation from Stage 1, modelled generators from Stage
-2, generated forms from Stage 3 and the model gaps closed in 4.2. The criterion is
+2, generated forms and an imported metalanguage from Stage 3, and the model gaps closed in
+4.2. The criterion is
 byte-identical output against the hand-written component, the same way 2.3 checks a
 modelled generator.
 
@@ -885,6 +1004,8 @@ Each is flagged at the step where it bites.
 | Step | Decision |
 |---|---|
 | 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
+| 3.3 | Whether a metalanguage package carries generated language strings, and under what naming |
+| 3.4 | Whether an imported metalanguage replaces Exten-gen's shipped ER1 forms or sits beside them until 3.5 |
 
 ## Suggested entry point
 

@@ -127,16 +127,14 @@ final class FormsTest extends TestCase
                     continue;
                 }
 
-                $prefix = $this->prefixFor($field);
+                $prefix    = $this->prefixFor($field);
+                $directory = $this->directoryFor($prefix);
 
                 // A type under somebody else's prefix - Joomla's own category
                 // field, for instance - is their problem, not this one's.
-                if (!str_starts_with($prefix, 'Yepr\\')) {
+                if ($directory === null) {
                     continue;
                 }
-
-                $directory = $this->root() . 'src/Field'
-                    . str_replace('\\', '/', substr($prefix, \strlen('Yepr\\Component\\Extengen\\Administrator\\Field')));
 
                 $class = ucfirst(ucwords($type)) . 'Field.php';
 
@@ -194,65 +192,33 @@ final class FormsTest extends TestCase
     }
 
     /**
-     * Nothing in the meta-model is unreachable from its root form.
+     * Where the classes under a field prefix live, or null for somebody else's.
      *
-     * The same question 1.8 asked of the template set, where 145 of 174 files
-     * turned out to be scaffolding nothing rendered. A form nothing reaches
-     * cannot be wrong, because it never runs - which is why `interface.xml`
-     * could point at a file that never existed for as long as it did.
+     * Two prefixes are ours. `Reference` moved into the shared library when
+     * Meta-gen was split out, because three components edit models with
+     * reference dropdowns and this one was carrying the mechanism for all
+     * three - so the forms that use it name `Yepr\Gen\Joomla\Form\Field` and the
+     * class is in `vendor/`. Resolving it there rather than skipping it
+     * matters: a field type Joomla cannot resolve falls back to a plain text
+     * box, silently turning a closed list into a place to type anything at
+     * all, and moving the class out of this repository must not move that
+     * check out with it.
      */
-    public function testEveryMetaModelFormIsReachableFromItsRoot(): void
+    private function directoryFor(string $prefix): ?string
     {
-        $prefix = 'administrator/components/com_extengen/';
-        $seen   = [];
-        $queue  = ['metaProjectForms/LIonCore_M3/projectForm.xml'];
+        $library = 'Yepr\\Gen\\Joomla\\Form\\Field';
 
-        while ($queue !== []) {
-            $relative = array_shift($queue);
-
-            if (isset($seen[$relative])) {
-                continue;
-            }
-
-            $seen[$relative] = true;
-            $path            = $this->root() . 'forms/' . $relative;
-
-            $this->assertFileExists($path, $relative . ' is referred to and not there.');
-
-            $form = simplexml_load_file($path);
-
-            foreach (($form === false ? [] : $form->xpath('//field[@formsource]')) ?: [] as $field) {
-                $source = (string) $field['formsource'];
-
-                if (str_starts_with($source, $prefix . 'forms/metaProjectForms/')) {
-                    $queue[] = substr($source, \strlen($prefix . 'forms/'));
-                }
-            }
+        if ($prefix === $library) {
+            return \dirname(__DIR__, 2) . '/vendor/yepr/generator-core/src/Joomla/Form/Field';
         }
 
-        $onDisk = [];
+        $own = 'Yepr\\Component\\Extengen\\Administrator\\Field';
 
-        $tree = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->root() . 'forms/metaProjectForms', \FilesystemIterator::SKIP_DOTS)
-        );
-
-        foreach ($tree as $file) {
-            if ($file->isFile() && $file->getExtension() === 'xml') {
-                $onDisk[] = str_replace(
-                    '\\',
-                    '/',
-                    substr($file->getPathname(), \strlen($this->root() . 'forms/'))
-                );
-            }
+        if (str_starts_with($prefix, $own)) {
+            return $this->root() . 'src/Field' . str_replace('\\', '/', substr($prefix, \strlen($own)));
         }
 
-        $unreachable = array_values(array_diff($onDisk, array_keys($seen)));
-
-        $this->assertSame(
-            [],
-            $unreachable,
-            "In metaProjectForms and reached by nothing:\n  " . implode("\n  ", $unreachable)
-        );
+        return null;
     }
 
     /**

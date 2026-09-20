@@ -3,7 +3,7 @@
  *
  * Before the rework, a reference dropdown was filled with `<option>` tags the
  * server rendered from the database, so an entity added a minute ago could not
- * be pointed at until the whole project had been saved. `<extengen-reference>`
+ * be pointed at until the whole project had been saved. `<yepr-reference>`
  * merges the index in the page with what the form holds right now.
  *
  * Every other check on that mechanism is a unit test over plain data, which is
@@ -43,8 +43,8 @@ describe('reference fields', () => {
   it('renders the custom element rather than a bare select', () => {
     openAProject();
 
-    cy.get('extengen-reference').should('exist');
-    cy.get('extengen-reference select').should('exist');
+    cy.get('yepr-reference').should('exist');
+    cy.get('yepr-reference select').should('exist');
   });
 
   it('carries the reference index in the page', () => {
@@ -53,7 +53,7 @@ describe('reference fields', () => {
     // One index for the whole form, put there by the view. Before the rework
     // each dropdown queried the database for the same answer.
     cy.window().then((win) => {
-      const options = win.Joomla.getOptions('com_extengen.references');
+      const options = win.Joomla.getOptions('yepr.references');
 
       expect(options, 'the reference index is in the page').to.be.an('object');
       expect(options.index, 'it has an index').to.be.an('object');
@@ -95,7 +95,7 @@ describe('reference fields', () => {
     });
 
     // No save. The dropdown reads the form, not the database.
-    cy.get('extengen-reference[type="Entity"] select', { timeout: 10000 })
+    cy.get('yepr-reference[type="Entity"] select', { timeout: 10000 })
       .first()
       .find('option')
       .should('contain.text', name);
@@ -107,7 +107,7 @@ describe('reference fields', () => {
     // selected option before any script runs.
     openAProject();
 
-    cy.get('extengen-reference select').each(($select) => {
+    cy.get('yepr-reference select').each(($select) => {
       const backup = $select.attr('id') ? Cypress.$(`#${$select.attr('id')}_id`) : null;
 
       if (backup && backup.length && backup.val()) {
