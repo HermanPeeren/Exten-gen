@@ -604,6 +604,45 @@ workflow. That is 2.4, and 2.3 comes first.
 the hand-written generator it replaces, measured against Stage 1's golden files. Not a
 judgement call.
 
+**Met.** `composer acceptance` in Gen-gen generates the generator, runs it over all three
+golden models and compares every file:
+
+> 228 files compared, all identical to the approved output.
+
+The model is a description of a generator and the output is a generator, and nothing in
+the core changed to allow that. `ModelInterface` is a marker, `Pipeline` never looks inside
+a model, and a target is a structure plus emitters plus a template set - a generator
+happens to be describable that way, so it is one.
+
+Four files come out. The rule file is the mapping, **emitted** as data, because
+`RuleSet::toJson()` already writes it correctly and rendering JSON from a Twig template
+would mean reimplementing quoting in Twig. The three classes are wiring, **rendered** from
+a template: a rule file does not run by itself, so something has to be a class, claim a
+slice of the rules and sit in the order Joomla runs them in.
+
+**It does not generate the groups that emit**, which is 2.1's line drawn once more.
+`AdminGeneral` writes language strings, `AdminEntities` writes sql for a schema only
+knowable once every entity has been seen; a generated class replacing either would delete
+that code and leave something that looks complete. The group declares `emits` in the model.
+
+Three things the check needed, each of which is the interesting part of it:
+
+- **A process of its own.** The generated classes have the same fully qualified names as
+  the hand-written ones - that is the point - so they are required before anything can
+  autoload the originals, and a class is defined once per process.
+- **The library's own normalisation.** Compared as raw bytes, every rendered file matched
+  and every sql and language file did not: a template's output ends with exactly one
+  newline and a file assembled by `implode()` ends with none. `GoldenFiles::normalise()` is
+  what Stage 1's golden test uses, so it is what this uses.
+- **A canonical rule file.** "Gen-gen generates this file" is only checkable if there is
+  one way to write a given rule set down, so Exten-gen's committed `joomla6.rules.json` is
+  now `RuleSet::toJson()` output rather than the hand formatting it had, and a test keeps
+  it that way. `RuleDrivenGenerator` also gained an overridable `ruleFile()`, which is how
+  a generated generator runs beside the committed one.
+
+Gen-gen's CI checks Exten-gen out beside it so the criterion actually runs there. A skipped
+test that is the whole point of a repository is worse than no test.
+
 **2.4 Repository, package, release.**
 
 ---

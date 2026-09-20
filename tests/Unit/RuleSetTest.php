@@ -182,6 +182,32 @@ final class RuleSetTest extends TestCase
     }
 
     /**
+     * The committed file is the canonical serialisation of what it holds.
+     *
+     * It was hand-formatted until 2.3, with blank lines between the groups,
+     * which read nicely and meant the file could not be compared with one a
+     * machine wrote. Gen-gen generates this file now, and "generates it" is
+     * only checkable if there is exactly one way to write a given rule set
+     * down. So: what `RuleSet::toJson()` produces, byte for byte.
+     *
+     * Reformatting it by hand fails here, which is the point - the formatting
+     * is not a preference any more, it is the interface between two
+     * repositories.
+     */
+    public function testTheCommittedFileIsTheCanonicalSerialisation(): void
+    {
+        $path = \dirname(__DIR__, 2)
+            . '/src/administrator/components/com_extengen/src/Generator/Rules/joomla6.rules.json';
+
+        $this->assertSame(
+            RuleSet::fromFile($path)->toJson() . "
+",
+            (string) file_get_contents($path),
+            'The rule file is not what RuleSet::toJson() writes. Regenerate it rather than editing it by hand.'
+        );
+    }
+
+    /**
      * Ids read as a path from generator to concern, which is what makes the
      * prefixes above a design rather than a convention nobody wrote down.
      */

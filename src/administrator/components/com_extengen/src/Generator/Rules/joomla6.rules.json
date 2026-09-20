@@ -5,29 +5,56 @@
         "template": "component/administrator/components/com_componentname/componentManifest.xml",
         "target": "{componentName|lower}.xml",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" },
-            "projectName": { "path": "name" },
-            "description": { "path": "extensions.component.component_description" },
-            "backendIndexViews": { "derive": "backendIndexViews" },
-            "defaultBackendView": { "derive": "defaultBackendView" },
-            "author_name": { "path": "extensions.component.manifest.author_name" },
-            "author_email": { "path": "extensions.component.manifest.author_email" },
-            "author_url": { "path": "extensions.component.manifest.author_url" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "creation_date": { "path": "extensions.component.manifest.creation_date" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "description": {
+                "path": "extensions.component.component_description"
+            },
+            "backendIndexViews": {
+                "derive": "backendIndexViews"
+            },
+            "defaultBackendView": {
+                "derive": "defaultBackendView"
+            },
+            "author_name": {
+                "path": "extensions.component.manifest.author_name"
+            },
+            "author_email": {
+                "path": "extensions.component.manifest.author_email"
+            },
+            "author_url": {
+                "path": "extensions.component.manifest.author_url"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "creation_date": {
+                "path": "extensions.component.manifest.creation_date"
+            }
         }
     },
-
     {
         "id": "admin.general.access",
         "for": "root",
         "template": "component/administrator/components/com_componentname/access.xml",
         "target": "administrator/components/com_{componentName|lower}/access.xml",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            }
         }
     },
     {
@@ -36,7 +63,9 @@
         "template": "component/administrator/components/com_componentname/config.xml",
         "target": "administrator/components/com_{componentName|lower}/config.xml",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            }
         }
     },
     {
@@ -45,7 +74,9 @@
         "template": "component/administrator/components/com_componentname/license_GPL3.txt",
         "target": "administrator/components/com_{componentName|lower}/LICENSE.txt",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            }
         }
     },
     {
@@ -54,12 +85,24 @@
         "template": "component/administrator/components/com_componentname/services/provider.php.twig",
         "target": "administrator/components/com_{componentName|lower}/services/provider.php",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            }
         }
     },
     {
@@ -68,31 +111,65 @@
         "template": "component/administrator/components/com_componentname/src/Extension/ComponentnameComponent.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Extension/{componentName}Component.php",
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" }
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            }
         }
     },
-
     {
         "id": "admin.entity.table",
         "for": "entities",
-        "when": [{ "operator": "missing", "path": "isvalueobject" }],
         "template": "component/administrator/components/com_componentname/src/Table/Table.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Table/{entityName}Table.php",
+        "when": [
+            {
+                "operator": "missing",
+                "path": "isvalueobject"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentNameUcfirst" },
-            "projectName": { "derive": "projectNameUcfirst" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "entityName": { "derive": "entityNameUcfirst" },
-            "slots": { "derive": "entitySlots" },
-            "getFK": { "literal": "" },
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "derive": "projectNameUcfirst"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "entityName": {
+                "derive": "entityNameUcfirst"
+            },
+            "slots": {
+                "derive": "entitySlots"
+            },
+            "getFK": {
+                "literal": ""
+            },
             "m2m_bind": {
                 "fragments": "manyToMany",
                 "template": "component/administrator/components/com_componentname/src/Table/fragments/m2m_bind.php.twig"
@@ -111,147 +188,334 @@
             }
         }
     },
-
     {
         "id": "admin.mvc.index.controller",
         "for": "backendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/Controller/AdminIndexController.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Controller/{pageName}Controller.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "admin.mvc.details.controller",
         "for": "backendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/Controller/AdminDetailsController.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Controller/{pageName}Controller.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "adminLinkPageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "adminLinkPageName"
+            }
         }
     },
     {
         "id": "admin.mvc.index.model",
         "for": "backendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/Model/AdminIndexModel.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Model/{pageName}Model.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "entityName": { "derive": "pageEntityName" },
-            "propertyFieldNames": { "derive": "adminPagePropertyFieldNames" },
-            "foreign": { "derive": "adminPageForeign" },
-            "filters": { "derive": "adminPageFilters" },
-            "slots": { "derive": "pageSlots" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "entityName": {
+                "derive": "pageEntityName"
+            },
+            "propertyFieldNames": {
+                "derive": "adminPagePropertyFieldNames"
+            },
+            "foreign": {
+                "derive": "adminPageForeign"
+            },
+            "filters": {
+                "derive": "adminPageFilters"
+            },
+            "slots": {
+                "derive": "pageSlots"
+            }
         }
     },
     {
         "id": "admin.mvc.details.model",
         "for": "backendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/Model/AdminDetailsModel.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Model/{pageName}Model.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "entityName": { "derive": "pageEntityName" },
-            "foreign": { "derive": "adminPageForeign" },
-            "slots": { "derive": "pageSlots" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "entityName": {
+                "derive": "pageEntityName"
+            },
+            "foreign": {
+                "derive": "adminPageForeign"
+            },
+            "slots": {
+                "derive": "pageSlots"
+            }
         }
     },
     {
         "id": "admin.mvc.index.view",
         "for": "backendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/View/Index/HtmlView.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/View/{pageName}/HtmlView.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "adminLinkPageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "adminLinkPageName"
+            }
         }
     },
     {
         "id": "admin.mvc.details.view",
         "for": "backendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/src/View/Details/HtmlView.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/View/{pageName}/HtmlView.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "admin.mvc.index.layout",
         "for": "backendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/tmpl/index/default.php.twig",
         "target": "administrator/components/com_{componentName|lower}/tmpl/{pageName|lower}/default.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "adminLinkPageName" },
-            "entity": { "derive": "pageEntityArray" },
-            "filters": { "derive": "adminPageFilters" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "adminLinkPageName"
+            },
+            "entity": {
+                "derive": "pageEntityArray"
+            },
+            "filters": {
+                "derive": "adminPageFilters"
+            }
         }
     },
     {
         "id": "admin.mvc.details.layout",
         "for": "backendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/administrator/components/com_componentname/tmpl/details/edit.php.twig",
         "target": "administrator/components/com_{componentName|lower}/tmpl/{pageName|lower}/edit.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "entity": { "derive": "pageEntityArray" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "entity": {
+                "derive": "pageEntityArray"
+            }
         }
     },
     {
@@ -260,174 +524,387 @@
         "template": "component/administrator/components/com_componentname/src/Controller/DisplayController.php.twig",
         "target": "administrator/components/com_{componentName|lower}/src/Controller/DisplayController.php",
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "defaultView": { "derive": "defaultBackendIndexPage" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "defaultView": {
+                "derive": "defaultBackendIndexPage"
+            }
         }
     },
-
     {
         "id": "site.mvc.index.controller",
         "for": "frontendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/Controller/SiteIndexController.php.twig",
         "target": "components/com_{componentName|lower}/src/Controller/{pageName}Controller.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "site.mvc.details.controller",
         "for": "frontendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/Controller/SiteDetailsController.php.twig",
         "target": "components/com_{componentName|lower}/src/Controller/{pageName}Controller.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "siteLinkPageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "siteLinkPageName"
+            }
         }
     },
     {
         "id": "site.mvc.index.model",
         "for": "frontendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/Model/SiteIndexModel.php.twig",
         "target": "components/com_{componentName|lower}/src/Model/{pageName}Model.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "entityName": { "derive": "pageEntityName" },
-            "propertyFieldNames": { "derive": "siteIndexPropertyFieldNames" },
-            "foreign": { "derive": "siteIndexForeign" },
-            "filters": { "derive": "siteIndexFilters" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "entityName": {
+                "derive": "pageEntityName"
+            },
+            "propertyFieldNames": {
+                "derive": "siteIndexPropertyFieldNames"
+            },
+            "foreign": {
+                "derive": "siteIndexForeign"
+            },
+            "filters": {
+                "derive": "siteIndexFilters"
+            }
         }
     },
     {
         "id": "site.mvc.details.model",
         "for": "frontendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/Model/SiteDetailsModel.php.twig",
         "target": "components/com_{componentName|lower}/src/Model/{pageName}Model.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "entityName": { "derive": "pageEntityName" },
-            "foreign": { "derive": "siteDetailsForeign" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "entityName": {
+                "derive": "pageEntityName"
+            },
+            "foreign": {
+                "derive": "siteDetailsForeign"
+            }
         }
     },
     {
         "id": "site.mvc.index.view",
         "for": "frontendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/View/Index/HtmlView.php.twig",
         "target": "components/com_{componentName|lower}/src/View/{pageName}/HtmlView.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "siteLinkPageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "siteLinkPageName"
+            }
         }
     },
     {
         "id": "site.mvc.details.view",
         "for": "frontendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/src/View/Details/HtmlView.php.twig",
         "target": "components/com_{componentName|lower}/src/View/{pageName}/HtmlView.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "site.mvc.index.layout",
         "for": "frontendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/tmpl/index/default.php.twig",
         "target": "components/com_{componentName|lower}/tmpl/{pageName|lower}/default.php",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" },
-            "linkPageName": { "derive": "siteLinkPageName" },
-            "entity": { "derive": "pageEntityArray" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "linkPageName": {
+                "derive": "siteLinkPageName"
+            },
+            "entity": {
+                "derive": "pageEntityArray"
+            }
         }
     },
     {
         "id": "site.mvc.index.menuitem",
         "for": "frontendPages",
-        "when": [{ "operator": "equals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/tmpl/index/default.xml.twig",
         "target": "components/com_{componentName|lower}/tmpl/{pageName|lower}/default.xml",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "site.mvc.details.layout",
         "for": "frontendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/tmpl/details/default.php.twig",
         "target": "components/com_{componentName|lower}/tmpl/{pageName|lower}/default.php",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
         "id": "site.mvc.details.menuitem",
         "for": "frontendPages",
-        "when": [{ "operator": "notEquals", "path": "page_type", "value": "indexpage" }],
         "template": "component/components/com_componentname/tmpl/details/default.xml.twig",
         "target": "components/com_{componentName|lower}/tmpl/{pageName|lower}/default.xml",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "pageName": { "derive": "pageName" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "pageName": {
+                "derive": "pageName"
+            }
         }
     },
     {
@@ -436,13 +913,27 @@
         "template": "component/components/com_componentname/src/Controller/DisplayController.php.twig",
         "target": "components/com_{componentName|lower}/src/Controller/DisplayController.php",
         "bind": {
-            "componentName": { "derive": "componentName" },
-            "projectName": { "path": "name" },
-            "version": { "path": "extensions.component.manifest.version" },
-            "copyright": { "path": "extensions.component.manifest.copyright" },
-            "license": { "path": "extensions.component.manifest.license" },
-            "company_namespace": { "path": "extensions.component.manifest.company_namespace" },
-            "defaultView": { "derive": "defaultFrontendIndexPage" }
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "defaultView": {
+                "derive": "defaultFrontendIndexPage"
+            }
         }
     }
 ]
