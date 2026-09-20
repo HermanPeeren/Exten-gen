@@ -3,12 +3,13 @@
 <form>
 	<fieldset
 		addruleprefix="Yepr\Component\Extengen\Administrator\Rule"
-		addfieldprefix="Yepr\Component\Extengen\Administrator\Field\LIonCore_M3"
+		addfieldprefix="Yepr\Component\Extengen\Administrator\Field"
 	>
 
 		<field
 				name="conceptInterface"
-				type="ConceptInterfaceReference"
+				type="Reference"
+				objecttype="ConceptInterface"
 				label="Concept Interface"
 				id="conceptInterface"
 				class="custom-select-color-state ConceptInterfaceRef"

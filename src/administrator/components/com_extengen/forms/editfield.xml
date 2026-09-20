@@ -19,7 +19,7 @@
 
 		<field
 				name="htmltype"
-				type="htmltypes"
+				type="HtmlTypes"
 				id="htmltype"
 				default="text"
 				label="HTML type for editing"

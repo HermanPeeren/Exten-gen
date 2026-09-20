@@ -120,7 +120,7 @@ class ProjectModel extends AdminModel
 	public function getReferenceIndex(): array
 	{
 		$item  = $this->getItem();
-		$index = new ReferenceIndex();
+		$index = ReferenceIndex::project();
 
 		$stored = null;
 
@@ -136,7 +136,7 @@ class ProjectModel extends AdminModel
 		}
 
 		return [
-			'index' => $index->forProject($stored),
+			'index' => $index->index($stored),
 			'types' => $index->clientTypes(),
 		];
 	}

@@ -43,6 +43,7 @@ use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
+use Yepr\Component\Extengen\Administrator\Reference\ReferenceIndex;
 
 /**
  * Item Model for a project form.
@@ -118,6 +119,38 @@ class ProjectFormModel extends AdminModel
 
 		return $form;
 	}
+	/**
+	 * Everything in this projectForm that a reference field can point at.
+	 *
+	 * The same mechanism 1.9 built for projects, arriving here at 3.1. Until
+	 * now the six M3 dropdowns each loaded the stored projectForm from the
+	 * database and walked it, so they described what had been saved: a concept
+	 * added a minute ago could not be extended, and a concept renamed on screen
+	 * kept its old name in every list until the form was saved and reopened.
+	 *
+	 * It is the model's job rather than the view's because it reads the stored
+	 * model, and reading the stored model happens here and nowhere else.
+	 *
+	 * @return  array  index and types, as <extengen-reference> expects them.
+	 *
+	 * @since   1.1.0
+	 */
+	public function getReferenceIndex(): array
+	{
+		$item  = $this->getItem();
+		$index = ReferenceIndex::projectForm();
+
+		$stored = empty($item->form_data) ? null : json_decode((string) $item->form_data);
+
+		// A projectForm that will not decode is reported by loadFormData(),
+		// which runs for the same request. An index of nothing is the honest
+		// answer here, and it leaves the form usable.
+		return [
+			'index' => $index->index(is_object($stored) ? $stored : null),
+			'types' => $index->clientTypes(),
+		];
+	}
+
 	/**
 	 * Method to get the data that should be injected in the form.
 	 *

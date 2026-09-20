@@ -36,7 +36,7 @@ final class ReferenceIndexTest extends TestCase
     public function testEveryEntityFieldAndPageInTheModelIsThere(string $name): void
     {
         $model = $this->model($name);
-        $index = (new ReferenceIndex())->forProject($model);
+        $index = ReferenceIndex::project()->index($model);
 
         // Counted from the model directly rather than from a number written
         // here, so the rule survives somebody editing a fixture.
@@ -56,7 +56,7 @@ final class ReferenceIndexTest extends TestCase
     #[DataProvider('storedModels')]
     public function testEveryEntryHasAnIdAndAName(string $name): void
     {
-        foreach ((new ReferenceIndex())->forProject($this->model($name)) as $type => $entries) {
+        foreach (ReferenceIndex::project()->index($this->model($name)) as $type => $entries) {
             foreach ($entries as $entry) {
                 $this->assertNotSame('', $entry['id'], $type . ' has an entry with no id');
                 $this->assertNotSame('', $entry['name'], $type . ' has an entry with no name: ' . $entry['id']);
@@ -74,7 +74,7 @@ final class ReferenceIndexTest extends TestCase
     #[DataProvider('storedModels')]
     public function testEveryFieldPointsAtAnEntityThatIsThere(string $name): void
     {
-        $index      = (new ReferenceIndex())->forProject($this->model($name));
+        $index      = ReferenceIndex::project()->index($this->model($name));
         $entityIds  = array_column($index['Entity'], 'id');
         $orphans    = [];
 
@@ -95,7 +95,7 @@ final class ReferenceIndexTest extends TestCase
      */
     public function testTheConferenceEntitiesAreNamedAsAPersonWouldSeeThem(): void
     {
-        $index = (new ReferenceIndex())->forProject($this->model('conference'));
+        $index = ReferenceIndex::project()->index($this->model('conference'));
 
         $this->assertSame(
             ['Program', 'Room', 'Speaker', 'Talk'],
@@ -107,7 +107,7 @@ final class ReferenceIndexTest extends TestCase
     {
         // The edit form for a new project renders the same reference fields.
         // They need an empty list to work with, not a missing key.
-        $index = (new ReferenceIndex())->forProject(null);
+        $index = ReferenceIndex::project()->index(null);
 
         $this->assertSame(['Entity', 'Page', 'Field'], array_keys($index));
         $this->assertSame([[], [], []], array_values($index));
@@ -130,7 +130,7 @@ final class ReferenceIndexTest extends TestCase
             'pages' => [],
         ]), false, 512, JSON_THROW_ON_ERROR);
 
-        $index = (new ReferenceIndex())->forProject($project);
+        $index = ReferenceIndex::project()->index($project);
 
         $this->assertSame([['id' => 'abc', 'name' => 'Saved']], $index['Entity']);
     }

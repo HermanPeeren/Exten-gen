@@ -23,28 +23,76 @@ use Yepr\Component\Extengen\Administrator\Reference\ReferenceIndex;
 final class ReferenceContractTest extends TestCase
 {
     /**
-     * Every objecttype a form asks for is one the index supplies.
+     * Every objecttype a form asks for is one *its own* model indexes.
+     *
+     * Two models, two indices, and which one a form belongs to is decided by
+     * where it lives: everything under `metaProjectForms/` describes a
+     * projectForm in LionCore M3, everything else describes a project in ER1.
+     *
+     * Checked per model rather than against the union of both, because the
+     * union would accept `objecttype="Entity"` on a meta-model form - a
+     * dropdown that renders empty on every screen, since the projectForm index
+     * has no Entity list and never will.
      */
     public function testEveryObjectTypeTheFormsUseIsIndexed(): void
     {
-        $known   = array_keys((new ReferenceIndex())->clientTypes());
+        $project     = array_keys(ReferenceIndex::project()->clientTypes());
+        $projectForm = array_keys(ReferenceIndex::projectForm()->clientTypes());
+
         $unknown = [];
+        $found   = 0;
 
         foreach ($this->formFiles() as $relative => $xml) {
+            $isMeta = str_starts_with($relative, 'metaProjectForms/');
+            $known  = $isMeta ? $projectForm : $project;
+
             foreach ($xml->xpath('//field[@objecttype]') ?: [] as $field) {
+                $found++;
+
                 $type = (string) $field['objecttype'];
 
                 if (!\in_array($type, $known, true)) {
-                    $unknown[] = $relative . ': ' . $type;
+                    $unknown[] = $relative . ': ' . $type
+                        . ' (that model offers ' . implode(', ', $known) . ')';
                 }
             }
         }
 
+        $this->assertGreaterThan(0, $found, 'No reference fields at all, which cannot be right.');
+
         $this->assertSame(
             [],
             $unknown,
-            'These forms point at object types the index does not carry: ' . implode(', ', $unknown)
+            "These forms point at object types their own model does not carry:
+  "
+            . implode("
+  ", $unknown)
         );
+    }
+
+    /**
+     * And both models are actually used by some form.
+     *
+     * Without this the rule above passes by having nothing to check the day
+     * somebody moves the meta-model forms somewhere else.
+     */
+    public function testBothModelsHaveFormsPointingAtThem(): void
+    {
+        $meta = 0;
+        $er1  = 0;
+
+        foreach ($this->formFiles() as $relative => $xml) {
+            $count = \count($xml->xpath('//field[@objecttype]') ?: []);
+
+            if (str_starts_with($relative, 'metaProjectForms/')) {
+                $meta += $count;
+            } else {
+                $er1 += $count;
+            }
+        }
+
+        $this->assertGreaterThan(0, $er1, 'No ER1 form uses a reference field.');
+        $this->assertGreaterThan(0, $meta, 'No meta-model form uses a reference field.');
     }
 
     /**
@@ -83,7 +131,7 @@ final class ReferenceContractTest extends TestCase
      */
     public function testEveryIndexedTypeTellsTheClientHowToFindItsRows(): void
     {
-        foreach ((new ReferenceIndex())->clientTypes() as $type => $descriptor) {
+        foreach (ReferenceIndex::project()->clientTypes() as $type => $descriptor) {
             foreach (['selector', 'nameToken', 'idToken'] as $required) {
                 $this->assertArrayHasKey($required, $descriptor, $type . ' does not say its ' . $required);
                 $this->assertNotSame('', $descriptor[$required], $type . ' has an empty ' . $required);
@@ -111,7 +159,7 @@ final class ReferenceContractTest extends TestCase
             }
         }
 
-        foreach ((new ReferenceIndex())->clientTypes() as $type => $descriptor) {
+        foreach (ReferenceIndex::project()->clientTypes() as $type => $descriptor) {
             $this->assertArrayHasKey(
                 $descriptor['selector'],
                 $classes,

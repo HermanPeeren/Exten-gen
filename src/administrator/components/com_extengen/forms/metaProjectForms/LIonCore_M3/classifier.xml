@@ -2,7 +2,7 @@
 <form>
 	<fieldset
 		addruleprefix="Yepr\Component\Extengen\Administrator\Rule"
-		addfieldprefix="Yepr\Component\Extengen\Administrator\Field\LIonCore_M3"
+		addfieldprefix="Yepr\Component\Extengen\Administrator\Field"
 	>
 
 		<!-- Classifier_type: a Classifier is either a Concept, a ConceptInterface or an Annotation -->

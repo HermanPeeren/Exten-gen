@@ -148,7 +148,16 @@ test('the inputs are not modified', () => {
  * because the whole of liveEntries is a claim about that shape.
  */
 function fakeDocument(elements) {
-  const byId = new Map(elements.map((el) => [el.id, { className: '', value: '', ...el }]));
+  const byId = new Map(elements.map((el) => {
+    // A radio group is a fieldset carrying the id, with the inputs numbered
+    // inside it - so `checked` stands in for those, and such an element has no
+    // value of its own. That is the shape liveEntries has to cope with.
+    if (el.checked !== undefined) {
+      return [el.id, { className: '', ...el, value: undefined, querySelector: () => ({ value: el.checked }) }];
+    }
+
+    return [el.id, { className: '', value: '', querySelector: () => null, ...el }];
+  }));
 
   return {
     querySelectorAll: (selector) => {
@@ -297,4 +306,109 @@ test('only rows carrying the class are read', () => {
 test('the class a type looks for starts lower case', () => {
   assert.equal(lowerFirst('Entity'), 'entity');
   assert.equal(lowerFirst('Field'), 'field');
+});
+
+// --- conditions: one repeating group, several object types ------------------
+
+/**
+ * LionCore M3, as the form really lays it out.
+ *
+ * Every language entity is one row of one subform. What kind it is lives in a
+ * radio inside that row, and for a classifier there is a second radio one
+ * subform deeper. A Concept dropdown has to skip the rows that are neither.
+ */
+const CONCEPT = {
+  selector: 'languageEntityName',
+  nameToken: 'name',
+  idToken: 'key',
+  when: [
+    { token: 'languageEntity_type', value: 'Classifier' },
+    { token: 'classifier__classifier_type', value: 'Concept' },
+  ],
+};
+
+const DATATYPE = {
+  selector: 'languageEntityName',
+  nameToken: 'name',
+  idToken: 'key',
+  when: [{ token: 'languageEntity_type', value: 'DataType' }],
+};
+
+function m3Document(rows) {
+  return fakeDocument(rows.flatMap((row, i) => {
+    const at = `jform_languageEntities__languageEntities${i}_`;
+
+    return [
+      { id: `${at}name`, className: 'languageEntityName', value: row.name },
+      { id: `${at}key`, value: row.key },
+      { id: `${at}languageEntity_type`, checked: row.kind },
+      { id: `${at}classifier__classifier_type`, checked: row.classifier ?? '' },
+    ];
+  }));
+}
+
+test('a dropdown for Concepts offers the concepts and nothing else', () => {
+  const root = m3Document([
+    { name: 'Entity', key: 'k1', kind: 'Classifier', classifier: 'Concept' },
+    { name: 'INamed', key: 'k2', kind: 'Classifier', classifier: 'ConceptInterface' },
+    { name: 'Text', key: 'k3', kind: 'DataType' },
+  ]);
+
+  assert.deepEqual(
+    liveEntries({ root, ...CONCEPT, newId: () => 'x' }),
+    [{ id: 'k1', name: 'Entity' }],
+  );
+});
+
+test('a dropdown for DataTypes offers the datatypes and nothing else', () => {
+  const root = m3Document([
+    { name: 'Entity', key: 'k1', kind: 'Classifier', classifier: 'Concept' },
+    { name: 'Text', key: 'k3', kind: 'DataType' },
+  ]);
+
+  assert.deepEqual(
+    liveEntries({ root, ...DATATYPE, newId: () => 'x' }),
+    [{ id: 'k3', name: 'Text' }],
+  );
+});
+
+test('changing what a row is changes what the dropdowns offer', () => {
+  // The whole reason this is read live rather than rendered once. Before 3.1
+  // these options came from the database, so a concept somebody had just
+  // turned into a datatype went on being offered as a concept until the form
+  // was saved and reopened.
+  const rows = [{ name: 'Entity', key: 'k1', kind: 'Classifier', classifier: 'Concept' }];
+  const root = m3Document(rows);
+
+  assert.equal(liveEntries({ root, ...CONCEPT, newId: () => 'x' }).length, 1);
+
+  root.getElementById('jform_languageEntities__languageEntities0_languageEntity_type')
+    .querySelector = () => ({ value: 'DataType' });
+
+  assert.deepEqual(liveEntries({ root, ...CONCEPT, newId: () => 'x' }), []);
+  assert.deepEqual(
+    liveEntries({ root, ...DATATYPE, newId: () => 'x' }),
+    [{ id: 'k1', name: 'Entity' }],
+  );
+});
+
+test('a row missing the input a condition names is not offered', () => {
+  // Rather than offered by default. A condition that cannot be evaluated is
+  // not a condition that passed, and guessing here would put a datatype in a
+  // concept list.
+  const root = fakeDocument([
+    { id: 'jform_languageEntities__languageEntities0_name', className: 'languageEntityName', value: 'Orphan' },
+    { id: 'jform_languageEntities__languageEntities0_key', value: 'k9' },
+  ]);
+
+  assert.deepEqual(liveEntries({ root, ...CONCEPT, newId: () => 'x' }), []);
+});
+
+test('with no conditions every row is offered, as before', () => {
+  const root = m3Document([{ name: 'Entity', key: 'k1', kind: 'Classifier', classifier: 'Concept' }]);
+
+  assert.deepEqual(
+    liveEntries({ root, selector: 'languageEntityName', nameToken: 'name', idToken: 'key', newId: () => 'x' }),
+    [{ id: 'k1', name: 'Entity' }],
+  );
 });

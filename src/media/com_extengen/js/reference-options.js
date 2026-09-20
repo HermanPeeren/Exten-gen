@@ -89,6 +89,14 @@ export function referenceOptions({ stored = [], live = [], parent = null, select
  * identity before anything can point at it, and the first moment that matters
  * is when somebody names it.
  *
+ * Some object types share a row and differ only by what the row says it is. A
+ * LionCore language entity is a Classifier or a DataType, and a Classifier is a
+ * Concept, a ConceptInterface or an Annotation - all one repeating group with
+ * one name input. `when` is how a dropdown for Concepts skips the rows that are
+ * something else, read live, so changing the radio changes what the dropdowns
+ * next to it offer. The server applies the same conditions to the stored model;
+ * both lists come from one table.
+ *
  * @param {object}    args
  * @param {Document}  args.root        Where to look.
  * @param {string}    args.selector    Class on the name inputs, for instance `entityName`.
@@ -97,6 +105,7 @@ export function referenceOptions({ stored = [], live = [], parent = null, select
  * @param {?string}   args.parentToken What it becomes on the parent's id input, for a child type.
  * @param {?string}   args.parentCut   Where to cut a child's id to reach its parent's row, when
  *                                     the child's own parent field is still empty.
+ * @param {Array}     args.when        `{token, value}` conditions the row must satisfy.
  * @param {function}  args.newId       Makes an identifier for a row that has none.
  * @returns {Array} `{id, name, parent?}` for each row on screen.
  */
@@ -107,11 +116,18 @@ export function liveEntries({
   idToken,
   parentToken = null,
   parentCut = null,
+  when = [],
   newId,
 }) {
   const rows = [...root.querySelectorAll(`.${selector}`)];
 
   return rows.map((nameInput) => {
+    for (const condition of when) {
+      if (valueInRow(root, nameInput, nameToken, condition.token) !== condition.value) {
+        return null;
+      }
+    }
+
     const idInput = root.getElementById(nameInput.id.replace(nameToken, idToken));
 
     // A name with no id beside it is a form that does not match this contract.
@@ -132,6 +148,31 @@ export function liveEntries({
 
     return entry;
   }).filter(Boolean);
+}
+
+/**
+ * What another input in the same row currently holds.
+ *
+ * The same id substitution the name and id inputs use, because it is the only
+ * relation between two fields of one row that Joomla guarantees. A radio group
+ * is the awkward case: Joomla puts the id on the fieldset and numbers the
+ * inputs inside it, so the fieldset is what the substitution finds and the
+ * checked input is what the answer is.
+ */
+function valueInRow(root, nameInput, nameToken, token) {
+  const element = root.getElementById(nameInput.id.replace(nameToken, token));
+
+  if (!element) {
+    return '';
+  }
+
+  if (typeof element.value === 'string') {
+    return element.value;
+  }
+
+  const checked = element.querySelector('input:checked');
+
+  return checked ? checked.value : '';
 }
 
 /**

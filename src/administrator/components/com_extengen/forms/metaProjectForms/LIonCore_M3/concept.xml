@@ -20,7 +20,8 @@
 
 		<field
 				name="extends"
-				type="ConceptReference"
+				type="Reference"
+				objecttype="Concept"
 				label="COM_EXTENGEN_PROJECTFORM_CONCEPT_FIELD_EXTENDS_LABEL"
 				id="extends"
 				class="custom-select-color-state QualifierRef"
