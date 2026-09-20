@@ -71,6 +71,7 @@ A **metalanguage package** is what travels, and one payload serves both consumer
 | the concept model | Gen-gen, to know what a rule may select |
 | generated forms | Exten-gen, to edit a model written in that language |
 | the reference table | both, for the dropdowns |
+| a language file, keyed to the language | both, so the forms read as words rather than constants |
 | a manifest: key, version, root classifier | both, to bind a project or a generator to it |
 
 Meta-gen is the only writer. Carrying the concept model *and* its derived forms means
@@ -967,10 +968,35 @@ button. It found the one defect of this step that no other gate could: `writeToD
 refuses a root that is not there, and the model created that root's *parent*.
 
 **3.3 The metalanguage package, and exporting one.** Meta-gen writes a zip: the concept
-model, the generated forms, the reference table and a manifest naming the language, its
-version and its root classifier. Nothing installs it yet.
+model, the generated forms, the reference table, a language file and a manifest naming the
+language, its version and its root classifier. Nothing installs it yet.
 *Done when* a package round-trips - exported, read back, and the forms in it are the forms
 the generator produced.
+
+*Decided: the package carries its own language file, with keys scoped to the language.*
+Not `COM_EXTENGEN_*`, which is what the old Extengen would have needed and the reason it
+never generated any: `ProjectForms` took a `LanguageStringUtil` and left it unused, with a
+comment saying the strings "should have to be added to the existing ones of this
+component". That reason is gone now - a package is consumed by com_extengen *and*
+com_gengen, so a key naming one of them is wrong by construction - and the answer is a
+key naming the *language*. The consumer loads the file from the package's own path.
+
+**`LanguageStringUtil` is not the mechanism here, and that is structural rather than a
+preference.** It is a Twig extension: `addLanguageString` is a Twig *function*, so strings
+are collected while templates render, which is why `LanguageFiles` runs last in
+`Joomla6Target`. Meta-gen's forms generator renders no templates at all - it builds XML
+through DOM, which is the line 2.1 drew - so there is no render pass to collect during.
+And `initLangTree()` reads `$AST->extensions->component->languages`, the *project's*
+translation list; a metalanguage has no `extensions` node, so the tree comes out empty and
+the first call fatals. It stays where it is, generating a component's strings, and Meta-gen
+collects its own as it builds each form.
+
+*Decided: the meta-model gains a `label`, and a `description`, on a Feature and a
+Classifier.* Optional, falling back to the name. Without it the only human text in a
+metalanguage is an identifier, and every generated form would read `isValueObject` where
+it should read "Is this a value object?" - so the package format would be fixed around
+text nobody chose. It lands before the package rather than after, because adding it later
+changes that format.
 
 **3.4 Importing one.** Exten-gen and Gen-gen each grow an import screen and a store, so a
 site can hold several metalanguages at once. A project records which language it is written
@@ -1026,7 +1052,6 @@ Each is flagged at the step where it bites.
 | Step | Decision |
 |---|---|
 | 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
-| 3.3 | Whether a metalanguage package carries generated language strings, and under what naming |
 | 3.4 | Whether an imported metalanguage replaces Exten-gen's shipped ER1 forms or sits beside them until 3.5 |
 
 ## Suggested entry point
