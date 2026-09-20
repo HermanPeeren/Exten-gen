@@ -47,6 +47,24 @@ final class ViewNamesTest extends TestCase
      * for a *generated* component, and the views they name are that
      * component's, not this one's.
      *
+     * **Directories that are not there are skipped rather than fatal**, and
+     * that is not defensive coding for its own sake. This file first named
+     * `cypress/` at the repository root, which is where the specs were when it
+     * was written and not where they are now - so it passed on a working tree
+     * that still had the leftover `cypress/screenshots/` folder and threw on a
+     * fresh clone, which is what CI is. `docs/development.md` says to run the
+     * gates against a fresh clone for exactly this reason, and I did not.
+     *
+     * `testTheScanReachesTheFilesItIsMeantTo` is the other half: skipping a
+     * missing directory is only safe while something notices when they have
+     * all moved.
+     *
+     * The browser specs are reached at `tests/cypress` rather than by scanning
+     * `tests/` whole, because scanning `tests/` reaches *this file* - whose
+     * own docblock writes `view=groups` as an example and trips the rule on its
+     * own prose. `ResolvableNamesTest` has the same warning in it: a rule that
+     * cries wolf about its own source text is one people learn to silence.
+     *
      * @return string[]
      */
     private function sourceFiles(): array
@@ -54,7 +72,11 @@ final class ViewNamesTest extends TestCase
         $root  = \dirname(__DIR__, 2);
         $files = [];
 
-        foreach (['src', 'cypress', 'tools'] as $directory) {
+        foreach (['src', 'tools', 'tests/cypress'] as $directory) {
+            if (!is_dir($root . '/' . $directory)) {
+                continue;
+            }
+
             $tree = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($root . '/' . $directory, \FilesystemIterator::SKIP_DOTS)
             );
@@ -157,6 +179,30 @@ final class ViewNamesTest extends TestCase
             scandir($root) ?: [],
             static fn (string $entry): bool => $entry !== '.' && $entry !== '..' && is_dir($root . '/' . $entry)
         ));
+    }
+
+    /**
+     * The scan reaches the files it is meant to.
+     *
+     * Skipping a directory that is not there keeps a fresh clone from throwing;
+     * this keeps that from quietly turning the whole rule into a no-op the day
+     * everything moves again. Both kinds of file have to be reached: the
+     * component's own PHP and XML, and the browser specs, which is where a
+     * view name gets typed by hand most often.
+     */
+    public function testTheScanReachesTheFilesItIsMeantTo(): void
+    {
+        $files = $this->sourceFiles();
+
+        $this->assertNotEmpty($files, 'The scan found no files at all.');
+
+        $component = array_filter($files, static fn (string $p): bool => str_contains($p, '/com_extengen/'));
+        $specs     = array_filter($files, static fn (string $p): bool => str_ends_with($p, '.cy.js'));
+
+        $this->assertNotEmpty($component, 'No file from the component itself was scanned.');
+        $this->assertNotEmpty($specs, 'No browser spec was scanned; they have moved and this rule has not followed.');
+
+        $this->assertNotEmpty($this->linkedViews(), 'No view= link was found anywhere, which cannot be right.');
     }
 
     public function testEveryLinkedViewResolvesToADirectoryOfThatExactName(): void
