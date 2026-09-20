@@ -313,6 +313,58 @@ files that no unit test reads. The spec caught it on the first run: the
 dropdowns contained `['c-entity']` where they should have contained
 `['Entity', 'Field']`.
 
+## How the forms generator works
+
+```
+src/Generator/Model/ConceptModel.php   a modelled language, as the component stores one
+src/Generator/Model/Classifier.php     a concept, a concept interface or an annotation
+src/Generator/Model/Feature.php        a property, or a link that is a containment or a reference
+src/Generator/Model/DataType.php       a primitive type or an enumeration
+src/Generator/Meta/LanguageStructure.php  the language, laid out as Joomla forms
+src/Generator/Meta/FormXml.php         one classifier's form, built through DOM
+src/Generator/Meta/ReferenceTable.php  what `<extengen-reference>` reads
+src/Generator/Meta/Naming.php          which property is the key, and which is the label
+src/Generator/Target/MetaFormsTarget.php  what runs
+```
+
+A project is *written in* a language; a concept model **is** one. Generating from a
+project produces a component, which is Stage 1. Generating from a concept model produces
+the forms a project in that language is edited with, which is 3.2.
+
+**Subtyping becomes nesting, containment becomes a path.** A classifier that others extend
+does not hand them its fields — it gets a radio saying which one this row is, and a
+subform each. That is how the hand-written meta-model is arranged, and it is what lets one
+`languageEntities` group hold five kinds of thing. A repeating containment is a repeating
+subform, which is a group a reader walks into; a single one is stored as the group itself
+rather than as one keyed row, so it is read as a dotted path and never walked.
+
+Those two facts are the whole of the reference table. `path` is the containments, `when`
+is the subtyping, and both halves — the server's path through stored JSON and the
+browser's token in an element id — come from one walk, so they cannot disagree.
+
+**Three conventions, all read off the hand-written meta-model rather than invented.** A
+subtype's subform group is `lcfirst` of its name (`concept`, `conceptInterface`); a
+discriminator radio is `lcfirst` of what it discriminates plus `_type`
+(`languageEntity_type`, `dataType_type`, `link_type` — all five follow it); and a
+classifier's qualified name is its extends chain joined with dots, which reproduces all
+fifteen of the `LIonWeb_key` values those files spell out by hand.
+
+**One convention stands in for something the meta-model cannot say**, and it is in
+`Naming` on its own for that reason: which property is a row's identity and which is its
+label. M3 has no way to mark either, so they are found by name — `key`, `id`, `*_id`;
+`name`, `*_name`. It reads M3's `key`/`name` and ER1's `entity_id`/`entity_name` without
+being tuned to either. Marking them in the model is 4.2's business.
+
+**How it is checked.** `tests/Fixtures/projectforms/lioncore-m3.json` is LionCore M3
+modelled in LionCore M3, so the expected output is already in this repository as fifteen
+hand-written form files and one hand-written table. `MetaReferenceTableTest` runs the
+generated table through `ReferenceIndex::fromTable()` and asserts it indexes a stored
+projectForm into the same answers as `ReferenceIndex::projectForm()` — by behaviour, not
+by comparing two arrays, because two arrays matching proves nothing if both are nonsense.
+
+It is not byte-identical to the hand-written forms; 3.2 in the plan has the table of what
+differs and which side is right. Reconciling them is 3.3.
+
 ## How custom code works
 
 ```
@@ -570,6 +622,20 @@ downloads folder full of identically named packages says nothing about which is
 which. The tree stays beside it because that is how generated output gets read
 here: opened, compared, looked through. Offering the archive as a download from
 the component's own interface is the part still missing.
+
+Generating the forms of a modelled language writes the same two things, beside
+those:
+
+```
+generated/projectForms/<Name>/<Name>-forms.zip    the forms and their reference table
+generated/projectForms/<Name>/tree/...            the same files, unpacked
+```
+
+**Not into the component's own `forms/` directory**, which is where the generator
+before 3.2 wrote them, one `mkdir` and `save()` at a time as it went — so
+generating forms edited the running component from inside itself, and a run that
+failed half way left a language half replaced. Installing a generated language is
+3.4.
 
 ## The site this is developed against
 

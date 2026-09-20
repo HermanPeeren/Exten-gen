@@ -63,6 +63,64 @@ final class ResolvableNamesTest extends TestCase
         return $cases;
     }
 
+    /**
+     * A file declares the namespace its own path spells out.
+     *
+     * PSR-4 is that correspondence and nothing else, so a file that breaks it
+     * cannot be loaded by name at all - and *nothing else notices*, because
+     * nothing asks for a class no request reaches. 1.5 found one:
+     * `src/Factory/MVCFactory.php` declared `...\Administrator\Service`, and
+     * `services/provider.php` had quietly gone on registering Joomla's stock
+     * factory instead. 3.2 found the second: `View/GenerateProjectForm/HtmlView.php`
+     * declared `View\GenerateForm`, so the one screen that generates the forms
+     * of a modelled language could not be reached even by the link that pointed
+     * at it - which itself named a third spelling again.
+     *
+     * The rule that would have caught both is one line of string comparison,
+     * and neither the analyser nor the coding standard asks the question.
+     */
+    #[DataProvider('componentClasses')]
+    public function testEveryFileDeclaresTheNamespaceItsPathImplies(string $relative): void
+    {
+        $source    = (string) file_get_contents(self::sourceRoot() . '/' . $relative);
+        $namespace = $this->namespaceOf($source);
+
+        if ($this->declaredIn($source) === []) {
+            // A file with no class in it is a script, and PSR-4 says nothing
+            // about where one lives. Asserted rather than skipped, so that the
+            // run has something to report either way.
+            $this->assertSame([], $this->declaredIn($source));
+
+            return;
+        }
+
+        if (!str_starts_with($namespace, 'Yepr\\Component\\Extengen\\')) {
+            // Somebody else's code, vendored into src/ rather than required
+            // through composer, and reached by a `require_once` precisely
+            // because PSR-4 cannot find it. `phpstan.neon` excludes the same
+            // file for the same reason. Listing it here rather than skipping
+            // anything foreign means a *second* one would be a failure.
+            $this->assertContains(
+                $relative,
+                ['Generator/GoogleTranslate.php'],
+                $relative . ' declares the foreign namespace ' . $namespace . '.'
+            );
+
+            return;
+        }
+
+        $expected = rtrim(
+            'Yepr\\Component\\Extengen\\Administrator\\' . str_replace('/', '\\', \dirname($relative)),
+            '\\.'
+        );
+
+        $this->assertSame(
+            $expected,
+            $namespace,
+            $relative . ' declares ' . $namespace . ', so nothing can load it by name.'
+        );
+    }
+
     #[DataProvider('componentClasses')]
     public function testEveryNameItUsesResolves(string $relative): void
     {

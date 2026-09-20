@@ -113,7 +113,7 @@ if ($saveOrder && !empty($this->items))
 
 								</th>
                                 <td class="text-center btns d-none d-md-table-cell">
-                                    <a class="btn btn-info dynbutton"  data-bs-toggle="modal"  href="#generationModal" data-href="<?php echo Uri::root(); ?>administrator/index.php?option=com_extengen&view=generateform&tmpl=component&projectform_id=<?php echo $item->id; ?>">
+                                    <a class="btn btn-info dynbutton"  data-bs-toggle="modal"  href="#generationModal" data-href="<?php echo Uri::root(); ?>administrator/index.php?option=com_extengen&view=generateProjectForm&tmpl=component&projectform_id=<?php echo $item->id; ?>">
 										<?php echo Text::_('COM_EXTENGEN_BUTTON_GENERATE'); ?>
                                     </a>
                                 </td>

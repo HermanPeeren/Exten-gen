@@ -225,6 +225,30 @@ final class ReferenceIndex
     }
 
     /**
+     * The index of a language whose table was generated from its concept model.
+     *
+     * The two tables above are written by hand because the two languages they
+     * describe are. A language somebody models gets its table from
+     * `Generator\Meta\ReferenceTable`, which reads the same concept model the
+     * forms are generated from - so the dropdowns and the forms cannot describe
+     * different things, which two hand-written halves always eventually do.
+     *
+     * Nothing is checked here beyond the shape being a map, because the table
+     * arrives from the generator rather than from a person: `index()` and
+     * `clientTypes()` read exactly the keys the generator writes, and a table
+     * missing one of them is a defect in the generator that its own tests are
+     * where to catch.
+     *
+     * @param  array<string, array<string, mixed>>  $types  A generated table.
+     *
+     * @since  1.2.0
+     */
+    public static function fromTable(array $types): self
+    {
+        return new self($types);
+    }
+
+    /**
      * The index of a projectForm, in LionCore M3.
      *
      * @since  1.1.0

@@ -747,6 +747,110 @@ proof it had not. The spec caught it on the first run.
 **3.2 The forms generator.** Concept model to form XML, reference field elements, and the
 JavaScript the 1.9 mechanism needs.
 
+**Done, and checked against the meta-model it generates.** `tests/Fixtures/projectforms/
+lioncore-m3.json` is LionCore M3 modelled in LionCore M3 - the meta-model describing
+itself - so "does the generator produce the meta-model" has an answer rather than an
+opinion, in the way 2.3's acceptance criterion did. The table half is exact:
+
+> the generated reference table indexes a stored projectForm into the same answers, type
+> for type and condition for condition, as the hand-written `ReferenceIndex::PROJECT_FORM`
+
+**Both** hand-written tables, in fact, and that matters because each exercises a half the
+other does not. M3 puts every type in one `languageEntities` group, so every path is one
+step and the work is all in the conditions. `ReferenceIndex::PROJECT` is the opposite
+shape - three different groups, no conditions at all, and a child type nested inside its
+parent's with a `parentKey` and a `parentCut` - and a language shaped like ER1 reproduces
+it as well, `_field__field` included. Modelling ER1 properly is still 3.3; this is the
+part of it the containment walk has to get right.
+
+`ReferenceIndex` said in its own docblock, at 1.9, that its type table was a map rather
+than a method per type *because Meta-gen generates this from a concept model in stage 3*.
+It does now, and the two are compared by running them - a table is not checked by matching
+two arrays, because two arrays matching proves nothing if both are nonsense. Both halves
+of an entry come from one walk of the language, which is the whole reason to generate
+them: a condition is written twice, once as a path through stored JSON and once as a token
+in an element id, and the hand-written pair could drift with no symptom but a dropdown
+that is right until somebody changes a radio.
+
+**Subtyping is what makes a forms generator possible at all.** A classifier that others
+extend does not hand them its fields; it gets a radio saying which one this row is, and a
+subform each. That is how the hand-written meta-model is arranged, and it is what lets one
+repeating group hold five kinds of thing. Written down as `LanguageStructure`, it produces
+the same file names, the same `showon` attributes, the same nesting - and the same fifteen
+qualified names (`LanguageEntity.Classifier.Concept`, `Feature.Link.Containment`) that
+fifteen separate files spell out by hand. Those are derived from the extends chain, not
+read: the stored `LIonWeb_key` on a row says the row is a LanguageEntity, which is true of
+every row and not what a form needs to know.
+
+Abstractness is the one model fact that decides an option list. `classifier_type` offers
+Concept, ConceptInterface and Annotation and not Classifier, because a row cannot be a
+Classifier and nothing more specific - so a concrete classifier is the first of its own
+choices and an abstract one is not.
+
+**There was a generator here and it could not have run.** `Generator\ProjectForms` was a
+copy of the ER1 forms generator with a dead first half bolted on - a `$createForm` closure
+nothing called, and a tree walk commented out beside it. Its live code opened
+`foreach ($projectForm->datamodel as $entity)`, and a projectForm has `languageEntities`
+and no `datamodel` at all, so the one screen that called it would have thrown on its first
+statement.
+
+Nothing had found that out because nothing could reach the screen either, and this is the
+part worth keeping: there were **three names for one view and no two of them agreed**. The
+link in `projectForms/default.php` said `view=generateform`; the directory was
+`GenerateProjectForm`; the class inside it declared `View\GenerateForm`. A screen nobody
+can open is a screen nobody finds out is broken, and a generator behind one can be wrong
+for years.
+
+`ResolvableNamesTest` has the rule that would have caught the third of those, and it is
+one string comparison: a file declares the namespace its own path spells out. PSR-4 is
+that correspondence and nothing else. It catches 1.5's `MVCFactory.php` too, which
+declared `...\Administrator\Service` from `src/Factory/` while `services/provider.php`
+quietly went on registering Joomla's stock factory. Neither the analyser nor the coding
+standard asks the question.
+
+**Which property is the identity is a convention, and it is written down.** LionCore M3
+cannot say "this property is the key" or "this one is the label", so `Naming` finds them
+by name: `key` or `id` or something ending in `_id`, and `name` or something ending in
+`_name`. It is a convention rather than a guess because it reads both hand-written tables
+correctly without being tuned to either - M3's `key`/`name` and ER1's
+`entity_id`/`entity_name`. Marking them in the model belongs with the other things the
+meta-model cannot express, at 4.2.
+
+**Not byte-identical to the hand-written forms, and not claimed to be.** That is 3.3, and
+these are what it has to reconcile:
+
+| Difference | Which side is right |
+|---|---|
+| `size="1"`, `class="custom-select-color-state QualifierRef"` | Presentation a concept model cannot hold. The model needs somewhere to put it, or the generator needs a defaults table. |
+| The root form's Joomla chrome: alias, published, access, catid, ordering, `params` | Not derivable from a language at all. A projectForm is a Joomla item as well as a model, and only the second half is generated. |
+| `COM_EXTENGEN_PROJECTFORM_*` against the generated `COM_EXTENGEN_LIONCORE_M3_*` | Open. The generated names are scoped by language, which the hand-written ones could not be; nothing defines either, because no `.ini` is generated yet. |
+| `languageEntity.xml` names the DataType subform `datatype`, where every other group is lowerCamel | The hand-written file. The generated `dataType` is what the convention says, and `ReferenceIndex` never exposed the difference because DataType needs no group-path condition. |
+| `link.xml` names the Reference subform `link`, pointing at `reference.xml` | The hand-written file. |
+| A hidden `extends` field in `classifier.xml`, `dataType.xml`, `link.xml` and three more | Neither. It duplicates what `LIonWeb_key` already says, and `extends` means something else entirely one form away, where it is a real reference to a concept. |
+
+**Not in 3.2, deliberately.** No `scope` is emitted on a reference field, and that is a
+decision rather than an omission: the hand-written ER1 form that scopes one points at
+`entity_reference_id`, the hidden backup of the *sibling dropdown* where somebody picked
+the entity, not at a property of the row. A child's `parentKey` and a dropdown's `scope`
+look like one idea and are two, and which of them a modelled language means is a question
+the real ER1 model answers at 3.3. Emitting one on a hunch would narrow dropdowns to the
+wrong thing, and an over-narrow list reads as an empty one rather than as a mistake.
+
+An annotation's `annotates` does not change the form of the classifier it attaches to -
+the mechanism for that is a language feature nothing in this repository can check yet. No
+language file is generated, so every generated label is a constant nothing defines. And a
+generated language is output rather than something
+installed: the old generator wrote straight into the running component's own `forms/`
+directory, one `mkdir` and `save()` at a time, so generating forms edited the component
+from inside itself and a run that failed half way left a language half replaced. It
+produces a package and a tree beside it, the way a generated component does; installing
+one is 3.4.
+
+*Done:* 332 unit tests, 27 browser-JavaScript tests, PHPStan, phpcs and 29 Cypress specs
+green - five of them new, and the reason they exist is that the unit suite cannot see the
+button. It found the one defect of this step that no other gate could: `writeToDirectory()`
+refuses a root that is not there, and the model created that root's *parent*.
+
 **3.3 Round-trip proof.** Model ER1 in LionWeb, regenerate Exten-gen's own forms, and
 compare against the hand-written ones as golden files.
 

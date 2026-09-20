@@ -10,7 +10,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-namespace Yepr\Component\Extengen\Administrator\View\GenerateForm;
+namespace Yepr\Component\Extengen\Administrator\View\GenerateProjectForm;
 
 defined('_JEXEC') or die;
 

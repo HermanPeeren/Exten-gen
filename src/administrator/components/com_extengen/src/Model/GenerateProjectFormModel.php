@@ -2,11 +2,9 @@
 
 /**
  * @package     Extengen
-
  * @subpackage  Extengen component
- * @version     0.8.0
  *
- * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
+ * @copyright   Copyright (C) Yepr, Herman Peeren. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
@@ -15,191 +13,182 @@ namespace Yepr\Component\Extengen\Administrator\Model;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Model\AdminModel;
+use Yepr\Component\Extengen\Administrator\Generator\Meta\Forms;
+use Yepr\Component\Extengen\Administrator\Generator\Model\ConceptModel;
+use Yepr\Component\Extengen\Administrator\Generator\Target\MetaFormsTarget;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectFormRepository;
-use Joomla\CMS\Form\Form;
-use Joomla\CMS\Language\Text;
-use Joomla\Registry\Registry;
-use Joomla\Utilities\ArrayHelper;
-use Yepr\Component\Extengen\Administrator\Generator\ProjectForms;
-
-use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
-
+use Yepr\Gen\Core\Output\FileCollection;
+use Yepr\Gen\Core\Output\ZipWriter;
+use Yepr\Gen\Core\Pipeline;
+use Yepr\Gen\Core\Target\Target;
 
 /**
- * Generate Form Model
+ * Generating the forms of a modelled language.
+ *
+ * The other half of what `GenerateModel` does for projects: that one turns a
+ * project into a component, this turns a language into the forms a project in
+ * that language is edited with. Both run the shared `Pipeline` over a target
+ * and write the whole file set afterwards, so a run that fails part way
+ * through leaves nothing behind.
+ *
+ * **What was here before could not have run.** It called a `ProjectForms`
+ * generator whose live code opened `foreach ($projectForm->datamodel as
+ * $entity)` - a projectForm has `languageEntities` and no `datamodel` at all -
+ * so the first statement of the only thing this model did would have thrown.
+ * Nothing had noticed because nothing could reach this model either: the link
+ * said `view=generateform`, the directory was `GenerateProjectForm`, and the
+ * view class inside it declared `View\GenerateForm`. Three names for one
+ * screen, no two of them the same.
+ *
+ * @since  1.2.0
  */
 class GenerateProjectFormModel extends AdminModel
 {
-	/**
-	 * A log of all files that were created with the various generators
-	 *
-	 * @var array
-	 */
-	public array $log = [];
+    /**
+     * A log of what the generators produced.
+     *
+     * @var array
+     */
+    public array $log = [];
 
-	/**
-	 * The (internal) id of the project for which we generate files
-	 *
-	 * @var   int|Integer
-	 */
-	protected int $projectFormId;
+    /**
+     * The (internal) id of the projectForm to generate from.
+     *
+     * @var int
+     */
+    protected int $projectFormId;
 
-	/**
-	 * Set the project form id.
-	 *
-	 * @param   int  $projectFormId
-	 */
-	public function setProjectFormId(int $projectFormId): void
-	{
-		$this->projectFormId = $projectFormId;
-	}
-
-	/**
-	 * Generate the form-files using various generators.
-	 * This is the central place from where all concrete generators are called.
-	 *
-	 */
-	public function generate()
-	{
-		// Initialise variables
-		$AST = $this->initiateAST();
-		$languageStringUtil = new LanguageStringUtil($AST);
-
-		// Project Form Name
-		$projectFormName = $AST->name;
-
-		// Find the root(s) in the AST. For now: assume exactly 1 root. Todo: multiple roots.
-		// walk through the AST and find the root; take that node and the tree under it
-
-
-		// file paths for generated (language)files
-		$extengenAdminPath = JPATH_ROOT . '/administrator/components/com_extengen/';
-		$generatedFormFilesPath = $extengenAdminPath . 'forms/ProjectForms/' . $projectFormName . '/';
-
-		$generatorNamespace = 'Yepr\\Component\\Extengen\\Administrator\\Model\\Generator\\';
-		$this->log[] = "<b>=== XML-FORMS FOR " . $projectFormName . " GENERATED ===</b>";
-		$generator = new ProjectForms($projectFormName, $AST, $languageStringUtil);
-		$this->log = array_merge($this->log, $generator->generate());
-
-		// todo: ? do we generate files or are we - more dynamically-  adding them to the db? How about version control then?
-
-		// Add strings to the language files. TODO: can we add those language stings more dynamically to the db?
-		$this->log[] = "&nbsp;";
-
-		//$this->log[] = "<b>=== LANGUAGE STRINGS OF THE FORMS ===</b>";
-		// todo: handle language strings
-
-		/*
-		 * Languagestrings not in use for projectforms at the moment
-	     * (because the generated language strings should have to be added to the existing ones of this component).
-		$languageTree = $languageStringUtil->getLangTree();
-		$baseGeneratedFilePath = 'administrator/components/com_'.strtolower($componentName).'/';
-		foreach ($languageTree as $section_name => $section)
-		{
-			switch ($section_name)
-			{
-				case 'backend':
-				case 'sys':
-					$generatedFilePath = 'administrator/components/com_'.strtolower($componentName) .'/language/';
-					break;
-				case 'frontend':
-					$generatedFilePath = 'components/com_'.strtolower($componentName) .'/language/';
-					break;
-			}
-			foreach ($section->languages as $language)
-			{
-				$languageFolderName = $language->language_code . '-' . $language->country_code;
-
-				// Create the directory for the generated files if it doesn't exist
-				$generatedDirectory = $generatedFilesPathComponent . $generatedFilePath . $languageFolderName;
-				if (!file_exists($generatedDirectory)) {
-					mkdir($generatedDirectory, 0755, true);
-				}
-
-				// Create the content of the language file
-				$languageContent = [];
-				foreach ($language->key_value_pairs as $keyValuePair)
-				{
-					$languageContent[] = $keyValuePair->language_string . '="' . $keyValuePair->locale_string . '"';
-				}
-
-				// Sort language strings alphabetically
-				sort($languageContent);
-
-				// todo: Add a heading to language string files with project, copyright, license and version
-
-				// File name
-				$sys = "";
-				if ($section_name == 'sys')
-				{
-					$sys = ".sys";
-				}
-				$generatedFileName ='com_' . strtolower($componentName) . $sys . '.ini';
-
-				// Write the file
-				$languageFile = fopen( $generatedDirectory . "/" . $generatedFileName, "w") or die("Unable to open file!");
-				fwrite($languageFile, implode("\n",$languageContent));
-				fclose($languageFile);
-				$this->log[] = $generatedFilePath . $languageFolderName . '/' . $generatedFileName . ' generated';
-			}
-		}*/
-	}
-
-	/**
-	 * Get the (json-encoded) form-data of the project that form the AST.
-	 *
-	 * @return object
-	 */
-	private function initiateAST(): object
+    /**
+     * Set the projectForm id.
+     *
+     * @param   int  $projectFormId  The row to generate from.
+     *
+     * @return  void
+     */
+    public function setProjectFormId(int $projectFormId): void
     {
-
-		// The id is set on this model by the controller, not taken from the
-		// request: the model is told which record it is working on.
-		$id = (int) $this->projectFormId;
-$model = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
-if ($model === null) {
-// The declared return type is not nullable, so without this a
-			// missing or unreadable record arrives as a TypeError with
-			// nothing in it to act on.
-			throw new \RuntimeException(sprintf('Cannot read project form %d.', $id));
-}
-
-		return $model;
+        $this->projectFormId = $projectFormId;
     }
 
-	/**
-	 * The table this model reads, which is the ProjectForm table.
-	 *
-	 * This replaced a copy of AdminModel::getItem() whose only reason to
-	 * exist was the same one: without it, AdminModel asks for a table
-	 * named after the model - ERDTable, GenerateTable - and there is no
-	 * such thing. Saying so here is one line instead of thirty, and it
-	 * leaves getItem() to the parent, which is where the behaviour was
-	 * copied from in the first place.
-	 *
-	 * @param   string  $name     The table name.
-	 * @param   string  $prefix   The class prefix.
-	 * @param   array   $options  Configuration for the table.
-	 *
-	 * @return  \Joomla\CMS\Table\Table
-	 */
-	public function getTable($name = 'ProjectForm', $prefix = 'Administrator', $options = [])
-	{
-		return parent::getTable($name, $prefix, $options);
-	}
+    /**
+     * Generate the forms of this language, and write them out.
+     *
+     * @return  void
+     */
+    public function generate(): void
+    {
+        $model  = $this->loadConceptModel();
+        $target = new MetaFormsTarget();
 
+        $generators = $target->generators();
 
-	/**
-	 * NOT USED ATM. BUT MUST BE IMPLEMENTED. MIGHT USE IN FUTURE TO CHOOSE GENERATORS.
-	 * Method to get the row form.
-	 *
-	 * @param   array    $data      Data for the form
-	 * @param   boolean  $loadData  True if the form is to load its own data (default case), false if not
-	 *
-	 * @return  Form|boolean  A Form object on success, false on failure
-	 */
-	public function getForm($data = array(), $loadData = true)
-	{
-		return false;
-	}
+        $files = (new Pipeline())->run($model, new Target(
+            $target->id(),
+            $target->label(),
+            $target->validator(),
+            ...$generators
+        ));
+
+        foreach ($generators as $generator) {
+            // Keeping a log is this project's habit rather than something the
+            // shared GeneratorInterface promises, so it is asked for where it
+            // exists instead of widening that interface for it.
+            if ($generator instanceof Forms) {
+                $this->log = array_merge($this->log, $generator->log());
+            }
+        }
+
+        $this->write($files, $model);
+    }
+
+    /**
+     * Put the generated forms on disk, beside the generated components.
+     *
+     * **Not into the component's own `forms/` directory**, which is where the
+     * old generator wrote them, one `mkdir` and `save()` at a time as it went.
+     * Generating forms then edited the running component from inside itself,
+     * and a run that failed half way left a language half replaced. Installing
+     * a generated language is a step of its own - 3.4 - and until there is one,
+     * the output is a package and a tree somebody can read, exactly as a
+     * generated component is.
+     *
+     * @param   FileCollection  $files  What was generated.
+     * @param   ConceptModel    $model  The language it came from.
+     *
+     * @return  void
+     */
+    private function write(FileCollection $files, ConceptModel $model): void
+    {
+        $name      = preg_replace('/[^A-Za-z0-9_-]+/', '', $model->name()) ?: 'unnamed';
+        $generated = JPATH_ROOT . '/administrator/components/com_extengen/generated/projectForms/' . $name;
+
+        // The tree, not its parent: `ZipWriter::writeToDirectory()` refuses a
+        // root that is not there rather than creating one, which is what keeps
+        // a mistyped path from scattering a file set across the filesystem.
+        $tree = $generated . '/tree';
+
+        if (!is_dir($tree) && !mkdir($tree, 0755, true) && !is_dir($tree)) {
+            throw new \RuntimeException('Cannot create ' . $tree);
+        }
+
+        $writer  = new ZipWriter();
+        $archive = $generated . '/' . $name . '-forms.zip';
+
+        $writer->write($files, $archive);
+        $writer->writeToDirectory($files, $tree);
+
+        $this->log[] = '&nbsp;';
+        $this->log[] = '<b>' . count($files) . ' files</b>';
+        $this->log[] = 'package: ' . $archive;
+        $this->log[] = 'unpacked: ' . $tree;
+    }
+
+    /**
+     * The stored projectForm, as a language.
+     *
+     * @return  ConceptModel
+     */
+    private function loadConceptModel(): ConceptModel
+    {
+        // The id is set on this model by the view, not taken from the request:
+        // the model is told which record it is working on.
+        $id  = (int) $this->projectFormId;
+        $row = (new ProjectFormRepository($this->getDatabase()))->findRaw($id);
+
+        if ($row === null) {
+            throw new \RuntimeException(sprintf('Cannot read project form %d.', $id));
+        }
+
+        return ConceptModel::fromObject($row);
+    }
+
+    /**
+     * The table this model reads, which is the ProjectForm table.
+     *
+     * Without it, AdminModel asks for a table named after the model - there is
+     * no GenerateProjectFormTable and there is no reason for one.
+     *
+     * @param   string  $name     The table name.
+     * @param   string  $prefix   The class prefix.
+     * @param   array   $options  Configuration for the table.
+     *
+     * @return  \Joomla\CMS\Table\Table
+     */
+    public function getTable($name = 'ProjectForm', $prefix = 'Administrator', $options = [])
+    {
+        return parent::getTable($name, $prefix, $options);
+    }
+
+    /**
+     * This model has no form of its own; it is a button, not a screen to fill in.
+     *
+     * @param   array    $data      Data for the form.
+     * @param   boolean  $loadData  Whether the form loads its own data.
+     *
+     * @return  \Joomla\CMS\Form\Form|boolean
+     */
+    public function getForm($data = [], $loadData = true)
+    {
+        return false;
+    }
 }
