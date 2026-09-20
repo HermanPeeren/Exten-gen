@@ -283,7 +283,7 @@ something.
 plain objects for one reason: they run under `node --test` with no dependencies
 and no browser. They live in generator-core now, with the script they describe,
 and `composer test-js` is a gate there rather than here. What is left in the
-element is reading and writing the DOM, and `cypress/e2e/reference-fields.cy.js`
+element is reading and writing the DOM, and `tests/cypress/e2e/reference-fields.cy.js`
 covers that against a real Joomla.
 
 **What only the browser could see.** Everything above passed with the meta-model

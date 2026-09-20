@@ -22,6 +22,6 @@
 
 # Cypress: the env file holds a login, and the rest is run output.
 /cypress.env.json
-/cypress/screenshots/
-/cypress/videos/
-/cypress/downloads/
+/tests/cypress/screenshots/
+/tests/cypress/videos/
+/tests/cypress/downloads/

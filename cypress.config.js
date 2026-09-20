@@ -17,8 +17,8 @@ export default defineConfig({
   e2e: {
     // Overridden by `baseUrl` in cypress.env.json.
     baseUrl: 'http://localhost/Exten-gen/joomla',
-    supportFile: 'cypress/support/e2e.js',
-    specPattern: 'cypress/e2e/**/*.cy.js',
+    supportFile: 'tests/cypress/support/e2e.js',
+    specPattern: 'tests/cypress/e2e/**/*.cy.js',
     video: false,
     screenshotOnRunFailure: true,
 

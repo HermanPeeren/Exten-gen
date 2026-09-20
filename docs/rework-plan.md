@@ -495,7 +495,7 @@ The layout was a copy of the administrator's, down to the selection checkboxes a
 `task=x.edit` links. It is a front-end list now: plain headings, no checkboxes, and links
 to the details view.
 
-`cypress/e2e/generated-front-end.cy.js` is what makes that a claim rather than a hope. It
+`tests/cypress/e2e/generated-front-end.cy.js` is what makes that a claim rather than a hope. It
 generates a component, installs it with `tools/install-generated.php`, points a menu item
 at one of its views with `tools/seed-menu-item.php`, and looks at the page a visitor gets.
 Nothing else in this repository leaves Exten-gen.
