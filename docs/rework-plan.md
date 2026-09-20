@@ -643,7 +643,44 @@ Three things the check needed, each of which is the interesting part of it:
 Gen-gen's CI checks Exten-gen out beside it so the criterion actually runs there. A skipped
 test that is the whole point of a repository is worse than no test.
 
-**2.4 Repository, package, release.**
+**2.4 Repository, package, release.** Gen-gen is an installable Joomla 6 component and
+0.1.0 is released. Model a generator in its forms, press Generate, get a generator.
+
+The row is thin on purpose: a name, a target, and the whole modelled generator as JSON.
+Its shape is the forms; putting it in columns would mean maintaining the same structure
+twice - once as a form and once as a schema - with a migration every time a rule gains a
+field. `GeneratorTable::check()` reads that JSON back and asks for the rules, so a rule
+missing its selector is refused on save rather than three screens later.
+
+Packaging is this repository's, already debugged the hard way, so nothing there was new.
+What was new is **`tools/smoke.php`, which asks about the install rather than the working
+copy** - 33 checks, no login - and it earned its place immediately:
+
+- it built the component through its own `services/provider.php` instead of calling
+  `class_exists`, and found `GengenComponent` missing `HTMLRegistryAwareTrait`. The
+  provider calls `setRegistry()` on it; nothing static sees that call, because it is in a
+  closure in a file Joomla includes at run time. It looks like a working component right
+  up until the first request reaches it.
+- it reported that no target published a vocabulary - correctly, because the *installed*
+  Exten-gen predated 2.2. A checkout cannot tell you that.
+
+**Cypress covers the one thing none of that sees: whether a screen renders.** Five specs,
+against the same Joomla 6: the list comes up, a stored generator opens for editing, and
+the dropdowns hold `root`, `entities`, `backendPages`, `frontendPages` and
+`componentNameUcfirst` - the target's real vocabulary rather than empty boxes. Two of the
+specs were wrong before the component was: a tab selector matched a hidden accordion
+title, and Joomla 6 renders `<joomla-tab-element>` where an older Joomla rendered
+`.tab-pane`.
+
+Two CI failures, both of them this machine hiding something. PHPStan was scanning a
+`/joomla` that was a copy of the development site, so it resolved `com_extengen`'s classes
+- it now scans `joomla/libraries` only, and the local copy is a clean Joomla. And
+`include JPATH_LIBRARIES . '/vendor/autoload.php'` folds to an absolute `/vendor/...` that
+Linux checks and Windows does not.
+
+**Building Gen-gen by hand is also the evidence for 4.2.** Its forms need custom field
+types and nested subforms, which are two of the three model gaps named as blocking
+self-hosting. Exten-gen could not have generated this component today.
 
 ---
 
