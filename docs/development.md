@@ -256,23 +256,62 @@ A reference in the model is a uuid. The edit view asks the model for
 somebody added and has not saved - and fills its `<select>`. Live wins, which is
 the whole of "you should not have to save before you can refer to something".
 
-**One description of an object type.** `ReferenceIndex::TYPES` says both where a
-type lives in the stored model and how the browser finds its rows: the class on
-the name input, and how that input's element id relates to the hidden id beside
-it. The client half is handed over in the same payload. Two descriptions, one in
-PHP and one in a hand-written script, is what drifts - and in stage 3 Meta-gen
-generates this table from a concept model, which it could not do if half of it
-lived in JavaScript.
+**One description of an object type.** A table in `ReferenceIndex` says both
+where a type lives in the stored model and how the browser finds its rows: the
+class on the name input, and how that input's element id relates to the hidden
+id beside it. The client half is handed over in the same payload. Two
+descriptions, one in PHP and one in a hand-written script, is what drifts - and
+Meta-gen is meant to generate this table from a concept model, which it could
+not do if half of it lived in JavaScript.
+
+**Two models, two tables.** `ReferenceIndex::project()` describes a project in
+ER1 - entities, pages, fields, in three different places.
+`ReferenceIndex::projectForm()` describes a projectForm in LionCore M3, where
+every object is a row of one repeating group and they differ only by what the
+row says it is: a language entity is a Classifier or a DataType, and a
+Classifier is a Concept, a ConceptInterface or an Annotation.
+
+So the M3 table needs one thing the ER1 table does not: **conditions**. They are
+written twice, once as a path through the stored JSON
+(`classifier.classifier_type`) and once as a token in an element id
+(`classifier__classifier_type`), because neither spelling can be derived from
+the other without knowing how Joomla builds element ids. `liveEntries` applies
+the same conditions in the browser, reading a radio group through the fieldset
+Joomla puts the id on rather than the numbered inputs inside it.
+
+Until 3.1 the meta-model had six field classes of its own - one per reference
+kind - and each loaded the stored projectForm from the database and walked it.
+That is the defect 1.9 fixed for projects and left here: the dropdowns described
+what had been *saved*, so a concept added a minute ago could not be extended and
+a concept renamed on screen kept its old name in every list until the form was
+saved and reopened. All six are gone, and with them the whole
+`Field\LIonCore_M3` namespace; the M3 forms use the same
+`type="Reference" objecttype="..."` as everything else.
 
 **The select is a real form control.** The server renders the held value as a
 selected option before any script runs. A reference is a uuid nobody can retype,
 so a form that posts an empty one because a module failed to load has destroyed
 something.
 
-**Testing it.** `referenceOptions()` is a function over plain objects for one
-reason: `composer test-js` runs it under `node --test` with no dependencies and
-no browser. What is left in the element is reading and writing the DOM, and that
-waits for the Cypress spec in 1.11.
+**Testing it.** `referenceOptions()` and `liveEntries()` are functions over
+plain objects for one reason: `composer test-js` runs them under `node --test`
+with no dependencies and no browser. What is left in the element is reading and
+writing the DOM, and `cypress/e2e/reference-fields.cy.js` and
+`projectform-references.cy.js` cover that against a real Joomla - one per model.
+
+The M3 spec needs something to open, and there was no stored projectForm
+anywhere before 3.1: not on this machine, not in the repository. So
+`tests/Fixtures/projectforms/er1.json` is one, seeded with
+`php tools/seed-projectform.php`, and it is the same fixture
+`ProjectFormReferenceTest` indexes - what the browser asserts is what those
+tests describe.
+
+**What only the browser could see.** Everything above passed with the meta-model
+dropdowns still holding nothing but a raw uuid, because the view never put the
+index in the page and the layout never loaded the script. Two lines, in two
+files that no unit test reads. The spec caught it on the first run: the
+dropdowns contained `['c-entity']` where they should have contained
+`['Entity', 'Field']`.
 
 ## How custom code works
 

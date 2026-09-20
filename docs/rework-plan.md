@@ -694,6 +694,56 @@ longer refresh as the form is edited. Adopting `<extengen-reference>` needs obje
 for `languageEntities` in `ReferenceIndex`, and a stored projectForm to check them
 against.
 
+**Done: repaired, and made live.** Four defects, none of which showed up as an error
+anywhere, and an audit rather than a hunt is what found them:
+
+- **`annotation.xml` did not exist.** `classifier.xml` has offered "Annotation" as one of
+  the three kinds of Classifier since the model was written and pointed at that file the
+  whole time. Joomla does not report a `formsource` it cannot resolve; the subform renders
+  with no fields in it, which looks like a feature nobody had filled in.
+- **`editfield.xml` asked for `type="htmltypes"`** and the class is `HtmlTypesField`.
+  Joomla builds the class name with `ucwords`, which only touches letters after whitespace,
+  so it looked for `HtmltypesField` - one letter out, and on this filesystem no letters out
+  at all. The same defect Gen-gen's CI caught in its own forms at 2.2.
+- **`concept.xml` named a field type under a prefix that did not hold it.**
+- **`interface.xml` pointed at a `classifier_property.xml` that never existed**, and at an
+  ER1 form from inside the meta-model. Nothing reached it at all, which is why nobody had
+  noticed - so it goes, with the two `Interfaces/` files that nothing reached either.
+
+**The substantive half.** The six M3 dropdowns are the shared `<extengen-reference>` now,
+so a concept added a minute ago can be extended and one renamed on screen shows its new
+name everywhere at once. All six field classes and the whole `Field\LIonCore_M3` namespace
+are gone.
+
+That needed one thing ER1 did not: **conditions**. Every M3 type lives in the same
+repeating group and they differ only by what the row says it is, so `ReferenceIndex` now
+carries a table per model and each type may name conditions - written twice, once as a path
+through stored JSON and once as a token in an element id, because neither spelling can be
+derived from the other. `liveEntries` applies the same conditions in the browser, reading a
+radio through the fieldset Joomla puts the id on.
+
+**There was no stored projectForm anywhere**, on this machine or in the repository, so
+nothing had ever exercised any of it. `tests/Fixtures/projectforms/er1.json` is one: two
+datatypes, a concept interface, two concepts, an annotation, and a row somebody added and
+never named. Modelling ER1 properly is 3.3; this is enough to check the mechanism.
+
+*Done:* 221 unit tests, 27 browser-JavaScript tests, PHPStan, phpcs, and 24 Cypress specs
+green - including seven new ones that open the projectForm on a real Joomla and read what
+the dropdowns hold.
+
+`FormsTest` is the compiler these files do not have, and it is what found all four: every
+subform source exists, every field type resolves the way Joomla resolves it, every class
+declares the type its form asks for, and nothing in the meta-model is unreachable from its
+root. `ReferenceContractTest` now checks each form against its own model rather than the
+union of both, so an ER1 objecttype on a meta-model form is refused rather than quietly
+rendering an empty list.
+
+**And one thing only the browser could see.** Everything else passed while the meta-model
+dropdowns still held nothing but a raw uuid, because the view never put the index in the
+page and the layout never loaded the script - two lines, in two files no unit test reads.
+A patch script had aborted before reaching them and I had taken its earlier output as
+proof it had not. The spec caught it on the first run.
+
 **3.2 The forms generator.** Concept model to form XML, reference field elements, and the
 JavaScript the 1.9 mechanism needs.
 

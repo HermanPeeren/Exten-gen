@@ -57,6 +57,11 @@ class HtmlView extends BaseHtmlView
 
 		$this->item = $model->getItem();
 
+		// Everything in this projectForm that a reference field can point at,
+		// in the page once. <extengen-reference> reads it from here and adds
+		// whatever the form holds that the server has not seen yet.
+		$this->getDocument()->addScriptOptions('com_extengen.references', $model->getReferenceIndex());
+
 		// If we are forcing a language in modal (used for associations).
 		if ($this->getLayout() === 'modal' && $forcedLanguage = Factory::getApplication()->getInput()->get('forcedLanguage', '', 'cmd')) {
 			// Set the language field to the forcedLanguage and disable changing it.

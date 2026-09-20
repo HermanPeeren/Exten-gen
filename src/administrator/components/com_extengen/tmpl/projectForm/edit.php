@@ -20,6 +20,9 @@ use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
 HTMLHelper::_('behavior.formvalidator');
+
+// <extengen-reference>, and the reference index the view put in the page.
+$this->getDocument()->getWebAssetManager()->useScript('com_extengen.reference');
 HTMLHelper::_('script', 'com_extengen/admin-extengen-letter.js', array('version' => 'auto', 'relative' => true));
 
 $app = Factory::getApplication();
