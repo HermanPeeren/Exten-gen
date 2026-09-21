@@ -950,7 +950,7 @@ these are what it has to reconcile:
 |---|---|
 | `size="1"`, `class="custom-select-color-state QualifierRef"` | Presentation a concept model cannot hold. The model needs somewhere to put it, or the generator needs a defaults table. |
 | The root form's Joomla chrome: alias, published, access, catid, ordering, `params` | Not derivable from a language at all. A projectForm is a Joomla item as well as a model, and only the second half is generated. |
-| `COM_EXTENGEN_PROJECTFORM_*` against the generated `COM_EXTENGEN_LIONCORE_M3_*` | Open. The generated names are scoped by language, which the hand-written ones could not be; nothing defines either, because no `.ini` is generated yet. |
+| `COM_EXTENGEN_PROJECTFORM_*` against the generated `COM_EXTENGEN_LIONCORE_M3_*` | Settled at 3.3, and neither: `YEPR_LIONCORE_M3_*`, scoped by the language rather than by whichever component loads it. The package defines them. |
 | `languageEntity.xml` names the DataType subform `datatype`, where every other group is lowerCamel | The hand-written file. The generated `dataType` is what the convention says, and `ReferenceIndex` never exposed the difference because DataType needs no group-path condition. |
 | `link.xml` names the Reference subform `link`, pointing at `reference.xml` | The hand-written file. |
 | A hidden `extends` field in `classifier.xml`, `dataType.xml`, `link.xml` and three more | Neither. It duplicates what `LIonWeb_key` already says, and `extends` means something else entirely one form away, where it is a real reference to a concept. |
@@ -983,6 +983,98 @@ model, the generated forms, the reference table, a language file and a manifest 
 language, its version and its root classifier. Nothing installs it yet.
 *Done when* a package round-trips - exported, read back, and the forms in it are the forms
 the generator produced.
+
+**Done, and the round-trip is read back two ways.** From the archive and from the tree the
+generate screen unpacks beside it, because until now nothing said those were the same
+package - which is the kind of thing that stays true until somebody adds a file to one
+writer and not the other. The package is
+
+```
+manifest.json                 the language, its version, its root classifier, a hash per file
+model.json                    the concept model it was generated from
+forms/<classifier>.xml        one form per classifier
+forms/references.json         the table the reference dropdowns read
+language/en-GB/<lang>.ini     every label on those forms
+```
+
+**Nothing in it names a component, and that turned out to be the shape of the whole step.**
+The decision recorded below settled it for language strings - a package is loaded by
+com_extengen *and* com_gengen, so a key naming either is wrong whichever one it names - and
+the same argument applies to every path in it. 3.2 wrote every generated file under
+`administrator/components/com_metagen/forms/generated/`: the producer's own directory,
+inside a file set the producer never reads. Constants are `YEPR_LIONCORE_M3_*` now, scoped
+by the language.
+
+**Which forced a decision this step could not defer.** Joomla resolves a subform's
+`formsource` as `JPATH_ROOT . '/' . $formsource` and nothing else - `SubformField::__set()`,
+and there is no package-relative spelling - so the directory a package will be unpacked
+into is baked into the XML when the forms are generated. It is
+`media/yepr_metalanguages/<language>/<version>/`: `media/` because it is the one shared site
+directory no single extension's uninstall owns, and `<language>/<version>/` because 3.4 has
+a project record both, which means nothing unless two versions can sit side by side.
+Installing is then a plain unpack with no XML rewritten on the way in, which is what makes
+the round-trip worth proving - the forms that run are the bytes that were generated. The
+root is *recorded* in the manifest rather than assumed, so an importer that must put a
+language elsewhere can see the mismatch and regenerate, instead of unpacking a set of forms
+whose subforms all point at a directory that is not there. That is the silent failure this
+plan has now met three times, and the spec that would not have caught it is the one that
+checks a `formsource` against the file set without checking where it points.
+
+**`addruleprefix` was the last thing in a generated form that named a component**, and it
+named one that does not exist: every generated fieldset carried
+`Yepr\Component\Metagen\Administrator\Rule`, and this component has never had a `Rule`
+directory. A modelled language cannot name a validation rule - that is one of the three
+model gaps 4.2 lists - and an attribute pointing at an empty namespace is not a head start
+on closing it. It is gone from the generator; the hand-written meta-model still carries it,
+where it is equally dead and equally harmless.
+
+**The manifest hashes every other file**, which is the only way *the forms in it are the
+forms the generator produced* is a question with an answer rather than an opinion. A reader
+that merely finds the files it expects cannot tell a truncated zip from a complete one, and
+a form file missing its last bytes still parses far enough for Joomla to render a fieldset
+with nothing in it. Both halves were checked by breaking a package rather than by passing:
+a changed file and a missing one each produce one exact complaint, and reordering the
+target's generators so the manifest runs first is caught as well - it would otherwise
+describe an empty package, with every hash in it correct because there would be none.
+
+**And the language file is the other half of 3.2's labels.** Every generated label was a
+constant nothing defined, so a generated form showed a person its own constant names in
+capitals - no error anywhere, because that is what Joomla does with a string it has not got.
+`FormXml` asks for a constant and hands over the words in the same call, which is the only
+arrangement in which the two cannot drift, and the suite checks it in both directions: every
+constant a form names is defined, and nothing is defined that no form asks for. The
+`label` and `description` the meta-model gained are what fills it, falling back to the name -
+so `er1.json` and `lioncore-m3.json`, both modelled before there was anywhere to put one,
+generate exactly as they did.
+
+**Exporting is the same run to a different destination.** One `package()` on the model,
+called by the generate screen and by a new `metalanguage.export` task; two code paths
+producing "the package" would be two package formats the day one of them changed. The task
+checks a token although it changes nothing, because a GET that runs a whole generation is
+worth somebody else's cpu on every image tag pointing at it.
+
+*Done:* 199 unit tests, PHPStan, phpcs, and the browser specs - three of them new, and they
+are there for the part no unit test can see: a controller that streams a file and forgets
+`$app->close()` appends the administrator template to the bytes it just sent, and the result
+is an archive that will not open with nothing reported anywhere.
+
+*Not in 3.3.* Nothing installs a package - that is 3.4, in the two components that consume
+one. `PackageReader` lives in Meta-gen and will not stay: a format two components read is a
+mechanism, which belongs in `Yepr\Gen\Core` by the argument 3.0 already made, and the
+reference dropdown set the precedent for moving it when the second consumer appears rather
+than before. A metalanguage has one label per feature and no notion of a translation, so one
+`en-GB` file is generated and translating a language is a model gap rather than a format
+gap. And the manifest records when it was built, so two exports of one language differ in
+that one field - the forms do not.
+
+**One thing still unanswered, and it is not about this step.** Meta-gen's
+`metalanguage-references.cy.js` fails *follows a rename without saving* about two runs in
+three, on this commit and on the two before it. Clearing any field on the metalanguage edit
+screen is followed by the page becoming the dashboard: rows 7 to 0, subforms 29 to 0, an
+empty `location.search`. It is not our change handler, not a `beforeunload`, not a
+`form.submit()`. If it reproduces when a person clears a field by hand it is data loss
+rather than a flaky spec, and it wants answering before an import screen is built on that
+same edit screen.
 
 *Decided: the package carries its own language file, with keys scoped to the language.*
 Not `COM_EXTENGEN_*`, which is what the old Extengen would have needed and the reason it
