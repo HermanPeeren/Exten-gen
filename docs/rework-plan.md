@@ -1191,8 +1191,59 @@ one that matters is the step's own criterion: a project bound to an imported lan
 renders that language's fields, with that language's labels out of the package's own
 language file, and none of ER1's. Nothing in this component knows those field names.
 
-*Still to do at 3.4:* Gen-gen. A generator records which language it is *for*, and
-Exten-gen refuses to run one over a project in a different language.
+**Gen-gen's half, and 3.4 is done.** A generator is written *for* a metalanguage the same
+way a project is written *in* one: same store, same import screen, same two columns. What
+differs is that Gen-gen ships no language of its own, and that is an answer rather than a
+gap - a generator written before 3.4 names selectors from its target's vocabulary,
+`Joomla6Selectors` hard-keyed to ER1, and every one of them keeps working. So the dropdown
+offers "no metalanguage" first and means it.
+
+The step's own criterion is `RuleSelectorField`: when a language is bound, a rule's *what to
+select* offers that language's concepts instead of the target's selectors. Gen-gen reads
+them from the package's manifest and never from the concept model - how a language is stored
+is Meta-gen's business, and teaching a third component would be teaching it to three. The
+value stored is the concept's **key** and the label is its name, because a rule that stored
+the name would come unpicked the moment somebody renamed a concept, silently, since it would
+still be a string and still look like one.
+
+**The store is the library's now**, at 0.6.0, for the reason two components keeping one kind
+of list always means: `Joomla\Metalanguage` holds Entry, Catalogue, Installer and Importer,
+and what each component passes in is its table and whatever language it ships. Exten-gen's
+four copies are gone. The library's entry no longer knows what ER1 is, so 3.5 turning it into
+a package is one argument fewer at one call site.
+
+**Gen-gen 0.1.0 could not save a generator at all**, and that had nothing to do with this
+step. `checked_out` arrives from the form as an empty string, `checked_out` is an unsigned
+int, and MySQL in strict mode refuses the row - so every save from the edit screen failed
+with the edit still on screen. The form already declares `filter="unset"` on it, which is
+what core components do, and Joomla's own `UnsetFilter` returns null; the value arrives as
+`''` anyway. The model drops it rather than sending an empty string to an integer column.
+
+Nothing had noticed because nothing had ever saved a generator: the browser spec opened every
+screen and read it, and every other test works on stored JSON directly. Reading a screen is
+not using it, which is the same lesson 3.2 learned about a button nobody pressed - one step
+further in.
+
+**Two things the specs taught about their own hygiene.** The first version of the new spec
+bound the *seeded* generator, saved it through the form and put it back - and saving a
+generator through the form rewrites its stored JSON from what the form posted, which is not
+what was seeded. `component-renders.cy.js` then failed on rules that had quietly changed
+shape, and the fix was to re-seed and to stop writing shared fixture state: the spec makes
+its own generator now, under a name unique per run, because two runs leaving two rows with
+one name means finding it again by name picks the wrong one.
+
+*Done:* generator-core 0.6.0 with 155 unit tests; Meta-gen 194; Exten-gen 245 and 24 Cypress
+specs; Gen-gen 48 and 9 Cypress specs - PHPStan and phpcs green in all four. The criterion
+is checked in a browser on both sides: a project bound to an imported language renders that
+language's fields with that language's labels, and a generator bound to one offers that
+language's concepts where a rule says what to select.
+
+*Not done, and moved to 3.6:* Exten-gen refusing to run a generator over a project in a
+different language. Both halves now record a language, so the check is a comparison - but a
+generator's selectors are still `Joomla6Selectors`, PHP hard-keyed to ER1, so today every
+modelled generator is honestly written for ER1 whatever its binding says. Refusing on a
+binding that nothing downstream reads would be theatre. 3.6 makes selectors a path through a
+modelled language, and the refusal belongs with it.
 
 **3.5 ER1 as a package, and the round-trip proof.** Model ER1 in LionCore M3, generate its
 forms, and compare against Exten-gen's hand-written ones as golden files - then keep the
