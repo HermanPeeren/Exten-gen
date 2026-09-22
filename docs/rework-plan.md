@@ -1067,14 +1067,23 @@ than before. A metalanguage has one label per feature and no notion of a transla
 gap. And the manifest records when it was built, so two exports of one language differ in
 that one field - the forms do not.
 
-**One thing still unanswered, and it is not about this step.** Meta-gen's
-`metalanguage-references.cy.js` fails *follows a rename without saving* about two runs in
-three, on this commit and on the two before it. Clearing any field on the metalanguage edit
-screen is followed by the page becoming the dashboard: rows 7 to 0, subforms 29 to 0, an
-empty `location.search`. It is not our change handler, not a `beforeunload`, not a
-`form.submit()`. If it reproduces when a person clears a field by hand it is data loss
-rather than a flaky spec, and it wants answering before an import screen is built on that
-same edit screen.
+**And one thing that looked worse than it was.**
+`metalanguage-references.cy.js` had been failing *follows a rename without saving* about two
+runs in three, across several commits, and the screenshots showed the *dashboard*: rows 7 to
+0, subforms 29 to 0, an empty `location.search`. Read straight, that says clearing a field on
+the metalanguage edit screen throws away an unsaved model - which would be data loss, and
+would have had to be fixed before 3.4 put an import screen on that same screen.
+
+It is not that. Herman could not reproduce it by hand - add, delete and change all behave -
+and it has not failed in five consecutive runs since, including one started immediately
+after a reinstall. That run is the useful one: it took 19 seconds for the single test against
+the usual three. A slow admin page re-rendering the subform between `clear()` and `type()` is
+what fits, and the subject being detached is what Cypress actually reported. The spec
+re-queries between commands now, which is what its own error message says to do.
+
+Worth writing down anyway, because the symptom pointed hard at the wrong thing: a detached
+subject in a repeating subform screenshots as a page that navigated away. Ruling out the
+serious reading first cost a day and was still the right order.
 
 *Decided: the package carries its own language file, with keys scoped to the language.*
 Not `COM_EXTENGEN_*`, which is what the old Extengen would have needed and the reason it
