@@ -1130,6 +1130,70 @@ nothing above it changes.
 *Done when* Exten-gen edits a project through imported forms rather than through forms it
 ships, and Gen-gen offers an imported language's concepts when a rule names what to select.
 
+**Exten-gen's half is done; Gen-gen's is not, and that order is forced.** Gen-gen's CI
+checks Exten-gen out beside itself and compares against its current `main`, so its side
+cannot land until this one has. The library moved first for the same reason: Exten-gen and
+Gen-gen both read a package now, so `Package\*` is `Yepr\Gen\Core`'s at **0.5.0** -
+written in Meta-gen at 3.3 and moved when there was a second reader, which is the order the
+reference dropdown set at 3.0. `PackageReader::model()` returns decoded JSON there rather
+than Meta-gen's `ConceptModel`: a library that handed back one consumer's model type would
+make every consumer depend on that consumer's idea of what a language is.
+
+**A site holds a catalogue, and ER1 is a row in it.** `MetalanguageCatalogue` answers "what
+can a project be written in" with the imported languages *and* the built-in, and everything
+above it asks the catalogue rather than asking whether a language was imported - so 3.5
+turning ER1 into a package removes one method and changes nothing else. A project records
+`metalanguage_key` and `metalanguage_version`; an empty binding reads as ER1, because that
+is what every project in every existing database is written in and reading it as "no
+language" would have made all of them unopenable.
+
+**`project.xml` is two files now**, and that split is what makes an import possible at all.
+`project_chrome.xml` is the half that is a Joomla item - alias, published, access, catid,
+ordering, params - which 3.2 recorded as not derivable from a language; `project_er1.xml`
+is ER1's model half, in exactly the position an imported language's root classifier form
+occupies. `getForm()` loads the chrome and merges one root form onto it, and the built-in
+arrives by that same route, so there is no "imported" code path and no "shipped" one.
+
+**Three things only the browser could have found.**
+
+`Form::load()` takes an xpath, and `'/form'` looks like the obvious one to pass. It merges
+the `<form>` element *itself* rather than its children, so the result is a form nested
+inside a form: the edit screen renders with no fields on it and nothing is reported
+anywhere. Passing no xpath is what merges children.
+
+The edit layout rendered `datamodel`, `pages` and `extensions` by name - ER1's own fields -
+so a template like that can only ever edit one language however good the model layer is.
+It renders an imported language's fields generically now, skipping the ones the chrome
+already drew. ER1 keeps its three tabs behind a branch that goes at 3.5.
+
+And **a project is created, then modelled.** Choosing the language on a form that is
+already showing another language's model half does not work: those fields carry `required`,
+and Joomla's validator refuses the save over fields belonging to a language the project is
+not going to be written in. A new project gets the chrome alone - which is what binding *at
+creation* actually means, rather than binding while pretending to model.
+
+**One trap worth writing down, which cost half an hour.** Joomla never re-runs an update
+file it has already applied: `#__schemas` records the last version applied per extension, so
+editing `1.1.0.sql` after a site has run it is invisible on that site. No real site has run
+this one - 1.1.0 was never released - but this machine's had, from the hours 3.0 spent at
+1.1.0. It is the sharper form of the trap already in `docs/development.md` about install SQL
+not re-running.
+
+**The version goes back up.** 3.0 held 1.1.0 because the update script drops
+`#__extengen_projectforms` and there was nowhere for that data to go; Meta-gen exports a
+package now and this imports one, so the condition the plan set is met. `src/extengen.xml`
+says 1.1.0 and `updates.xml` is regenerated to match, which means the tag should follow the
+push rather than wait - an update server offering a version with no release is the failure
+1.12 added a test for.
+
+*Done:* 255 unit tests, PHPStan, phpcs and 24 Cypress specs green - seven of them new. The
+one that matters is the step's own criterion: a project bound to an imported language
+renders that language's fields, with that language's labels out of the package's own
+language file, and none of ER1's. Nothing in this component knows those field names.
+
+*Still to do at 3.4:* Gen-gen. A generator records which language it is *for*, and
+Exten-gen refuses to run one over a project in a different language.
+
 **3.5 ER1 as a package, and the round-trip proof.** Model ER1 in LionCore M3, generate its
 forms, and compare against Exten-gen's hand-written ones as golden files - then keep the
 generated set, which makes this the migration rather than only a proof. The table of six

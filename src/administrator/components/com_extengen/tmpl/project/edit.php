@@ -49,9 +49,36 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
 <form action="<?php echo Route::_('index.php?option=com_extengen&layout=' . $layout . $tmpl . '&id=' . (int) $this->item->id); ?>" method="post" name="adminForm" id="project-form" class="form-validate">
 
     <?php echo $this->getForm()->renderField('name'); ?>
+    <?php echo $this->getForm()->renderField('metalanguage'); ?>
 
 	<div>
 		<?php echo HTMLHelper::_('uitab.startTabSet', 'myTab', array('active' => 'details')); ?>
+
+		<?php if (!$this->metalanguage->isBuiltIn()) : ?>
+
+			<?php /*
+				A project written in an imported language renders whatever that
+				language's root form holds, because nothing here knows what it
+				holds. The three tabs below name `datamodel`, `pages` and
+				`extensions` - ER1's own fields - and a template that renders a
+				model by naming its fields can only ever edit one language.
+
+				3.5 turns ER1 into a package too, at which point the branch
+				goes and this is the only path.
+			*/ ?>
+			<?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'entities', $this->metalanguage->label()); ?>
+			<div class="row">
+				<div class="col-md-12">
+					<?php foreach ($this->getForm()->getGroup('') as $field) : ?>
+						<?php if (!\in_array($field->fieldname, $this->chromeFields, true)) : ?>
+							<?php echo $field->renderField(); ?>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</div>
+			</div>
+			<?php echo HTMLHelper::_('uitab.endTab'); ?>
+
+		<?php else : ?>
 
 		<?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'entities', Text::_('COM_EXTENGEN_HEADING_ENTITIES')); ?>
 
@@ -103,6 +130,8 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
         </div>
         <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
+
+		<?php endif; ?>
 
 		<?php echo HTMLHelper::_('uitab.endTabSet'); ?>
 	</div>

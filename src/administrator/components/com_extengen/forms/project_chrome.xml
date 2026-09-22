@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+	The half of a project that is a Joomla item rather than a model.
+
+	Split from project.xml at 3.4. A project edited through an imported
+	metalanguage needs these fields and that language's root form, and a
+	project edited through ER1 needs these fields and project_er1.xml - so the
+	built-in language and an imported one have exactly the same shape, and 3.5
+	can replace the first with a package without touching anything above.
+
+	3.2 recorded why this half is not generated: alias, published, access,
+	catid, ordering and params are not derivable from a language at all.
+-->
 <form>
 	<fieldset name="general"
 		addruleprefix="Yepr\Component\Extengen\Administrator\Rule"
@@ -22,6 +34,27 @@
 			size="40"
 			required="true"
 		 />
+
+		<!--
+			Which metalanguage this project is written in: step 3.4.
+		
+			Chosen once, when the project is created, and read-only afterwards.
+			The plan asked for the binding to be made visibly by the person making
+			the model rather than inferred from whatever the component ships - and
+			changing it later is not a setting, it is a different model: the forms
+			that opened it would stop matching what is stored.
+		
+			An empty value is ER1, which is what every project made before this
+			field existed is written in.
+		-->
+		<field
+			name="metalanguage"
+			type="metalanguage"
+			label="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_LABEL"
+			description="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_DESC"
+			class="custom-select"
+			size="1"
+		/>
 
 		<field
 			name="alias"
@@ -91,49 +124,6 @@
 	</fieldset>
 
 
-	<fieldset name="entities"
-			addruleprefix="Yepr\Component\Extengen\Administrator\Rule"
-			addfieldprefix="Yepr\Component\Extengen\Administrator\Field"
-	>
-
-		<field
-				name="datamodel"
-				type="subform"
-				formsource="administrator/components/com_extengen/forms/entity.xml"
-				multiple="true"
-				buttons="add,remove"
-				label="Entities"
-				id="datamodel"
-		/>
-
-		<field
-				name="pages"
-				type="subform"
-				formsource="administrator/components/com_extengen/forms/page.xml"
-				multiple="true"
-				min="1"
-				buttons="add,remove"
-				label="Pages"
-				id="pages"
-		/>
-
-		<!-- todo: multiple extensions in 1 package -->
-		<field
-				name="extensions"
-				type="subform"
-				formsource="administrator/components/com_extengen/forms/extensions.xml"
-				multiple="false"
-				min="1"
-				buttons="add,remove"
-				label="Extensions"
-				id="extensions"
-		/>
-
-		<field
-				name="project_id"
-				type="hidden"
-		/>
-	</fieldset>
 
 	<fields name="params" label="JGLOBAL_FIELDSET_DISPLAY_OPTIONS">
 		<fieldset name="display" label="JGLOBAL_FIELDSET_DISPLAY_OPTIONS">

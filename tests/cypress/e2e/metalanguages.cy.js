@@ -1,0 +1,163 @@
+/**
+ * Importing a metalanguage, and writing a project in one: step 3.4.
+ *
+ * The unit suite installs a package into a temp directory and checks what came
+ * out. It cannot see any of this: the route, the upload, the token, the
+ * screen, the dropdown on a project, or whether a project bound to an imported
+ * language opens with that language's forms rather than ER1's. That last one
+ * is the step's own acceptance criterion, and no other gate reaches it.
+ *
+ * The package is built by `tools/make-test-package.php` rather than committed
+ * or exported from Meta-gen - see that file for why.
+ */
+
+const PACKAGE = 'tests/cypress/fixtures/metalanguage.zip';
+
+describe('metalanguages', () => {
+  before(() => {
+    // Built fresh, so a spec cannot pass against a package left over from a
+    // format two changes ago.
+    // cy.exec already fails the run on a non-zero exit; what is asserted here
+    // is that a package actually landed, because a tool that writes nothing
+    // and exits 0 would otherwise leave every test below failing for the
+    // wrong reason.
+    cy.exec('php tools/make-test-package.php');
+    cy.readFile(PACKAGE, null).should((buffer) => {
+      expect(buffer.length, 'the package has bytes in it').to.be.greaterThan(200);
+    });
+  });
+
+  beforeEach(() => {
+    cy.loginToAdmin();
+  });
+
+  it('renders, with ER1 in the list like any other language', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
+
+    cy.get('#metalanguageList', { timeout: 20000 }).should('exist');
+    cy.get('body').should('not.contain', 'Fatal error');
+    cy.get('body').should('not.contain', 'View not found');
+
+    // Which is the shape 3.5 needs: ER1 becomes a package and joins the rows
+    // above it without anything else changing.
+    cy.get('#metalanguageList').should('contain.text', 'ER1');
+    cy.get('#metalanguageList').should('contain.text', 'Built in');
+  });
+
+  it('imports a package and lists what came out of it', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
+
+    cy.get('input[name="package"]').selectFile(PACKAGE);
+    cy.get('button[type="submit"]').click();
+
+    cy.get('#system-message-container', { timeout: 30000 }).should('contain.text', 'Testlang');
+
+    cy.get('#metalanguageList').should('contain.text', 'Testlang');
+
+    // The root classifier, which is what a project in it opens at.
+    cy.get('#metalanguageList').should('contain.text', 'Thing');
+  });
+
+  it('refuses something that is not a package, and says so', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
+
+    cy.get('input[name="package"]').selectFile({
+      contents: Cypress.Buffer.from('holiday photos'),
+      fileName: 'notapackage.zip',
+      mimeType: 'application/zip',
+    });
+    cy.get('button[type="submit"]').click();
+
+    cy.get('#system-message-container', { timeout: 20000 }).should('exist');
+    cy.get('#metalanguageList').should('not.contain.text', 'notapackage');
+  });
+
+  it('offers the imported language when a project is created', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=project&layout=edit&id=0');
+
+    cy.get('#jform_metalanguage', { timeout: 20000 }).should('exist');
+    cy.get('#jform_metalanguage option').then(($options) => {
+      const texts = [...$options].map((o) => o.textContent.trim());
+
+      expect(texts, 'the built-in is offered').to.include('ER1 1.0');
+      expect(texts, 'and the imported one').to.include('Testlang 1.0');
+    });
+  });
+
+  /**
+   * An existing project cannot be moved to another language.
+   *
+   * The binding decides which forms open the project, so changing it under a
+   * model that is already stored means the forms on screen stop describing
+   * what is in the database - fields that post nothing, and a save that drops
+   * whatever the new forms have no field for.
+   */
+  it('does not let an existing project change language', () => {
+    // Opened from the list, which is how the other specs reach a saved
+    // project: a direct visit with an id does not check the record out, and a
+    // spec that made up a url would keep passing after the link beside it
+    // broke.
+    cy.visit('/administrator/index.php?option=com_extengen&view=project&layout=edit&id=0');
+
+    cy.visitExtengen('projects');
+    cy.get('#adminForm a[href*="task=project.edit"]').first().click();
+
+    cy.get('#jform_metalanguage', { timeout: 20000 })
+      .should('satisfy', ($el) => $el.is(':disabled') || $el.attr('readonly') !== undefined);
+  });
+
+  /**
+   * The step's own acceptance criterion: *Exten-gen edits a project through
+   * imported forms rather than through forms it ships*.
+   *
+   * A project bound to Testlang has Testlang's fields on it - `thingName` and
+   * a repeating `parts` - and none of ER1's. Nothing in this component knows
+   * those names: they come out of the package, through a root form the
+   * manifest named, merged onto the Joomla half.
+   *
+   * The labels are the other half of it. They are defined only in the
+   * package's own language file, so reading "What this thing is called" rather
+   * than YEPR_TESTLANG_THING_FIELD_THINGNAME_LABEL says that file was found
+   * and loaded from the path the manifest gave.
+   */
+  it('edits a project through the imported language rather than ER1', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=project&layout=edit&id=0');
+
+    cy.get('#jform_name', { timeout: 20000 }).clear();
+    cy.get('#jform_name').type('WrittenInTestlang');
+    cy.get('#jform_metalanguage').select('Testlang 1.0');
+
+    cy.window().then((w) => w.Joomla.submitbutton('project.apply'));
+
+    // Testlang's own fields, which this component has never heard of.
+    cy.get('#jform_thingName', { timeout: 30000 }).should('exist');
+    cy.get('#jform_parts-lbl').should('exist');
+
+    // And its own strings, from the package's language file.
+    cy.get('#jform_thingName-lbl').should('contain.text', 'What this thing is called');
+
+    // ER1's fields are not on this project at all.
+    cy.get('#jform_datamodel-lbl').should('not.exist');
+  });
+
+  /**
+   * The project this site already has still opens, through ER1.
+   *
+   * Every project made before 3.4 carries no binding at all, and reading that
+   * as "no language" would have made all of them unopenable on the day this
+   * shipped. It reads as ER1, which is what they are written in - and the
+   * model half now arrives as project_er1.xml, merged onto the chrome.
+   */
+  it('still opens a project that names no language', () => {
+    cy.visitExtengen('projects');
+    cy.get('#adminForm a[href*="task=project.edit"]').first().click();
+
+    cy.get('body').should('not.contain', 'Fatal error');
+
+    // The label, not the field: `datamodel` is a repeating subform, so what
+    // carries the bare name is `jform_datamodel-lbl` and the rows underneath
+    // are `jform_datamodel__...`. A project with an empty model has the label
+    // and no rows, which is the case this test is about.
+    cy.get('#jform_datamodel-lbl', { timeout: 20000 }).should('exist');
+  });
+});

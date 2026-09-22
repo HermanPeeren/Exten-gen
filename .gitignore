@@ -25,3 +25,4 @@
 /tests/cypress/screenshots/
 /tests/cypress/videos/
 /tests/cypress/downloads/
+/tests/cypress/fixtures/metalanguage.zip

@@ -16,6 +16,7 @@ namespace Yepr\Component\Extengen\Administrator\View\Project;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\Language\Text;
@@ -50,6 +51,27 @@ class HtmlView extends BaseHtmlView
 	 *
 	 * @return  mixed  A string if successful, otherwise an Error object.
 	 */
+	/**
+	 * The metalanguage this project is written in.
+	 *
+	 * @var \Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry
+	 */
+	public $metalanguage;
+
+	/**
+	 * The fields that belong to the Joomla half of the form rather than the model.
+	 *
+	 * The layout renders these itself, above the tabs, so the generic pass
+	 * over an imported language's fields has to leave them out - otherwise the
+	 * name box appears twice and the second one wins whatever is typed in it.
+	 *
+	 * Read off project_chrome.xml rather than listed here, because a list here
+	 * is a list that stops matching that file without anything saying so.
+	 *
+	 * @var string[]
+	 */
+	public $chromeFields = [];
+
 	public function display($tpl = null)
 	{
 		/** @var \Yepr\Component\Extengen\Administrator\Model\ProjectModel $model */
@@ -57,6 +79,23 @@ class HtmlView extends BaseHtmlView
 
 		$this->form = $model->getForm();
 		$this->item = $model->getItem();
+
+		// Which language this project is written in, so the layout can render
+		// an imported one's fields without knowing what they are called. The
+		// three tabs it has otherwise name ER1's own fields, and a template
+		// that renders a model by naming its fields can only ever edit one
+		// language.
+		$this->metalanguage = $model->metalanguage();
+
+		// Through the built-in entry's own form root, so this path and the one
+		// getForm() loads cannot drift apart.
+		$chrome = simplexml_load_file(
+			JPATH_ROOT . '/' . MetalanguageEntry::builtIn()->formRoot . 'project_chrome.xml'
+		);
+
+		foreach (($chrome === false ? [] : $chrome->xpath('//field')) ?: [] as $field) {
+			$this->chromeFields[] = (string) $field['name'];
+		}
 
 		// Everything in this project that a reference field can point at,
 		// in the page once. <extengen-reference> reads it from here and adds

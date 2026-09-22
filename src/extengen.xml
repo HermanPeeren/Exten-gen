@@ -7,7 +7,7 @@
 	<authorUrl>https://yepr.nl</authorUrl>
 	<copyright>Yepr, Herman Peeren, 2022</copyright>
 	<license>GNU General Public License version 3 or later;</license>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<description>COM_EXTENGEN_XML_DESCRIPTION</description>
 	<namespace path="src">Yepr\Component\Extengen</namespace>
 	<scriptfile>script.php</scriptfile>
@@ -38,6 +38,7 @@
 		<submenu>
 			<menu link="option=com_extengen&amp;view=projects">COM_EXTENGEN_SUBMENU_MANAGER_PROJECTS</menu>
 			<menu link="option=com_extengen&amp;view=generators">COM_EXTENGEN_SUBMENU_MANAGER_GENERATORS</menu>
+			<menu link="option=com_extengen&amp;view=metalanguages">COM_EXTENGEN_SUBMENU_MANAGER_METALANGUAGES</menu>
 			<menu link="option=com_extengen&amp;view=info">COM_EXTENGEN_SUBMENU_MANAGER_INFO</menu>
 		</submenu>
 		<files folder="administrator/components/com_extengen">

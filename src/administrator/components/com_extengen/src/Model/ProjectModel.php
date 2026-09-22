@@ -41,6 +41,8 @@ use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
 use Yepr\Component\Extengen\Administrator\Reference\Er1;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogue;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
@@ -92,14 +94,95 @@ class ProjectModel extends AdminModel
 	 */
 	public function getForm($data = array(), $loadData = true)
 	{
-		// Get the form.
-		$form = $this->loadForm('com_extengen.project', 'project', array('control' => 'jform', 'load_data' => $loadData));
+		// The half of a project that is a Joomla item: alias, published,
+		// access, catid, ordering, params. 3.2 recorded why it is not
+		// generated - none of it is derivable from a language.
+		$form = $this->loadForm(
+			'com_extengen.project',
+			'project_chrome',
+			array('control' => 'jform', 'load_data' => $loadData)
+		);
 
 		if (empty($form)) {
 			return false;
 		}
 
+		// A project that does not exist yet gets the chrome and nothing else.
+		// The language is chosen on this screen, and until it is saved there
+		// is no answer to "which forms" - so showing one language's model half
+		// while somebody picks another is showing them the wrong form. It also
+		// cannot be filled in: the model half carries required fields, and
+		// Joomla's validator refuses the save over fields belonging to a
+		// language the project is not going to be written in.
+		//
+		// So a project is created, and then modelled. That is what binding at
+		// creation means.
+		if ((int) ($this->getItem()->id ?? 0) === 0) {
+			return $form;
+		}
+
+		// And the half that is a model, from whichever metalanguage this
+		// project is written in. ER1 arrives by exactly this route, as
+		// project_er1.xml, so the built-in and an imported language are the
+		// same case - which is what lets 3.5 turn ER1 into a package without
+		// touching anything here.
+		$entry  = $this->metalanguage();
+		$source = JPATH_ROOT . '/' . $entry->rootFormPath();
+
+		if (!is_file($source)) {
+			// A language whose files are gone - uninstalled, or half copied
+			// between sites. Saying so beats an edit screen with no model on
+			// it, which is what merging nothing would produce.
+			// Enqueued rather than setError(), which is deprecated and which
+			// nothing reads on this path anyway - the form would come back
+			// with no model on it and no word of why. loadFormData() says the
+			// same thing about the same screen.
+			Factory::getApplication()->enqueueMessage(
+				Text::sprintf('COM_EXTENGEN_PROJECT_METALANGUAGE_MISSING', $entry->label(), $entry->rootFormPath()),
+				'warning'
+			);
+
+			return $form;
+		}
+
+		// No xpath. Form::load() with one runs it against the file and merges
+		// whatever it returns, so '/form' merges the <form> element itself and
+		// the result is a form nested inside a form - which renders as a
+		// screen with no fields on it and reports nothing. Without one, a
+		// document whose root is <form> contributes its children, which is the
+		// merge this wants.
+		$form->load((string) file_get_contents($source), true);
+
+		// The strings on an imported language's forms come with it, at a path
+		// the package names. Nothing else defines them, so without this every
+		// label renders as its own constant in capitals.
+		if (!$entry->isBuiltIn() && $entry->languageFile !== '') {
+			Factory::getApplication()->getLanguage()->load(
+				basename($entry->languageFile, '.ini'),
+				JPATH_ROOT . '/' . rtrim($entry->formRoot, '/')
+			);
+		}
+
 		return $form;
+	}
+
+	/**
+	 * The metalanguage this project is written in.
+	 *
+	 * Never null, and an unbound project is written in ER1 - which is what
+	 * every project in every existing database is, because there was nothing
+	 * else when they were made.
+	 *
+	 * @return  MetalanguageEntry
+	 */
+	public function metalanguage(): MetalanguageEntry
+	{
+		$item = $this->getItem();
+
+		return (new MetalanguageCatalogue($this->getDatabase()))->forProject(
+			(string) ($item->metalanguage_key ?? ''),
+			(string) ($item->metalanguage_version ?? '')
+		);
 	}
 
 	/**
@@ -136,9 +219,47 @@ class ProjectModel extends AdminModel
 		}
 
 		// The mechanism is the shared library's, because Meta-gen and Gen-gen
-		// ask the same question of their own models; the table is this
-		// component's, because that is the only thing that differs between them.
-		return ReferenceIndex::fromTable(Er1::TABLE)->payload($stored);
+		// ask the same question of their own models; the table says what this
+		// particular language offers, which is the only thing that differs.
+		//
+		// An imported language brings its own, generated beside its forms by
+		// the same walk that generated them - which is the whole reason 3.2
+		// generated a table at all. ER1's is still PHP this component ships,
+		// and 3.5 is where that stops being true.
+		return ReferenceIndex::fromTable($this->referenceTable())->payload($stored);
+	}
+
+	/**
+	 * The reference table of the language this project is written in.
+	 *
+	 * @return  array
+	 */
+	private function referenceTable(): array
+	{
+		$entry = $this->metalanguage();
+		$path  = $entry->referenceTablePath();
+
+		if ($path === '') {
+			return Er1::TABLE;
+		}
+
+		$file = JPATH_ROOT . '/' . $path;
+
+		if (!is_file($file)) {
+			return [];
+		}
+
+		try {
+			$table = json_decode((string) file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+		} catch (\JsonException $e) {
+			// A dropdown with nothing in it reads as "there is nothing to
+			// point at", which is a lie worth not telling twice - the import
+			// refuses a package whose files do not match their hashes, so
+			// getting here means somebody edited one afterwards.
+			return [];
+		}
+
+		return \is_array($table) ? $table : [];
 	}
 
 	/**
@@ -156,11 +277,24 @@ class ProjectModel extends AdminModel
 			return new \stdClass();
 		}
 
+		// The binding lives in two columns and renders through one field, so
+		// it is put back together on the way to the form. Without this the
+		// dropdown on an existing project shows the first entry rather than
+		// the language the project is actually written in - which is worse
+		// than showing nothing, because it looks like an answer.
+		$binding = (string) ($item->metalanguage_key ?? '') === ''
+			? ''
+			: $item->metalanguage_key . '|' . ($item->metalanguage_version ?? '');
+
 		// Through the model type rather than a bare json_decode, so that every
 		// read of a stored project goes through one place. The form wants the
 		// values as stored, which is what raw() is.
 		try {
-			return Project::fromJson((string) $item->form_data)->raw();
+			$stored = Project::fromJson((string) $item->form_data)->raw();
+
+			$stored->metalanguage = $binding;
+
+			return $stored;
 		} catch (\JsonException | \InvalidArgumentException $e) {
 			// A model that cannot be read must not take down the page somebody
 			// needs in order to fix it. Enqueued rather than setError(), which
@@ -265,8 +399,35 @@ class ProjectModel extends AdminModel
         // can be made without guessing what an older one meant.
         $data['modelVersion'] = Project::CURRENT_VERSION;
 
+        // Which metalanguage this project is written in, out of the one field
+        // that carries it and into the two columns that store it. Two columns
+        // rather than one string because they are queried separately: 3.5 will
+        // ask "is anything still written in this language" before letting one
+        // be removed, and a LIKE over a packed value is not that question.
+        //
+        // It is taken out of the form data before it is serialised, because
+        // the binding is not part of the model - a project's JSON describes
+        // the thing being generated, and which forms it was typed into is a
+        // fact about the row.
+        $binding = (string) ($data['metalanguage'] ?? '');
+
+        unset($data['metalanguage']);
+
         $form_data = json_encode($data);
         $data['form_data'] = $form_data;
+
+        // Only on a new project. The field renders read-only once a project
+        // has an id, and a post is not a thing to trust about that: changing
+        // the binding under an existing model means the forms that opened it
+        // stop describing what is stored.
+        if (empty($data['id'])) {
+            [$key, $version] = array_pad(explode('|', $binding, 2), 2, '');
+
+            $data['metalanguage_key']     = $key;
+            $data['metalanguage_version'] = $version;
+        } else {
+            unset($data['metalanguage_key'], $data['metalanguage_version']);
+        }
 
         return parent::save($data);
     }

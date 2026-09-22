@@ -559,6 +559,38 @@ those:
 writes its output the same way, in its own repository.)
 ```
 
+## Metalanguages
+
+A project is written in one, and says which by key and version in two columns on
+its own row. An empty binding is ER1 — which is what every project made before
+3.4 is written in, and reading it as "no language" would make all of them
+unopenable.
+
+`MetalanguageCatalogue` answers *what can a project be written in*: the imported
+languages, and ER1 as an entry like any other. Everything above it asks the
+catalogue rather than asking whether a language was imported, so when 3.5 turns
+ER1 into a generated package the built-in entry goes and nothing else changes.
+
+`project.xml` is two files. `project_chrome.xml` is the half that is a Joomla
+item — alias, published, access, catid, ordering, params — and
+`project_er1.xml` is ER1's model half, in exactly the position an imported
+language's root classifier form occupies. `ProjectModel::getForm()` loads the
+chrome and merges one root form onto it, whichever language it belongs to.
+
+Two things that are not obvious and cost a rebuild each:
+
+- **`Form::load()` with `$xpath = '/form'` merges the `<form>` element itself**,
+  not its children — so the result is a form nested in a form, which renders as
+  a screen with no fields and reports nothing. Pass no xpath.
+- **Joomla never re-runs an update file it has already applied.** `#__schemas`
+  holds the last version applied per extension, so editing
+  `sql/updates/mysql/1.1.0.sql` after a site has run it is invisible on that
+  site. Reset that row, or use a new version file.
+
+A new project gets the chrome alone and is modelled after it is saved. The model
+half carries required fields, so a form that showed one language's model while
+somebody chose another could not be saved at all.
+
 ## The site this is developed against
 
 `localhost/joomla5` runs the component through symlinks into the *old* Extengen
