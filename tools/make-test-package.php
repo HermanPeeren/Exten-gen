@@ -85,6 +85,10 @@ $files->add(MetalanguagePackage::MANIFEST, (new PackageManifest(
     $root,
     MetalanguagePackage::languagePath($name),
     MetalanguagePackage::TAG,
+    [
+        ['key' => 'c-thing', 'name' => 'Thing'],
+        ['key' => 'c-part', 'name' => 'Part'],
+    ],
     $hashes,
     MetalanguagePackage::FORMAT,
     gmdate('c')

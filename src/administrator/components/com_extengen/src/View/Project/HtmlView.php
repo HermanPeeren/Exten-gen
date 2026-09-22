@@ -16,7 +16,7 @@ namespace Yepr\Component\Extengen\Administrator\View\Project;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\Language\Text;
@@ -54,7 +54,7 @@ class HtmlView extends BaseHtmlView
 	/**
 	 * The metalanguage this project is written in.
 	 *
-	 * @var \Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry
+	 * @var \Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry
 	 */
 	public $metalanguage;
 
@@ -90,7 +90,7 @@ class HtmlView extends BaseHtmlView
 		// Through the built-in entry's own form root, so this path and the one
 		// getForm() loads cannot drift apart.
 		$chrome = simplexml_load_file(
-			JPATH_ROOT . '/' . MetalanguageEntry::builtIn()->formRoot . 'project_chrome.xml'
+			JPATH_ROOT . '/' . Metalanguages::builtIn()->formRoot . 'project_chrome.xml'
 		);
 
 		foreach (($chrome === false ? [] : $chrome->xpath('//field')) ?: [] as $field) {

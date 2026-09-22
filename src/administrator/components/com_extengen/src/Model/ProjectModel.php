@@ -41,8 +41,8 @@ use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
 use Yepr\Component\Extengen\Administrator\Reference\Er1;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogue;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
@@ -179,7 +179,8 @@ class ProjectModel extends AdminModel
 	{
 		$item = $this->getItem();
 
-		return (new MetalanguageCatalogue($this->getDatabase()))->forProject(
+		return Metalanguages::forProject(
+			$this->getDatabase(),
 			(string) ($item->metalanguage_key ?? ''),
 			(string) ($item->metalanguage_version ?? '')
 		);

@@ -17,7 +17,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
 use Joomla\Database\DatabaseInterface;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageImporter;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -57,7 +57,7 @@ class MetalanguagesController extends BaseController
         // first: an import that is refused should leave nothing behind, and
         // the only thing that writes to the site is the importer, after it has
         // decided the package is sound.
-        $importer = new MetalanguageImporter($this->getDatabaseDriver(), JPATH_ROOT);
+        $importer = Metalanguages::importer($this->getDatabaseDriver(), JPATH_ROOT);
 
         try {
             $entry = $importer->import((string) $file['tmp_name']);
@@ -99,7 +99,7 @@ class MetalanguagesController extends BaseController
         $this->setRedirect(Route::_('index.php?option=com_extengen&view=metalanguages', false));
 
         $query = $database->getQuery(true)
-            ->delete($database->quoteName('#__extengen_metalanguages'))
+            ->delete($database->quoteName(Metalanguages::TABLE))
             ->where($database->quoteName('id') . ' = :id')
             ->bind(':id', $id, \Joomla\Database\ParameterType::INTEGER);
 

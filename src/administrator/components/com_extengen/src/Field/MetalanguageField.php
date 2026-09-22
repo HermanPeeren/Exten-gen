@@ -15,7 +15,7 @@ namespace Yepr\Component\Extengen\Administrator\Field;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Field\ListField;
 use Joomla\Database\DatabaseInterface;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogue;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -97,8 +97,8 @@ class MetalanguageField extends ListField
     /**
      * @since  1.1.0
      */
-    private function catalogue(): MetalanguageCatalogue
+    private function catalogue(): \Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue
     {
-        return new MetalanguageCatalogue(Factory::getContainer()->get(DatabaseInterface::class));
+        return Metalanguages::catalogue(Factory::getContainer()->get(DatabaseInterface::class));
     }
 }

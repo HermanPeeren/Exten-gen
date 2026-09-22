@@ -15,7 +15,7 @@ namespace Yepr\Component\Extengen\Administrator\View\Metalanguages;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;

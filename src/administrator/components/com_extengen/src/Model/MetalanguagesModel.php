@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Model;
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogue;
-use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageEntry;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -46,7 +46,7 @@ class MetalanguagesModel extends BaseDatabaseModel
      */
     public function getItems(): array
     {
-        return (new MetalanguageCatalogue($this->getDatabase()))->all();
+        return Metalanguages::catalogue($this->getDatabase())->all();
     }
 
     /**
