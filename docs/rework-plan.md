@@ -1253,6 +1253,28 @@ attributes the model cannot hold, the Joomla item chrome on a root form, how lan
 strings are named, and three places where the hand-written files are internally
 inconsistent.
 
+**Blocked, one step from done, and the blocker is worth the step.** `packages/ER1-1.0.zip`
+is built and ships in the installer. Nothing installs it, because switching over means
+retiring the hand-written forms and that loses two working features.
+
+ER1 uses three custom field types and two of them do something. `type="Slot" owner="Entity"`
+is the custom-code picker, and its choices come from `SlotCatalogue` rather than from a list
+in the form; `type="HtmlTypes"` is the html-type picker. A modelled language cannot name a
+field class, and cannot pass one a parameter like `owner`, so the generated set has a plain
+text box where each of those was. `editor` is the third and costs only a nicer textarea.
+
+So **3.5 cannot finish until a Property can name a field type and give it parameters**, which
+is the first of the three gaps 4.2 lists - and 4.2 says to re-measure and add only what is
+still missing. This is the measurement: ER1 needs it, so it comes here rather than there.
+
+It is a small addition of the same kind as `is_assigned` and `default_value`: a property may
+say it is edited with a named field class, and carry key-value parameters for it. The
+alternative is shipping the generated set with the two pickers gone, which is a working
+feature removed to meet a date.
+
+`SlotContractTest` is what found it, by refusing to pass having checked nothing. A rule that
+stops reaching its subject stops being a rule, and this one says so.
+
 **Started: ER1 is modelled, and the differences are an inventory rather than an argument.**
 `tools/import-forms.php` in Meta-gen reads a set of Joomla forms back into a language, and
 `tests/Fixtures/languages/er1-full.json` is what it made of Exten-gen's twenty-six files: 19
