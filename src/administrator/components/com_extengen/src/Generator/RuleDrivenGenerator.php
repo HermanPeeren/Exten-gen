@@ -106,8 +106,14 @@ abstract class RuleDrivenGenerator extends Generator
      */
     protected function selectors(): Registry
     {
+        // Beside the component's *own* rule file, never beside `ruleFile()`. A
+        // generated generator overrides the rules and is written to a temp
+        // directory with nothing else in it, so resolving the vocabulary from
+        // there found no file and stopped the run - which is what the
+        // acceptance check in Gen-gen caught. The vocabulary belongs to the
+        // target and not to whichever rule set is being run through it.
         $vocabulary = Vocabulary::fromFile(
-            \dirname($this->ruleFile()) . '/joomla6.vocabulary.json'
+            \dirname(self::defaultRuleFile()) . '/joomla6.vocabulary.json'
         );
 
         if ($vocabulary->paths() === []) {
