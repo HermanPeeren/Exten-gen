@@ -1299,13 +1299,39 @@ than a category:
 
 | Difference | Count | What it needs |
 |---|---|---|
-| Presentation the model cannot hold (`size`, `class`, `min`, `buttons`, `layout`, `default`) | 62 | Somewhere in the model, or a defaults table in the generator |
+| ~~Presentation the model cannot hold~~ | ~~62~~ | **Done, as a defaults table.** See below - the 62 was three different things |
 | A plain-text label became a language-scoped constant | 44 | Nothing: this is 3.3's decision working. The text moves into the package's `.ini` |
 | `COM_EXTENGEN_*` became `YEPR_ER1_*` | 10 | Nothing, same decision - but the forty-odd existing strings need carrying across |
 | A generated `LIonWeb_key` per form | 20 | Nothing: it is how a stored node says what it is |
 | A field changed type: `editor`, `Slot`, `HtmlTypes` | 3 | The custom-field-type gap 4.2 already names |
 | ~~A closed list became a text box~~ | ~~3~~ | **Done.** `page_type`, `link_type` and a Property's `type` are enumerations, and generate the dropdown they came from |
 | ~~The identity property renders as a text box, not `hidden`~~ | ~~5~~ | **Done.** A property says whether its value is assigned or entered |
+
+**Presentation is the generator's, not the model's**, and counting it properly showed the 62
+was three different things.
+
+*Uniform by kind, and now in `Presentation`.* Every reference dropdown and every closed list
+carries the same tint, a repeating subform gets add, remove and move, a single one gets a
+layout and no buttons. Those were spelled out inside `FormXml` beside the fields they applied
+to - which works, and means nobody can answer "what does a generated form look like" without
+reading the whole emitter. Now they are one file.
+
+*Per-field, and lost on purpose.* Sixteen `size` attributes running 60, 40, 20, 2 and 1;
+fourteen `min`s on seventeen of thirty-five subforms. Somebody made each of those one at a
+time. A table guessing one number would make sixteen fields differently wrong instead of
+uniformly plain, so it guesses none. That is what choosing not to model presentation costs,
+and it is the cost that was chosen.
+
+*Not differences at all.* Twelve were `required="false"`, which means exactly what leaving
+the attribute out means. The comparison was over-reporting, and a number nobody checked would
+have made the remaining work look half again as large as it is.
+
+**And one that is not presentation, found by counting.** Seven are default *values* -
+`default="detailspage"` on a page's type, `default="NOW"` on a creation date, `default="en"`
+on a language code. "A new page is a detail page unless you say otherwise" is a fact about
+the language, not about how a form looks, and without it a generated form opens with nothing
+selected where the hand-written one opens with something. It wants the same small model
+addition `is_assigned` got, and it is the next thing in this step.
 
 **The identity row is fixed**, because it was the only one that made a generated form *wrong*
 rather than different. "Hide the identity" is the obvious rule and it is wrong: LionCore M3's
