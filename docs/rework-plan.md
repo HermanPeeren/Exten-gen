@@ -1476,6 +1476,53 @@ reference have to read the same table.
 **3.7 Package and release Meta-gen.** 0.1.0 is unreleased: the repository exists, the
 gates run, and nothing is published yet.
 
+**Ready, and the tag is the only step left.** Meta-gen already had the machinery - a build
+script, an update-xml script, a release workflow that checks the tag against the manifest and
+publishes what it built. What it had never had was anything reading that machinery between
+tags, and three things had quietly gone wrong in the gap.
+
+*The one that would have shipped broken.* `composer.json` asked for `^0.8`, which is where
+`Lionweb\ChunkBuilder` arrived, and `src/script.php` still insisted on `0.6.0` from before the
+LionWeb import existed. The build reads `LIBRARY_MINIMUM` to decide what to bundle, so the
+released package would have carried a library with no `Lionweb` namespace in it: install,
+accept the library, fatal on the import screen. Exten-gen and Gen-gen have had a test pinning
+those two together for some time. Meta-gen was the one repository without it, which is why it
+was the one that drifted.
+
+*The one on the screen where it matters.* `updates.xml` described this component as "Model a
+Joomla extension, and generate it" - Exten-gen's description, which came over with the build
+script. That line is what the extension manager shows somebody deciding whether to install.
+The manifest holds a language key rather than a sentence, so `update-xml.php` resolves it out
+of `com_metagen.sys.ini` now instead of repeating it.
+
+*And the one that was only a comment.* `build/update-xml.php` has said since it was written
+that "`UpdateServerTest` fails when the committed file and the manifest disagree". That
+sentence came from Exten-gen and the test did not. Nothing in this repository read
+`updates.xml` at all; the release workflow's own regenerate-and-diff check runs when a tag is
+pushed, which is the one moment it is too late to find out.
+
+So two test files, ported from Exten-gen where every rule in them was written after the thing
+it checks had already shipped broken. `ReleaseTest` reads the manifest against the filesystem
+in both directions - the direction that bites being a folder that exists and is not listed,
+which works perfectly in development and is simply absent the moment somebody installs the
+package. `UpdateServerTest` regenerates `updates.xml` and compares, and checks the download
+URL names the file the build actually produces, because a link that 404s looks to the user
+like the release is broken and no other rule would see it.
+
+*Verified as far as a local machine can.* The package builds - 70 files, none of them build
+products - and passes the content assertions the release workflow makes. `composer
+install-local` builds that same zip and installs it through Joomla's CLI, so the ordinary
+install route is the one development has been using all along. 240 unit tests, PHPStan, phpcs
+and 22 Cypress specs green against it.
+
+What no gate here reaches: an install onto a site that has never had this component. The
+development site always has the tables already, so the install SQL runs as an update.
+
+The release procedure is written down in Meta-gen's `docs/development.md` now, including why
+a locally built package and the one CI publishes can carry different library versions and both
+be right, and why `updates.xml` has to be committed and tagged together - it is served from
+`main`, so a site learns of a version the moment the commit lands, tag or no tag.
+
 ---
 
 ## Stage 4 — convergence
