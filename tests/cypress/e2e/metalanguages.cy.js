@@ -31,17 +31,23 @@ describe('metalanguages', () => {
     cy.loginToAdmin();
   });
 
-  it('renders, with ER1 in the list like any other language', () => {
+  it('renders, with ER1 in the list as an imported language', () => {
     cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
 
     cy.get('#metalanguageList', { timeout: 20000 }).should('exist');
     cy.get('body').should('not.contain', 'Fatal error');
     cy.get('body').should('not.contain', 'View not found');
 
-    // Which is the shape 3.5 needs: ER1 becomes a package and joins the rows
-    // above it without anything else changing.
+    // 3.4 put ER1 in this list as the language the component shipped, with a
+    // "Built in" badge beside it. 3.5 modelled it in LionCore M3 and it ships
+    // as a package now, installed on update like any import - so the badge is
+    // gone and the row is an ordinary one. That the row looks like every other
+    // row is the step having landed, not a detail.
     cy.get('#metalanguageList').should('contain.text', 'ER1');
-    cy.get('#metalanguageList').should('contain.text', 'Built in');
+    cy.get('#metalanguageList').should('not.contain.text', 'Built in');
+
+    // And it says what a project written in it opens at.
+    cy.get('#metalanguageList').should('contain.text', 'Project');
   });
 
   it('imports a package and lists what came out of it', () => {

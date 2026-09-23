@@ -126,7 +126,30 @@ class ProjectModel extends AdminModel
 		// project_er1.xml, so the built-in and an imported language are the
 		// same case - which is what lets 3.5 turn ER1 into a package without
 		// touching anything here.
-		$entry  = $this->metalanguage();
+		$entry = $this->metalanguage();
+
+		if ($entry === null) {
+			// Nothing to open it with. Before 3.5 this could not happen - an
+			// unbound project fell back to the forms this component shipped -
+			// and now that ER1 is a package like any other it can: somebody
+			// removed the language this project is written in.
+			//
+			// The chrome alone, and a message. A project whose model cannot be
+			// rendered is still a row somebody may need to look at, and opening
+			// it with another language's forms would let a save reshape the
+			// model to fit them.
+			Factory::getApplication()->enqueueMessage(
+				Text::sprintf(
+					'COM_EXTENGEN_PROJECT_METALANGUAGE_UNKNOWN',
+					(string) ($this->getItem()->metalanguage_key ?: '?'),
+					(string) ($this->getItem()->metalanguage_version ?: '?')
+				),
+				'warning'
+			);
+
+			return $form;
+		}
+
 		$source = JPATH_ROOT . '/' . $entry->rootFormPath();
 
 		if (!is_file($source)) {
@@ -175,7 +198,7 @@ class ProjectModel extends AdminModel
 	 *
 	 * @return  MetalanguageEntry
 	 */
-	public function metalanguage(): MetalanguageEntry
+	public function metalanguage(): ?MetalanguageEntry
 	{
 		$item = $this->getItem();
 
@@ -238,9 +261,17 @@ class ProjectModel extends AdminModel
 	private function referenceTable(): array
 	{
 		$entry = $this->metalanguage();
-		$path  = $entry->referenceTablePath();
+
+		if ($entry === null) {
+			return [];
+		}
+
+		$path = $entry->referenceTablePath();
 
 		if ($path === '') {
+			// A language the component ships rather than one it imported.
+			// Nothing does this since 3.5 turned ER1 into a package, and the
+			// branch stays because the library still allows one.
 			return Er1::TABLE;
 		}
 

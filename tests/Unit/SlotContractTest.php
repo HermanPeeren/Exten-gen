@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Tests\Unit;
 
+use Yepr\Component\Extengen\Tests\Support\ShippedLanguage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
@@ -133,14 +134,11 @@ final class SlotContractTest extends TestCase
     public function testEveryFormThatOffersSlotsAsksForOnesThatExist(): void
     {
         $catalogue = new SlotCatalogue();
-        $root      = \dirname(__DIR__, 2) . '/src/administrator/components/com_extengen/forms';
         $checked   = 0;
 
-        foreach (glob($root . '/*.xml') ?: [] as $path) {
-            $xml = simplexml_load_file($path);
-
-            $this->assertNotFalse($xml, $path . ' is not valid XML.');
-
+        // The shipped package since 3.5, where this read a directory of
+        // hand-written forms before.
+        foreach (ShippedLanguage::forms() as $path => $xml) {
             foreach ($xml->xpath('//field[@type="Slot"]') ?: [] as $field) {
                 $owner    = (string) $field['owner'];
                 $pageType = (string) ($field['pagetype'] ?? '');

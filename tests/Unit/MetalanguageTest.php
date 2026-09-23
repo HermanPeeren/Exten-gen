@@ -6,99 +6,166 @@ namespace Yepr\Component\Extengen\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Component\Extengen\Tests\Support\ShippedLanguage;
+use Yepr\Gen\Core\Package\PackageReader;
 
 /**
- * What this component brings to the shared metalanguage store: step 3.4.
+ * The language this component ships: step 3.5.
  *
- * Installing a package is the library's job and is tested there, against
- * packages built by hand. What is left here is the part that is about files in
- * this repository: the language this component ships, and the split that lets
- * a shipped language and an imported one take the same code path.
+ * It used to be twenty-four hand-written form files loaded straight out of
+ * `forms/`, and `MetalanguageEntry::builtIn()` was the entry that stood for
+ * them. ER1 is modelled in LionCore M3 now and ships as a package, so there is
+ * no built-in and the tests about one are gone with it.
+ *
+ * What replaced them is the question that actually matters: **can this
+ * component open a project with what it ships?** A package that is missing a
+ * form, or whose root classifier names a form that is not in it, is a component
+ * whose own language does not work - and that is a thing the shipped artefact
+ * can be asked, once, here.
  *
  * @since  1.2.0
  */
 final class MetalanguageTest extends TestCase
 {
     /**
-     * A project that names no language is written in ER1.
+     * The shipped package describes itself correctly.
      *
-     * Every project in every existing database is one of these, because there
-     * was nothing else when they were made. Reading an empty binding as "no
-     * language" would have made all of them unopenable on the day 3.4 shipped.
+     * The same question `MetalanguageImporter` asks before it writes anything,
+     * asked of the package this component carries - because a component whose
+     * own language would be refused on import is one that installs and then
+     * cannot open a project.
      */
-    public function testAProjectThatNamesNoLanguageIsWrittenInTheBuiltIn(): void
+    public function testTheShippedPackageWouldSurviveBeingImported(): void
     {
-        $builtIn = Metalanguages::builtIn();
+        $reader = PackageReader::fromZip(ShippedLanguage::package());
 
-        $this->assertTrue($builtIn->answersTo('', ''));
-        $this->assertTrue($builtIn->isBuiltIn());
-        $this->assertFalse($builtIn->answersTo('Small', '1.0'));
+        $this->assertSame([], $reader->problems());
+
+        $manifest = $reader->manifest();
+
+        $this->assertSame(Metalanguages::SHIPPED, $manifest->key);
+        $this->assertSame('Project', $manifest->root, 'a project opens at a Project');
+        $this->assertNotSame([], $manifest->concepts, 'nothing could be selected in a rule');
     }
 
     /**
-     * The built-in and an imported language have the same shape.
+     * Every form the shipped language reaches is in the package.
      *
-     * Chrome plus one root form, either way - which is what lets 3.5 turn ER1
-     * into a package without changing anything that opens a project.
+     * A `formsource` pointing at a file that is not there renders as an empty
+     * box with nothing reported anywhere, which is the failure this family has
+     * met at 3.1, at 3.0 and again at 3.3. Asking it of the artefact means the
+     * answer covers what a site installs rather than what a working copy has.
      */
-    public function testTheBuiltInIsShapedLikeAnImportedLanguage(): void
+    public function testEverySubformInTheShippedPackageIsInIt(): void
     {
-        $root = \dirname(__DIR__, 2) . '/src/';
+        $reader   = PackageReader::fromZip(ShippedLanguage::package());
+        $manifest = $reader->manifest();
+        $files    = $reader->files();
+        $missing  = [];
+        $checked  = 0;
 
-        $this->assertFileExists(
-            $root . Metalanguages::builtIn()->formRoot . 'project_chrome.xml'
-        );
-        $this->assertFileExists($root . Metalanguages::builtIn()->rootFormPath());
+        foreach ($reader->forms() as $path => $contents) {
+            $xml = simplexml_load_string($contents);
 
-        // And the shipped one has no generated reference table, which is the
-        // other half of what 3.5 removes.
-        $this->assertSame('', Metalanguages::builtIn()->referenceTablePath());
+            $this->assertNotFalse($xml, $path . ' is not XML.');
+
+            foreach ($xml->xpath('//field[@formsource]') ?: [] as $field) {
+                $source = (string) $field['formsource'];
+                $checked++;
+
+                if (!str_starts_with($source, $manifest->formRoot)) {
+                    $missing[] = $path . ' -> ' . $source . ' points outside the package';
+
+                    continue;
+                }
+
+                if (!isset($files[substr($source, \strlen($manifest->formRoot))])) {
+                    $missing[] = $path . ' -> ' . $source;
+                }
+            }
+        }
+
+        $this->assertSame([], $missing, implode("\n  ", $missing));
+        $this->assertGreaterThan(10, $checked, 'no subform was checked, so this proves nothing');
     }
 
     /**
-     * The split put the Joomla half in one file and the model half in the other.
+     * The Joomla half of a project's form is still this component's own.
      *
-     * Checked because the two were one file until 3.4, and a field that ended
-     * up in neither would be a field that silently stopped being on the form -
-     * no error, just a value that stops being saved.
+     * 3.2 recorded why it is not generated: alias, published, access, catid,
+     * ordering and params are not derivable from a language at all. A project
+     * is a Joomla item as well as a model, and only the second half comes out
+     * of a package - so `project_chrome.xml` stays after the other twenty-four
+     * forms have gone.
      */
-    public function testTheProjectFormSplitLostNothing(): void
+    public function testTheJoomlaHalfOfTheFormIsStillShipped(): void
     {
         $forms  = \dirname(__DIR__, 2) . '/src/administrator/components/com_extengen/forms/';
         $chrome = simplexml_load_file($forms . 'project_chrome.xml');
-        $model  = simplexml_load_file($forms . 'project_er1.xml');
 
         $this->assertNotFalse($chrome);
-        $this->assertNotFalse($model);
 
-        $names = static fn (\SimpleXMLElement $form): array => array_map(
+        $names = array_map(
             static fn (\SimpleXMLElement $f): string => (string) $f['name'],
-            $form->xpath('//field') ?: []
+            $chrome->xpath('//field') ?: []
         );
 
-        $inChrome = $names($chrome);
-        $inModel  = $names($model);
-
-        // The Joomla item half, which 3.2 recorded as not derivable from a
-        // language at all.
         foreach (['id', 'name', 'alias', 'published', 'catid', 'access', 'ordering'] as $field) {
-            $this->assertContains($field, $inChrome, $field . ' left the form entirely.');
+            $this->assertContains($field, $names, $field . ' left the form entirely.');
         }
 
-        // And the model half.
-        foreach (['datamodel', 'pages', 'extensions'] as $field) {
-            $this->assertContains($field, $inModel, $field . ' left the form entirely.');
-        }
+        // And the binding, which is how the other half is found at all.
+        $this->assertContains('metalanguage', $names);
 
-        // The binding itself, which is new.
-        $this->assertContains('metalanguage', $inChrome);
+        // The model half is gone from this repository - it is in the package.
+        $this->assertFileDoesNotExist($forms . 'project_er1.xml');
+        $this->assertFileDoesNotExist($forms . 'entity.xml');
+    }
 
-        // And nothing is in both, which would post two inputs to one key and
-        // let the later one win without saying so.
-        $this->assertSame(
-            [],
-            array_values(array_intersect($inChrome, $inModel)),
-            'These are in both halves of the project form.'
+    /**
+     * Nothing in this component reads the old forms directory any more.
+     *
+     * Twenty-four files left at once. A path still naming one of them would be
+     * a screen that renders an empty box, and that is exactly the kind of
+     * leftover a grep finds and a test run does not.
+     */
+    public function testNothingStillNamesTheFormsThatWent(): void
+    {
+        $root    = \dirname(__DIR__, 2) . '/src';
+        $gone    = ['project_er1.xml', 'entity.xml', 'field.xml', 'page.xml', 'property.xml'];
+        $naming  = [];
+        $scanned = 0;
+
+        $tree = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
         );
+
+        foreach ($tree as $file) {
+            if (!$file instanceof \SplFileInfo || !$file->isFile()) {
+                continue;
+            }
+
+            if (!\in_array($file->getExtension(), ['php', 'xml'], true)) {
+                continue;
+            }
+
+            // The generator's own templates describe a *generated* component's
+            // forms, which are not these.
+            if (str_contains(str_replace('\\', '/', $file->getPathname()), '/generator_templates/')) {
+                continue;
+            }
+
+            $scanned++;
+            $source = (string) file_get_contents($file->getPathname());
+
+            foreach ($gone as $form) {
+                if (str_contains($source, 'forms/' . $form)) {
+                    $naming[] = basename($file->getPathname()) . ' names forms/' . $form;
+                }
+            }
+        }
+
+        $this->assertGreaterThan(20, $scanned, 'the scan reached almost nothing');
+        $this->assertSame([], $naming, implode("\n  ", $naming));
     }
 }

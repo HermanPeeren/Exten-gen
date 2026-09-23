@@ -16,6 +16,7 @@ use Joomla\CMS\Installer\InstallerHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 
 /**
  * Install script for Exten-gen.
@@ -105,6 +106,113 @@ class Com_ExtengenInstallerScript
             return true;
         }
 
+        $library = $this->installLibrary($type, $parent);
+
+        // The languages only after the library, because importing one needs
+        // `Yepr\Gen\Joomla\Metalanguage` and that arrives with it.
+        $this->installLanguages($parent);
+
+        return $library;
+    }
+
+    /**
+     * Install the metalanguages this component ships.
+     *
+     * ER1 is one of these now. It used to be twenty-one hand-written form
+     * files that the component loaded directly; 3.5 modelled it in LionCore M3
+     * and kept the generated set, so it arrives as a package and installs the
+     * way an imported one does - through the same reader, with the same
+     * refusal if anything in it does not match its own manifest.
+     *
+     * A component that shipped its own language by copying files into place
+     * would be a component whose language is exempt from the checks every
+     * other language goes through, which is the kind of exemption that is fine
+     * until the day it is not.
+     *
+     * @param   InstallerAdapter  $parent  The installer running this.
+     *
+     * @return  void
+     */
+    private function installLanguages($parent): void
+    {
+        $directory = $parent->getParent()->getPath('source') . '/packages';
+        $packages  = is_dir($directory) ? (glob($directory . '/*.zip') ?: []) : [];
+
+        if ($packages === []) {
+            return;
+        }
+
+        $database = Factory::getContainer()->get(DatabaseInterface::class);
+
+        foreach ($packages as $package) {
+            try {
+                $entry = Metalanguages::importer($database, JPATH_ROOT)->import($package);
+            } catch (Throwable $e) {
+                $this->say(
+                    'The ' . basename($package) . ' metalanguage could not be installed: ' . $e->getMessage(),
+                    'warning'
+                );
+
+                continue;
+            }
+
+            $this->bindLooseProjects($database, $entry->key, $entry->version);
+        }
+    }
+
+    /**
+     * Point projects that name no language at the one they were written in.
+     *
+     * Every project made before 3.4 carries an empty binding, and until now an
+     * empty binding meant "the forms this component ships" - which were ER1's.
+     * They still are ER1's; they arrive as a package instead. So the binding is
+     * filled in rather than left to a fallback, because a fallback is a second
+     * answer to "which language" and the whole point of 3.4 was that there is
+     * one.
+     *
+     * Only the empty ones. A project somebody bound to another language stays
+     * bound to it.
+     *
+     * @param   DatabaseInterface  $database  The site's database.
+     * @param   string             $key       The language's key.
+     * @param   string             $version   And its version.
+     *
+     * @return  void
+     */
+    private function bindLooseProjects($database, string $key, string $version): void
+    {
+        if ($key !== 'ER1') {
+            return;
+        }
+
+        $query = $database->getQuery(true)
+            ->update($database->quoteName('#__extengen_projects'))
+            ->set($database->quoteName('metalanguage_key') . ' = :key')
+            ->set($database->quoteName('metalanguage_version') . ' = :version')
+            ->where($database->quoteName('metalanguage_key') . " = ''")
+            ->bind(':key', $key)
+            ->bind(':version', $version);
+
+        try {
+            $database->setQuery($query)->execute();
+        } catch (Throwable $e) {
+            // A fresh install has no projects table yet when this runs on some
+            // orderings, and a site with no loose projects is the ordinary
+            // case. Neither is worth a warning on screen.
+            unset($e);
+        }
+    }
+
+    /**
+     * Install the shared library when the site has none, or an older one.
+     *
+     * @param   string            $type    The installation route.
+     * @param   InstallerAdapter  $parent  The installer running this.
+     *
+     * @return  bool
+     */
+    private function installLibrary($type, $parent): bool
+    {
         $installed = $this->installedLibraryVersion();
 
         if ($installed !== null && version_compare($installed, self::LIBRARY_MINIMUM, '>=')) {

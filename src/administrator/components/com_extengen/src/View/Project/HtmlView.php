@@ -54,7 +54,7 @@ class HtmlView extends BaseHtmlView
 	/**
 	 * The metalanguage this project is written in.
 	 *
-	 * @var \Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry
+	 * @var ?\Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry
 	 */
 	public $metalanguage;
 
@@ -87,11 +87,9 @@ class HtmlView extends BaseHtmlView
 		// language.
 		$this->metalanguage = $model->metalanguage();
 
-		// Through the built-in entry's own form root, so this path and the one
-		// getForm() loads cannot drift apart.
-		$chrome = simplexml_load_file(
-			JPATH_ROOT . '/' . Metalanguages::builtIn()->formRoot . 'project_chrome.xml'
-		);
+		// Named in one place, so this path and the one getForm() loads cannot
+		// drift apart.
+		$chrome = simplexml_load_file(JPATH_ROOT . '/' . Metalanguages::CHROME_FORM);
 
 		foreach (($chrome === false ? [] : $chrome->xpath('//field')) ?: [] as $field) {
 			$this->chromeFields[] = (string) $field['name'];

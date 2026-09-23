@@ -54,7 +54,15 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
 	<div>
 		<?php echo HTMLHelper::_('uitab.startTabSet', 'myTab', array('active' => 'details')); ?>
 
-		<?php if (!$this->metalanguage->isBuiltIn()) : ?>
+		<?php if ($this->metalanguage === null) : ?>
+
+			<?php /*
+				The language this project is written in is not on this site, so
+				there is nothing to render its model with. getForm() has said so
+				already; this is the tab not being there.
+			*/ ?>
+
+		<?php elseif (!$this->metalanguage->isBuiltIn()) : ?>
 
 			<?php /*
 				A project written in an imported language renders whatever that

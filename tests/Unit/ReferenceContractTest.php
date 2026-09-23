@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Tests\Unit;
 
+use Yepr\Component\Extengen\Tests\Support\ShippedLanguage;
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Reference\Er1;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
@@ -164,31 +165,17 @@ final class ReferenceContractTest extends TestCase
         $this->assertSame([], $offenders, 'These name a function from a form: ' . implode(', ', $offenders));
     }
 
-    /** @return array<string, \SimpleXMLElement> */
+    /**
+     * The forms this component ships.
+     *
+     * The shipped package since 3.5, where it was a directory of hand-written
+     * files before. What these rules assert has not changed - every reference
+     * points at a type the index carries - only where the forms are.
+     *
+     * @return array<string, \SimpleXMLElement>
+     */
     private function formFiles(): array
     {
-        $root  = \dirname(__DIR__, 2) . '/src/administrator/components/com_extengen/forms';
-        $forms = [];
-
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
-        );
-
-        foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'xml') {
-                continue;
-            }
-
-            $xml = simplexml_load_file($file->getPathname());
-
-            $this->assertNotFalse($xml, $file->getPathname() . ' is not valid XML.');
-
-            $relative         = str_replace('\\', '/', substr($file->getPathname(), \strlen($root) + 1));
-            $forms[$relative] = $xml;
-        }
-
-        ksort($forms);
-
-        return $forms;
+        return ShippedLanguage::forms();
     }
 }
