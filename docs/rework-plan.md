@@ -1529,6 +1529,59 @@ be right, and why `updates.xml` has to be committed and tagged together - it is 
 
 **4.1 Plug-gen adopts the core**, dropping its private copy.
 
+**Done, and nothing moved.** Ten classes deleted from `com_pluggen` and taken from
+`yepr/generator-core` instead: `FileCollection`, `ZipWriter`, `ProtectedRegionMerger`, the
+three emitters, the renderer, `Pipeline`, `GeneratorInterface`, `ValidationException`. 1435
+lines gone, and the golden fixtures did not change by a byte.
+
+*That last part is the result, and it was not guaranteed.* The library was extracted from
+plug-gen at stage 0 and plug-gen went on running the original for four stages, which is
+exactly how two copies drift. They had not: every public signature matched, and the two
+places the classes differ are generalisations made on the way out - the region tag became a
+constructor argument rather than a hard-coded `pluggen`, and `region()` became an instance
+method with it. The ini escaping, which Joomla 6 changed under both of them, had been fixed
+identically on both sides.
+
+Being lucky is not a property, so `SharedEngineTest` is. Its first rule is the one that
+matters: a copy does not come back by somebody forking the library, it comes back by somebody
+adding `Generator/Output/FileCollection.php` because that is where it used to be, and every
+test still passing because the class they wrote does what the library's does. Checked by
+putting one back; it fails.
+
+*What the shared `Pipeline` asked for that the private one did not.* The library's takes a
+model and a target; plug-gen's took a model and knew the rest. So `PluginTarget` is new -
+which generators run, in what order, and what a model must satisfy first - and the dispatch to
+the chosen plugin type became `PluginTypeGenerator`, because a target's generator list is
+fixed and which type runs is a property of the model. `PluginTypeInterface` kept its own
+signature, so a type bundle is still a folder with a `Definition` in it and nothing a type
+author writes had to learn about the library. The container grew a `TargetAwareInterface`
+beside the `PipelineAwareInterface` it already had, which is this component's existing idiom
+for the same problem.
+
+*The half that is packaging, and it is not optional.* Until now plug-gen shipped its engine
+inside itself, so it had no install script at all. A component that reads a shared library and
+does not ship one installs cleanly and fatals on the first screen that generates anything, and
+Joomla has no way for a manifest to declare a dependency - so `src/script.php` and the
+`library/` folder in the package are ported from Meta-gen, and the build reads
+`LIBRARY_MINIMUM` to decide what to bundle. Verified on a real site: the package installs and
+says "The Yepr Gen library was installed."
+
+*Three things that came loose, all of the same species.* A repository that acquires a
+dependency cannot keep a zero-dependency test runner: `tests/run.php` and the shim in
+`tests/TestCase.php` are gone, and with them `TestHarnessTest`, whose whole subject was a
+subtlety of that shim. The release workflow had no `composer install` step because it had
+never needed one. And `build/update-xml.php` had claimed since it was written that it also
+writes the version in `joomla.asset.json` - it did not, and that file sat at 0.4.4 while this
+was being prepared, which after an upgrade serves everybody the previous release's stylesheet.
+The workflow's regenerate-and-diff check could not have caught it: the script wrote nothing to
+diff. Exactly what 3.7 found in Meta-gen, in a different file.
+
+Released as 0.5.0 rather than 0.4.5: the PHP floor moves to 8.3 with the library.
+
+*Not run here:* plug-gen's Cypress spec, which signs in from a git-ignored `.env` this machine
+does not have. 76 unit tests, PHPStan and phpcs green, and the package verified by installing
+it.
+
 **4.2 Close the model gaps that block self-hosting.** The three named under Stage 1: a
 custom form field type, a custom validation rule, and tabs or subform layouts on a
 generated form. Re-measure first - 1.9 may have removed most of the need - then add only
