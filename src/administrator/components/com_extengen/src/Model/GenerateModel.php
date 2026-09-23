@@ -46,8 +46,13 @@ use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
+use Yepr\Component\Extengen\Administrator\Generator\LanguageContext;
+use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
+use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
+use Yepr\Gen\Core\Reference\ReferenceIndex;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
 use Yepr\Gen\Core\Model\ValidationException;
 use Yepr\Gen\Core\Output\FileCollection;
@@ -107,7 +112,34 @@ class GenerateModel extends AdminModel
 	public function generate()
 	{
 		$project = $this->loadProject();
-		$target  = new Joomla6Target(
+
+		// Which language this project is written in, before anything reads the
+		// model. A selector that follows a reference needs that language's
+		// reference table to follow it with, and these rules are only about one
+		// language - so this both refuses the run and supplies the table.
+		LanguageContext::use(ReferenceIndex::fromTable(
+			Metalanguages::referenceTable($this->language())
+		));
+
+		try {
+			$this->runGenerators($project);
+		} finally {
+			// One run must not decide what the next one follows. The screens
+			// are separate requests, but the acceptance checks are not.
+			LanguageContext::reset();
+		}
+	}
+
+	/**
+	 * Run the target's generators over the project and write what they made.
+	 *
+	 * @param   Project  $project  The model to generate from.
+	 *
+	 * @return  void
+	 */
+	private function runGenerators(Project $project): void
+	{
+		$target = new Joomla6Target(
 			JPATH_ROOT . '/administrator/components/com_extengen/generator_templates',
 			JPATH_ROOT . '/administrator/components/com_extengen/compilation_cache'
 		);
@@ -139,6 +171,66 @@ class GenerateModel extends AdminModel
 		}
 
 		$this->write($files, $project);
+	}
+
+	/**
+	 * The metalanguage this project is written in, or refuse to generate.
+	 *
+	 * Three ways to fail and all three are refusals, because the alternative is
+	 * not "generate a bit less" - it is a component with empty views and no
+	 * indication of why. Every selector that finds the pages of a section goes
+	 * through the reference table; without the right one the join returns
+	 * nothing, every page-shaped rule fires zero times, and what comes out is a
+	 * plausible-looking package missing half its files.
+	 *
+	 * The interesting one is the third. A project written in another language
+	 * is a project this component can open, edit and save perfectly well - 3.4
+	 * made that true - and cannot generate from, because the rules are about
+	 * ER1 and nothing has taught them otherwise. That gap is the whole of what
+	 * is left between here and a generator that is language-neutral, and a
+	 * refusal is how it stays visible instead of being discovered in the output.
+	 *
+	 * @return  MetalanguageEntry
+	 *
+	 * @throws  \RuntimeException  When the project is written in something else.
+	 */
+	private function language(): MetalanguageEntry
+	{
+		$database = $this->getDatabase();
+		$binding  = (new ProjectRepository($database))->binding((int) $this->projectId);
+
+		if ($binding === null) {
+			throw new \RuntimeException(
+				Text::sprintf('COM_EXTENGEN_GENERATE_NO_METALANGUAGE', $this->projectId)
+			);
+		}
+
+		if ($binding['key'] !== RuleDrivenGenerator::LANGUAGE) {
+			throw new \RuntimeException(
+				Text::sprintf(
+					'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
+					$binding['key'] . ' ' . $binding['version'],
+					RuleDrivenGenerator::LANGUAGE
+				)
+			);
+		}
+
+		$entry = Metalanguages::forProject($database, $binding['key'], $binding['version']);
+
+		if ($entry === null) {
+			// Bound to the right language in a version this site does not have.
+			// Its forms are gone, so its reference table is too, and the join
+			// would silently reach nothing.
+			throw new \RuntimeException(
+				Text::sprintf(
+					'COM_EXTENGEN_GENERATE_METALANGUAGE_MISSING',
+					$binding['key'],
+					$binding['version'] ?: '?'
+				)
+			);
+		}
+
+		return $entry;
 	}
 
 	/**

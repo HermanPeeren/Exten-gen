@@ -40,6 +40,30 @@ use Yepr\Gen\Core\Rule\RuleSet;
 abstract class RuleDrivenGenerator extends Generator
 {
     /**
+     * Which metalanguage the committed rules are written against: step 3.6.
+     *
+     * 3.6 made a selector a path rather than a closure, so `entities` is no
+     * longer the word `datamodel` compiled into PHP. That is half the distance.
+     * The other half is in the rule file itself and in `Joomla6Derivations`,
+     * which are full of ER1 by name - `entity_name`, `page_type`, the shape of
+     * a property - and no amount of data in the vocabulary changes what those
+     * rules are about.
+     *
+     * So this is the honest statement of what is still true, written once where
+     * something can act on it. `GenerateModel` refuses a project written in
+     * another language rather than running these rules over a model they cannot
+     * describe, which produced a component with empty views and no error.
+     *
+     * The version is deliberately not part of it. A language's minor version
+     * adds concepts; a rule written for ER1 1.0 is still a rule about ER1 when
+     * the language reaches 1.1, and refusing on the version would mean nobody
+     * could ever ship one.
+     *
+     * @since  1.2.0
+     */
+    public const LANGUAGE = 'ER1';
+
+    /**
      * Parsed rule sets, by file, once per process.
      *
      * Keyed by path rather than held as one, because a generator produced by
@@ -88,12 +112,10 @@ abstract class RuleDrivenGenerator extends Generator
      * A path says what it means, in the descriptor that already says what a
      * rule may say.
      *
-     * **One thing here is still hard-keyed, and it is not the selectors.**
-     * Following a reference needs the language's reference table, and this
-     * takes ER1's. That is honest for now - `Joomla6Derivations` is full of
-     * ER1 besides - but it is the next slice: the table should come from the
-     * language the project is bound to, which is a thing a project has said
-     * since 3.4 and which nothing has yet asked it.
+     * **The table comes from the project's own language.** `GenerateModel`
+     * resolves it before the run and the screen refuses outright if it is not
+     * the language these rules are written for, so by the time a selector
+     * follows a reference the table is the right one rather than the only one.
      *
      * A vocabulary with no paths falls back to the closures, which is what a
      * target generating from something other than a modelled language looks
@@ -120,9 +142,14 @@ abstract class RuleDrivenGenerator extends Generator
             return Joomla6Selectors::registry();
         }
 
+        // The table belongs to the language the project is written in, which
+        // the screen resolves and puts in LanguageContext before the run.
+        // Falling back to ER1's is for the caller that does not go through that
+        // screen - Gen-gen's acceptance check runs this pipeline directly - and
+        // is what every project here is written in anyway.
         return DataSelectors::registry(
             $vocabulary->paths(),
-            ReferenceIndex::fromTable(Er1::TABLE)
+            LanguageContext::current() ?? ReferenceIndex::fromTable(Er1::TABLE)
         );
     }
 

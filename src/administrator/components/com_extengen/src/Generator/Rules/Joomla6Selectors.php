@@ -29,10 +29,55 @@ use Yepr\Gen\Core\Rule\Registry;
  * A selector yields nodes in model order, and that order reaches the output:
  * the first back-end index page becomes the component's default view.
  *
+ * **Since 3.6 the closures are the fallback and `PATHS` is the answer.** The
+ * same four, written down rather than compiled in, so that a generator modelled
+ * for another metalanguage can name a selector and have it mean something. What
+ * is left here is the shape a target has when it generates from something that
+ * is not a modelled language at all - which nothing in this component is.
+ *
  * @since  1.1.0
  */
 final class Joomla6Selectors
 {
+    /**
+     * The same four selectors, as paths through the model: step 3.6.
+     *
+     * Published in the vocabulary by `build/vocabulary.php`, which is why they
+     * are a constant and not a literal in that script: a list kept in two
+     * places disagrees with itself, and `Joomla6SelectorTest` is what says
+     * these two agree.
+     *
+     * The joins are the reason a step is an object rather than a dotted string.
+     * `pages` is a flat collection and which of them are back-end pages is
+     * recorded elsewhere, as references under `Sections` - so the last step
+     * follows a reference, using the reference table of the language the
+     * project is written in.
+     *
+     * @var array<string, array<int, array<string, string>>>
+     *
+     * @since  1.2.0
+     */
+    public const PATHS = [
+        'root'     => [],
+        'entities' => [
+            ['contain' => 'datamodel'],
+        ],
+        'backendPages' => [
+            ['contain' => 'extensions'],
+            ['contain' => 'component'],
+            ['contain' => 'Sections'],
+            ['contain' => 'backendsection'],
+            ['follow' => 'page_reference', 'to' => 'Page'],
+        ],
+        'frontendPages' => [
+            ['contain' => 'extensions'],
+            ['contain' => 'component'],
+            ['contain' => 'Sections'],
+            ['contain' => 'frontendsection'],
+            ['follow' => 'page_reference', 'to' => 'Page'],
+        ],
+    ];
+
     /**
      * The selectors, ready for the engine.
      *

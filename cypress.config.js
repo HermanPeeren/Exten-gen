@@ -22,6 +22,13 @@ export default defineConfig({
     video: false,
     screenshotOnRunFailure: true,
 
+    // Beside the specs, where `.gitignore` has been expecting them. Cypress
+    // defaults to `cypress/screenshots` at the repository root, so a failing
+    // run left an untracked directory nobody had ignored - which shows up as
+    // something to commit the next time anyone looks at `git status`.
+    screenshotsFolder: 'tests/cypress/screenshots',
+    downloadsFolder: 'tests/cypress/downloads',
+
     // Joomla's admin is one origin and one session; nothing here talks to a
     // third party, so the browser need not police it.
     chromeWebSecurity: false,

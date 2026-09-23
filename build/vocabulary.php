@@ -59,14 +59,29 @@ $vocabulary = Vocabulary::fromRegistries(
     $templates
 );
 
+// And what those selectors *are*, which is the half 3.6 added. A name on its
+// own tells an editor what may be picked and tells the engine nothing, so the
+// meaning stayed a closure written against ER1's shape. Rebuilt rather than
+// passed to `fromRegistries()`, because a registry holds callables and there is
+// nothing in one to read a path out of - the paths are their own list, and the
+// test below is what keeps that list and the registry naming the same four.
+$vocabulary = new Vocabulary(
+    $vocabulary->target,
+    $vocabulary->selectors,
+    $vocabulary->derivations,
+    $vocabulary->templates,
+    Joomla6Selectors::PATHS
+);
+
 $path = $component . '/src/Generator/Rules/joomla6.vocabulary.json';
 
 file_put_contents($path, $vocabulary->toJson());
 
 printf(
-    "vocabulary written for %s: %d selectors, %d derivations, %d templates\n",
+    "vocabulary written for %s: %d selectors (%d described), %d derivations, %d templates\n",
     $vocabulary->target,
     \count($vocabulary->selectors),
+    \count($vocabulary->paths()),
     \count($vocabulary->derivations),
     \count($vocabulary->templates)
 );

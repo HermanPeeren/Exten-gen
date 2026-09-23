@@ -83,5 +83,49 @@
         "upper",
         "ucfirst",
         "lcfirst"
-    ]
+    ],
+    "selectorPaths": {
+        "root": [],
+        "entities": [
+            {
+                "contain": "datamodel"
+            }
+        ],
+        "backendPages": [
+            {
+                "contain": "extensions"
+            },
+            {
+                "contain": "component"
+            },
+            {
+                "contain": "Sections"
+            },
+            {
+                "contain": "backendsection"
+            },
+            {
+                "follow": "page_reference",
+                "to": "Page"
+            }
+        ],
+        "frontendPages": [
+            {
+                "contain": "extensions"
+            },
+            {
+                "contain": "component"
+            },
+            {
+                "contain": "Sections"
+            },
+            {
+                "contain": "frontendsection"
+            },
+            {
+                "follow": "page_reference",
+                "to": "Page"
+            }
+        ]
+    }
 }

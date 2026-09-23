@@ -40,7 +40,6 @@ use Joomla\CMS\Workflow\Workflow;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
-use Yepr\Component\Extengen\Administrator\Reference\Er1;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
@@ -260,38 +259,11 @@ class ProjectModel extends AdminModel
 	 */
 	private function referenceTable(): array
 	{
-		$entry = $this->metalanguage();
-
-		if ($entry === null) {
-			return [];
-		}
-
-		$path = $entry->referenceTablePath();
-
-		if ($path === '') {
-			// A language the component ships rather than one it imported.
-			// Nothing does this since 3.5 turned ER1 into a package, and the
-			// branch stays because the library still allows one.
-			return Er1::TABLE;
-		}
-
-		$file = JPATH_ROOT . '/' . $path;
-
-		if (!is_file($file)) {
-			return [];
-		}
-
-		try {
-			$table = json_decode((string) file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
-		} catch (\JsonException $e) {
-			// A dropdown with nothing in it reads as "there is nothing to
-			// point at", which is a lie worth not telling twice - the import
-			// refuses a package whose files do not match their hashes, so
-			// getting here means somebody edited one afterwards.
-			return [];
-		}
-
-		return \is_array($table) ? $table : [];
+		// Resolved where the generate screen resolves it, which is the point:
+		// the dropdown offering what a field may point at and the selector
+		// following that reference during generation have to read the same
+		// table, or the model will offer a choice the generator cannot follow.
+		return Metalanguages::referenceTable($this->metalanguage());
 	}
 
 	/**

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Metalanguage;
 
 use Joomla\Database\DatabaseInterface;
+use Yepr\Component\Extengen\Administrator\Reference\Er1;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
@@ -110,5 +111,60 @@ final class Metalanguages
     public static function importer(DatabaseInterface $database, string $siteRoot): MetalanguageImporter
     {
         return new MetalanguageImporter($database, self::TABLE, $siteRoot);
+    }
+
+    /**
+     * What a language says can be pointed at, as `ReferenceIndex` reads it.
+     *
+     * Two screens need this and they need the same answer. The edit screen has
+     * needed it since 3.2, to fill a reference dropdown; the generate screen
+     * needs it since 3.6, because a selector that follows a reference follows
+     * it with this. They were one method apart from becoming two answers to the
+     * same question, and the interesting half of that question - what an
+     * unreadable table means - is not one to answer twice.
+     *
+     * An empty table is what every failure returns, and the two callers are
+     * right to read it differently. A dropdown with nothing in it says "there
+     * is nothing to point at", which is a small lie on a screen somebody is
+     * using to fix the problem. A generation run that follows no references
+     * produces a component missing whole files, so `GenerateModel` refuses
+     * rather than running on one.
+     *
+     * @param   ?MetalanguageEntry  $entry  The language, or null for none.
+     *
+     * @return  array<string, array<string, mixed>>
+     *
+     * @since   1.4.0
+     */
+    public static function referenceTable(?MetalanguageEntry $entry): array
+    {
+        if ($entry === null) {
+            return [];
+        }
+
+        $path = $entry->referenceTablePath();
+
+        if ($path === '') {
+            // A language the component ships rather than one it imported.
+            // Nothing does this since 3.5 turned ER1 into a package, and the
+            // branch stays because the library still allows one.
+            return Er1::TABLE;
+        }
+
+        $file = JPATH_ROOT . '/' . $path;
+
+        if (!is_file($file)) {
+            return [];
+        }
+
+        try {
+            $table = json_decode((string) file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            // The import refuses a package whose files do not match their
+            // hashes, so getting here means somebody edited one afterwards.
+            return [];
+        }
+
+        return \is_array($table) ? $table : [];
     }
 }

@@ -64,6 +64,51 @@ final class ProjectRepository
     }
 
     /**
+     * Which metalanguage this project says it is written in.
+     *
+     * The binding 3.4 gave a project, read straight off the row rather than
+     * through `ProjectModel`: the generate screen needs it before it runs
+     * anything, and it has an id and a database and no item.
+     *
+     * A row that is missing returns null, and so does one whose binding is
+     * empty - which no row has had since the install script filled them in, and
+     * which means "this project does not say" rather than "this project is
+     * written in the default". There is no default; that is what 3.4 was for.
+     *
+     * @return  ?array{key: string, version: string}
+     *
+     * @since   1.4.0
+     */
+    public function binding(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        $query = $this->db->getQuery(true)
+            ->select($this->db->quoteName(['metalanguage_key', 'metalanguage_version']))
+            ->from($this->db->quoteName('#__extengen_projects'))
+            ->where($this->db->quoteName('id') . ' = :id')
+            ->bind(':id', $id, ParameterType::INTEGER);
+
+        $this->db->setQuery($query);
+
+        $row = $this->db->loadObject();
+
+        if ($row === null) {
+            return null;
+        }
+
+        $key = trim((string) ($row->metalanguage_key ?? ''));
+
+        if ($key === '') {
+            return null;
+        }
+
+        return ['key' => $key, 'version' => trim((string) ($row->metalanguage_version ?? ''))];
+    }
+
+    /**
      * The raw stored JSON, or null when the row is missing or empty.
      *
      * @since  0.9.0
