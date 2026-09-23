@@ -100,6 +100,17 @@ if ($library !== null) {
     echo '  library/                 ' . basename($library) . "\n";
 }
 
+// The languages this component ships, as packages. ER1 is one: it used to be
+// twenty-one hand-written form files, and 3.5 made it a generated metalanguage
+// like any other - so it installs the way an imported one does, through the
+// same validated path, rather than by being copied into place and trusted.
+foreach (glob(\dirname(__DIR__) . '/packages/*.zip') ?: [] as $package) {
+    $zip->addFile($package, 'packages/' . basename($package));
+    $added++;
+
+    echo '  packages/                ' . basename($package) . "\n";
+}
+
 $zip->close();
 
 printf(
