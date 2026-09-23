@@ -1326,12 +1326,20 @@ and it is the cost that was chosen.
 the attribute out means. The comparison was over-reporting, and a number nobody checked would
 have made the remaining work look half again as large as it is.
 
-**And one that is not presentation, found by counting.** Seven are default *values* -
-`default="detailspage"` on a page's type, `default="NOW"` on a creation date, `default="en"`
-on a language code. "A new page is a detail page unless you say otherwise" is a fact about
-the language, not about how a form looks, and without it a generated form opens with nothing
-selected where the hand-written one opens with something. It wants the same small model
-addition `is_assigned` got, and it is the next thing in this step.
+**And one that is not presentation, found by counting - now done.** Seven were default
+*values*: `default="detailspage"` on a page's type, `default="NOW"` on a creation date,
+`default="en"` on a language code. A property carries one now.
+
+The line between this and `Presentation` is whether another target would want it. "A new page
+is a detail page unless you say otherwise" is part of what the language means and is the same
+wherever it is generated to; `size="40"` is about this Joomla form and nothing else. It sits
+on the property rather than the feature, because a default is a value of the property's
+datatype - what a link would default to is a reference to something that does not exist yet.
+
+The model checks one thing about itself here: a default on a closed list is one of that
+list's own answers. A default naming something the list does not offer renders as nothing
+selected, which looks exactly like having no default - invisible on screen, and surviving
+until somebody saves a row without touching the field.
 
 **The identity row is fixed**, because it was the only one that made a generated form *wrong*
 rather than different. "Hide the identity" is the obvious rule and it is wrong: LionCore M3's
