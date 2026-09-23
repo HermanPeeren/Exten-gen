@@ -1304,7 +1304,7 @@ than a category:
 | `COM_EXTENGEN_*` became `YEPR_ER1_*` | 10 | Nothing, same decision - but the forty-odd existing strings need carrying across |
 | A generated `LIonWeb_key` per form | 20 | Nothing: it is how a stored node says what it is |
 | A field changed type: `editor`, `Slot`, `HtmlTypes` | 3 | The custom-field-type gap 4.2 already names |
-| A closed list became a text box: `page_type`, `link_type`, `property.type` | 3 | The reader records a `list` as a String. It should read one as an Enumeration, which the generator already emits |
+| ~~A closed list became a text box~~ | ~~3~~ | **Done.** `page_type`, `link_type` and a Property's `type` are enumerations, and generate the dropdown they came from |
 | ~~The identity property renders as a text box, not `hidden`~~ | ~~5~~ | **Done.** A property says whether its value is assigned or entered |
 
 **The identity row is fixed**, because it was the only one that made a generated form *wrong*
@@ -1316,9 +1316,10 @@ fact about the language rather than presentation. `MetaFormsTest` guards the oth
 so the fix cannot be "corrected" later into hiding every identity.
 
 Splitting the type row in two was the other thing that fell out: three of those nine are
-custom field types and belong to 4.2, and three are closed lists the reader flattened to
-String when the generator can already emit an Enumeration. The second three are a gap in the
-reader, not in the language.
+custom field types and belong to 4.2, and three were closed lists the reader flattened to
+String when the generator can already emit an Enumeration. Those three are **done** - the
+literals keep each option's own value and text, so `page_type` generates ER1's five kinds of
+page in order, with its own wording. Three type differences remain, all custom field types.
 
 
 **3.6 Selectors as data.** `Joomla6Selectors::entities()` is PHP hard-keyed to ER1. A
