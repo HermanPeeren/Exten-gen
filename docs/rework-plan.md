@@ -1303,11 +1303,22 @@ than a category:
 | A plain-text label became a language-scoped constant | 44 | Nothing: this is 3.3's decision working. The text moves into the package's `.ini` |
 | `COM_EXTENGEN_*` became `YEPR_ER1_*` | 10 | Nothing, same decision - but the forty-odd existing strings need carrying across |
 | A generated `LIonWeb_key` per form | 20 | Nothing: it is how a stored node says what it is |
-| A field changed type (`editor`, `Slot`, `HtmlTypes` became `textarea`/`text`) | 9 | The custom-field-type gap 4.2 already names |
-| The identity property renders as a text box, not `hidden` | 5 | A real defect: `entity_id` and friends must stay hidden, and the model has no way to say so |
+| A field changed type: `editor`, `Slot`, `HtmlTypes` | 3 | The custom-field-type gap 4.2 already names |
+| A closed list became a text box: `page_type`, `link_type`, `property.type` | 3 | The reader records a `list` as a String. It should read one as an Enumeration, which the generator already emits |
+| ~~The identity property renders as a text box, not `hidden`~~ | ~~5~~ | **Done.** A property says whether its value is assigned or entered |
 
-The last row is the one to fix first, because it is the only one that would make a generated
-form *wrong* rather than different.
+**The identity row is fixed**, because it was the only one that made a generated form *wrong*
+rather than different. "Hide the identity" is the obvious rule and it is wrong: LionCore M3's
+identity is `key` and a person types it into a visible field, while ER1's `entity_id` is a
+surrogate nobody enters. Hiding is what *assigned* means, not what identity means, and only
+the language knows which a property is - so a Feature carries `is_assigned`, and that is a
+fact about the language rather than presentation. `MetaFormsTest` guards the other direction,
+so the fix cannot be "corrected" later into hiding every identity.
+
+Splitting the type row in two was the other thing that fell out: three of those nine are
+custom field types and belong to 4.2, and three are closed lists the reader flattened to
+String when the generator can already emit an Enumeration. The second three are a gap in the
+reader, not in the language.
 
 
 **3.6 Selectors as data.** `Joomla6Selectors::entities()` is PHP hard-keyed to ER1. A
