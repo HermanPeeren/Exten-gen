@@ -96,7 +96,7 @@ describe('metalanguages', () => {
     cy.get('#jform_metalanguage option').then(($options) => {
       const texts = [...$options].map((o) => o.textContent.trim());
 
-      expect(texts, 'the built-in is offered').to.include('ER1 1.0');
+      expect(texts, 'the shipped language is offered').to.include('ER1 1.1');
       expect(texts, 'and the imported one').to.include('Testlang 1.0');
     });
   });
@@ -207,6 +207,37 @@ describe('metalanguages', () => {
 
     // And it stopped before writing: no file count, no package.
     cy.get('body').should('not.contain.text', '.zip');
+  });
+
+  /**
+   * A project opens through the version of ER1 this release ships: step 4.2.
+   *
+   * ER1 1.1 adds four optional properties to an edit field - a field class,
+   * where it lives, a validation rule and where *it* lives, and which group of
+   * the form the field belongs to. All four are text boxes three subforms deep,
+   * which is precisely where a change stops being visible: every unit test
+   * passed against a language whose new fields nothing rendered, because the
+   * generator they exercise never opens a page.
+   *
+   * The install script moves a project bound to ER1 1.0 forward, since the
+   * additions are optional and every stored model is still valid - so this also
+   * says the migration happened, by opening a project that existed before it.
+   */
+  it('opens a project through the shipped version, with the fields 4.2 added', () => {
+    cy.visitExtengen('projects');
+    cy.get('#adminForm a[href*="task=project.edit"]').first().click();
+
+    cy.get('#jform_datamodel-lbl', { timeout: 20000 }).should('exist');
+
+    // Deep in a repeating subform, so what carries them is the row template
+    // Joomla renders into the page rather than a field with an id.
+    cy.document().then((doc) => {
+      const html = doc.documentElement.outerHTML;
+
+      for (const name of ['htmltype', 'field_prefix', 'validate', 'rule_prefix', 'fieldset']) {
+        expect(html, 'the edit-field form carries ' + name).to.contain(name);
+      }
+    });
   });
 
   /**

@@ -12,7 +12,7 @@ use Yepr\Gen\Core\Package\PackageReader;
  * Until 3.5 that was `src/administrator/components/com_extengen/forms`, and the
  * rules about them - every reference points at a type the index carries, every
  * slot names an owner the catalogue knows - read that directory. ER1 is a
- * generated metalanguage now and ships as `packages/ER1-1.0.zip`, so the rules
+ * generated metalanguage now and ships as `packages/ER1-<version>.zip`, so the rules
  * read the package. What they assert has not changed; where the forms are has.
  *
  * **Read through `PackageReader` rather than unzipped by hand**, so that a

@@ -167,9 +167,15 @@ final class FormsTest extends TestCase
             $class  = basename($file->getFilename(), 'Field.php');
 
             // A field in a subdirectory of Field/ is named for its path:
-            // `Modal/ProjectField` is `type="modal_project"`, because Joomla
-            // turns an underscore into a namespace step before looking. So the
-            // expected `$type` is the path, not just the class.
+            // `Modal/ProjectField` would be `type="modal_project"`, because
+            // Joomla turns an underscore into a namespace step before looking.
+            // So the expected `$type` is the path, not just the class.
+            //
+            // Nothing is in a subdirectory at the moment - that one was the
+            // example and 4.2 deleted it, having found that no form had asked
+            // for it since it was carried over from Extengen. The rule stays,
+            // because the naming is Joomla's and putting a class back in a
+            // folder is a thing somebody will do without thinking about it.
             $relative = str_replace(
                 '\\',
                 '/',

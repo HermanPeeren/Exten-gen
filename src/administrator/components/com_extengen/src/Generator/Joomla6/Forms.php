@@ -131,6 +131,49 @@ $log = array_merge($log, $append);
 				$fieldset->setAttributeNode($fieldprefix);
 				$root->appendChild($fieldset);
 
+				// Groups, which 4.2 added: a generated form was one fieldset and
+				// every field went in it. An edit field may now name a group, and
+				// fields sharing a name are rendered together.
+				//
+				// The one above stays the default and stays first, so a model that
+				// names no group generates exactly the form it generated before -
+				// which is what lets the golden files stand unchanged.
+				//
+				// Whether a group becomes a tab is the template's business. Joomla
+				// renders fieldsets as tabs or as blocks depending on the layout,
+				// and the model saying "these belong together" is the part the
+				// model can honestly know.
+				$fieldsets = ['' => $fieldset];
+
+				$fieldsetFor = function (string $name) use (
+					$form,
+					$root,
+					&$fieldsets,
+					$addLanguageString,
+					$componentName,
+					$formName
+				): \DOMElement {
+					$name = trim($name);
+
+					if ($name === '') {
+						return $fieldsets[''];
+					}
+
+					if (!isset($fieldsets[$name])) {
+						$group = $form->createElement('fieldset');
+						$group->setAttributeNode(new \DOMAttr('name', $name));
+						$group->setAttributeNode(new \DOMAttr(
+							'label',
+							$addLanguageString($componentName, $formName, $name, "pageName_FIELDSET_fieldName_LABEL", '%fieldName%')
+						));
+						$root->appendChild($group);
+
+						$fieldsets[$name] = $group;
+					}
+
+					return $fieldsets[$name];
+				};
+
 				// Add fields to the fieldset
 
 				// Find the entity referenced in that page todo: multiple entities?
@@ -147,6 +190,19 @@ $log = array_merge($log, $append);
 					// Add a FIELD to the fieldset
 					$formField = $form->createElement('field');
 
+					// The edit field the page declares for this field, if it declares
+					// one. Looked up here rather than inside the property branch that
+					// used to be the only thing reading it: what 4.2 added - a field
+					// class, its namespace, a validation rule and a group - is about
+					// the field on the form, whatever kind of thing it holds.
+					$editfieldFor = null;
+
+					foreach ((array) ($page->editfields ?? []) as $candidate) {
+						if (($candidate->attribute->field_reference ?? null) === $field->field_id) {
+							$editfieldFor = $candidate;
+						}
+					}
+
 					// Name
 					$name = new \DOMAttr('name', $field->field_name);
 					$formField->setAttributeNode($name);
@@ -160,9 +216,10 @@ $log = array_merge($log, $append);
 						$type     = $this->standard2HtmlTypes($property->type);
 
 						// Is this field in the editFields?
-						foreach ($page->editfields as $editfield) {
-							// The current field is in the editfields
-							if (($editfield->attribute->field_reference) == $field->field_id) {
+						if ($editfieldFor !== null) {
+							$editfield = $editfieldFor;
+
+							{
 								// If in editfields, then use the HtmlType defined there.
 								$type = $editfield->htmltype;
 
@@ -310,7 +367,30 @@ $log = array_merge($log, $append);
                     );
 					$formField->setAttributeNode($description);
 
-					$fieldset->appendChild($formField);
+					// What the model can now say about the field itself: step 4.2.
+					//
+					// The fieldset already carries this component's own Field and Rule
+					// namespaces, so a class the generated extension declares resolves
+					// without any of this. A prefix is for the other case - a class
+					// borrowed from somewhere else - and is written on the field rather
+					// than the fieldset because `Form::loadFile()` collects
+					// addfieldprefix from every element in the document, so one field
+					// may carry its own without widening the search for its neighbours.
+					foreach (
+						[
+							'field_prefix' => 'addfieldprefix',
+							'validate'     => 'validate',
+							'rule_prefix'  => 'addruleprefix',
+						] as $property => $attribute
+					) {
+						$value = trim((string) ($editfieldFor->{$property} ?? ''));
+
+						if ($value !== '') {
+							$formField->setAttributeNode(new \DOMAttr($attribute, $value));
+						}
+					}
+
+					$fieldsetFor((string) ($editfieldFor->fieldset ?? ''))->appendChild($formField);
 				}
 
 				if (($page->page_type) != "subform") {

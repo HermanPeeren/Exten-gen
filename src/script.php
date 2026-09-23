@@ -156,22 +156,40 @@ class Com_ExtengenInstallerScript
                 continue;
             }
 
-            $this->bindLooseProjects($database, $entry->key, $entry->version);
+            $this->bindProjects($database, $entry->key, $entry->version);
         }
     }
 
     /**
-     * Point projects that name no language at the one they were written in.
+     * Point projects at the version of the shipped language this release carries.
      *
-     * Every project made before 3.4 carries an empty binding, and until now an
-     * empty binding meant "the forms this component ships" - which were ER1's.
-     * They still are ER1's; they arrive as a package instead. So the binding is
-     * filled in rather than left to a fallback, because a fallback is a second
-     * answer to "which language" and the whole point of 3.4 was that there is
-     * one.
+     * Two cases, and they are the same statement made at two different times.
      *
-     * Only the empty ones. A project somebody bound to another language stays
-     * bound to it.
+     * *A project that names no language at all.* Every project made before 3.4
+     * carries an empty binding, and an empty binding used to mean "the forms
+     * this component ships" - which were ER1's. They still are ER1's; they
+     * arrive as a package instead. So the binding is filled in rather than left
+     * to a fallback, because a fallback is a second answer to "which language"
+     * and the whole point of 3.4 was that there is one.
+     *
+     * *A project bound to an older version of it.* 4.2 is the first time the
+     * shipped language has moved: ER1 1.1 adds four optional properties to an
+     * edit field, and nothing else. Every model stored under 1.0 is a valid 1.1
+     * model - that is what "optional" buys - so the choice is between moving
+     * these projects forward and leaving every project that already exists
+     * unable to reach the thing the version was bumped for.
+     *
+     * **This is not a project changing language**, which the edit screen
+     * refuses and should: the forms would stop describing what is in the
+     * database, and a save would drop whatever the new forms have no field for.
+     * A later version of the same language adds fields and removes none, so
+     * nothing a project holds becomes unreachable. If a version ever does
+     * remove something, this has to become a migration that reads the models
+     * rather than one line of SQL - and the release that does it is the one
+     * that has to say so.
+     *
+     * Only this component's own language, by key. A language somebody imported
+     * is theirs, and its versions are not this script's business.
      *
      * @param   DatabaseInterface  $database  The site's database.
      * @param   string             $key       The language's key.
@@ -179,9 +197,9 @@ class Com_ExtengenInstallerScript
      *
      * @return  void
      */
-    private function bindLooseProjects($database, string $key, string $version): void
+    private function bindProjects($database, string $key, string $version): void
     {
-        if ($key !== 'ER1') {
+        if ($key !== Metalanguages::SHIPPED) {
             return;
         }
 
@@ -189,16 +207,22 @@ class Com_ExtengenInstallerScript
             ->update($database->quoteName('#__extengen_projects'))
             ->set($database->quoteName('metalanguage_key') . ' = :key')
             ->set($database->quoteName('metalanguage_version') . ' = :version')
-            ->where($database->quoteName('metalanguage_key') . " = ''")
+            ->where(
+                '(' . $database->quoteName('metalanguage_key') . " = ''"
+                . ' OR (' . $database->quoteName('metalanguage_key') . ' = :existing'
+                . ' AND ' . $database->quoteName('metalanguage_version') . ' <> :current))'
+            )
             ->bind(':key', $key)
-            ->bind(':version', $version);
+            ->bind(':version', $version)
+            ->bind(':existing', $key)
+            ->bind(':current', $version);
 
         try {
             $database->setQuery($query)->execute();
         } catch (Throwable $e) {
             // A fresh install has no projects table yet when this runs on some
-            // orderings, and a site with no loose projects is the ordinary
-            // case. Neither is worth a warning on screen.
+            // orderings, and a site with nothing to move is the ordinary case.
+            // Neither is worth a warning on screen.
             unset($e);
         }
     }

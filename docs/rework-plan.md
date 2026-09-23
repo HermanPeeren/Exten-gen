@@ -513,9 +513,9 @@ because each is invisible until something needs it and then blocks a whole line 
 
 | Gap | Model today | Bites at |
 |---|---|---|
-| A custom form field type | `editfield.xml` picks among *stock* Joomla types through `htmltype`. A generated extension cannot declare a field type of its own. | 4.2 |
-| A custom validation rule | Nothing. Extengen's own `LetterRule` has no counterpart in the model. | 4.2 |
-| Tabs and subform layouts on a generated form | Nothing. Generated forms are one fieldset. | 4.2 |
+| ~~A custom form field type~~ | `editfield.xml` picks among *stock* Joomla types through `htmltype`. A generated extension cannot declare a field type of its own. | **Closed at 4.2**, and it was half closed already: the fieldset has always carried the extension's own `Field` namespace |
+| ~~A custom validation rule~~ | Nothing. Extengen's own `LetterRule` has no counterpart in the model. | **Closed at 4.2** |
+| ~~Tabs and subform layouts on a generated form~~ | Nothing. Generated forms are one fieldset. | **Closed at 4.2**, as groups. Whether a group is a tab is the template's business |
 
 None of the three blocks v1, and that is worth stating rather than assuming: the current
 generator emits only stock field types - `text`, `sql` for a relation, `hidden`, `number`,
@@ -1586,6 +1586,70 @@ it.
 custom form field type, a custom validation rule, and tabs or subform layouts on a
 generated form. Re-measure first - 1.9 may have removed most of the need - then add only
 what is still missing.
+
+**Done, and the measurement was most of it.** Eleven custom field classes and one rule were
+what the gap was sized by. Four files are left, and three of the four are not the gap:
+
+| What is left | Where it is used | What it needs |
+|---|---|---|
+| `Reference` | five fields in ER1's own forms | Nothing. It is the shared library's, and it *is* what 1.9 built |
+| `HtmlTypes`, `Slot` | ER1's own forms | Nothing. 3.5 gave LionCore M3 the three properties that say which class edits a property |
+| `Metalanguage` | `project_chrome.xml` | Nothing. The half 3.2 decided is not generated, for reasons that have not changed |
+| `LetterRule` | `project_chrome.xml` | Same |
+| `Modal/ProjectField` | nothing at all | Deleted. It was carried over from Extengen and nothing has referred to it since |
+
+So the eight that went were 1.9's doing, exactly as Stage 1 guessed, and what was actually
+missing came to **four optional properties on one concept**: `field_prefix`, `validate`,
+`rule_prefix` and `fieldset` on ER1's `Editfield`. ER1 1.1.
+
+*The first gap was half closed and nobody had noticed.* The fieldset in a generated form has
+carried the generated extension's own `Field` and `Rule` namespaces since long before this, so
+a class that extension declares was always resolvable - what was missing was a way to *name*
+one, and a way to point at a class that lives somewhere else. `htmltype` already holds the
+name and `parameters` already become attributes; only the prefix had nowhere to go. That is
+why the whole of gaps 1 and 2 is four properties rather than a mechanism.
+
+*A prefix goes on the field, not the fieldset*, for the reason 3.5 found on the other side of
+the family: `Form::loadFile()` collects `addfieldprefix` from every element in the document, so
+one field may carry its own without widening the search for its neighbours. On the fieldset it
+would make every field resolvable against somebody else's namespace.
+
+*The third gap is groups, and stops there.* An edit field may name one; fields sharing a name
+are rendered together. Whether a group becomes a tab is the template's business - Joomla
+renders fieldsets as tabs or as blocks depending on the layout - and "these belong together" is
+the part a model can honestly know. A model naming no group generates the single fieldset it
+always did, which is what leaves the golden files untouched.
+
+*Which is also the problem.* A change whose success criterion is "the golden files did not
+move" has no test until somebody writes one that uses the new thing, so `EditFieldGapsTest`
+does, and says so in its own docblock: every assertion in it would pass against the generator
+as it stood before 4.2, on the fixtures that were already there.
+
+*ER1 moved version, and that has a cost this step had to pay.* A project bound to ER1 1.0 on a
+site that has 1.1 is a project nothing can open. The four additions are optional, so every
+model stored under 1.0 is a valid 1.1 model, and the install script moves projects forward
+rather than stranding them - `bindLooseProjects` became `bindProjects` and now handles both an
+empty binding and an older version of the shipped language. This is not a project changing
+language, which the edit screen refuses and should. If a version ever *removes* something, this
+has to become a migration that reads the models, and the release that does it has to say so.
+
+*And one thing that only existed in a browser.* Exporting a language package was something only
+the screen could do: 3.5 built ER1's package by clicking, and recorded what came out, so the
+plan said what the package contains and nothing said how to make it again. `tools/export-language.php`
+in Meta-gen runs the same target through the same pipeline. Regenerating ER1 for this step is
+the second time it has been needed.
+
+*Verified on a real site.* The package installs, the twelve ER1 projects move from 1.0 to 1.1
+and the thirteen Testlang ones are left alone, and the four new fields render three subforms
+deep on a project edit page - which is asserted, because a text box nothing puts in the page is
+exactly what every other gate here cannot see.
+
+*Not closed, and not part of this step:* the fourth gap 3.5 found, that LionCore M3 cannot say
+"this feature only applies when". That one is about the metalanguage rather than about ER1, and
+it is still where 3.5 left it.
+
+*Done:* 256 unit tests, PHPStan, phpcs and 25 Cypress specs green in Exten-gen; 241 and the
+same three gates in Meta-gen.
 
 **4.3 Self-hosting.** Exten-gen generates Exten-gen. Everything it needs exists by now:
 the engine from Stage 0, working generation from Stage 1, modelled generators from Stage
