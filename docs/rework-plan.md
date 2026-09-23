@@ -1253,27 +1253,48 @@ attributes the model cannot hold, the Joomla item chrome on a root form, how lan
 strings are named, and three places where the hand-written files are internally
 inconsistent.
 
-**Blocked, one step from done, and the blocker is worth the step.** `packages/ER1-1.0.zip`
-is built and ships in the installer. Nothing installs it, because switching over means
-retiring the hand-written forms and that loses two working features.
+**Done.** ER1 is a generated package, the twenty-four hand-written forms are deleted, and
+`MetalanguageEntry::builtIn()` is gone. The component installs `packages/ER1-1.0.zip` through
+`MetalanguageImporter` - the same reader and the same refusal an uploaded package goes
+through - and then fills in every project whose binding was empty. A fallback would have been
+a second answer to "which language", and 3.4 exists so that there is one.
 
-ER1 uses three custom field types and two of them do something. `type="Slot" owner="Entity"`
-is the custom-code picker, and its choices come from `SlotCatalogue` rather than from a list
-in the form; `type="HtmlTypes"` is the html-type picker. A modelled language cannot name a
-field class, and cannot pass one a parameter like `owner`, so the generated set has a plain
-text box where each of those was. `editor` is the third and costs only a nicer textarea.
+`project_chrome.xml` is the one form file left, for the reason 3.2 gave: alias, published,
+access, catid, ordering and params are not derivable from a language at all.
 
-So **3.5 cannot finish until a Property can name a field type and give it parameters**, which
-is the first of the three gaps 4.2 lists - and 4.2 says to re-measure and add only what is
-still missing. This is the measurement: ER1 needs it, so it comes here rather than there.
+The contract tests moved with the forms. `ReferenceContractTest` and `SlotContractTest` read
+the shipped package now, through `PackageReader`, so a damaged package fails them the way it
+would fail an install rather than yielding no forms and letting every rule pass by checking
+nothing.
 
-It is a small addition of the same kind as `is_assigned` and `default_value`: a property may
-say it is edited with a named field class, and carry key-value parameters for it. The
-alternative is shipping the generated set with the two pickers gone, which is a working
-feature removed to meet a date.
+*The blocker, and what it cost.* Retiring the forms first time round lost two working
+features: ER1 uses three custom field types and two of them do something - `type="Slot"
+owner="Entity"` is the custom-code picker, whose choices come from `SlotCatalogue`, and
+`type="HtmlTypes"` is the html-type picker. Generated as text boxes they stop being pickers.
+So the first of 4.2's three gaps was brought forward: a property may name a field class, the
+namespace it lives in, and the attributes that class reads. 4.2 says to re-measure and add
+only what is still missing, and this was the measurement.
 
-`SlotContractTest` is what found it, by refusing to pass having checked nothing. A rule that
-stops reaching its subject stops being a rule, and this one says so.
+`addfieldprefix` goes on the field rather than the fieldset, because `Form::loadFile()`
+collects it from every element in the document. **This is the one place a language may name a
+component**, and the exception is deliberate: paths and language keys must not, because a
+package is loaded by more than one component, but a field class genuinely lives in one.
+
+*And one thing the browser caught that the counting had got wrong.* `min="1"` was filed under
+presentation and lost with the widths. It is not presentation: it says the thing always has
+at least one of these, which is multiplicity, which LionCore has and which `is_optional`
+already held. A project's `pages` is not optional, so the hand-written form opened with a page
+in it and the generated one opened with none - and `reference-fields.cy.js` said so, in a
+comment written long before any of this.
+
+*Verified from a clean install, twice.* The package unpacks 19 forms, the row appears, six
+loose projects are bound, and a project opens and edits through the generated forms -
+including adding an entity and seeing it in a reference dropdown, which is a spec that has
+always done that, now doing it against forms nobody wrote.
+
+
+`SlotContractTest` is what found the blocker, by refusing to pass having checked nothing. A
+rule that stops reaching its subject stops being a rule, and this one said so.
 
 **Started: ER1 is modelled, and the differences are an inventory rather than an argument.**
 `tools/import-forms.php` in Meta-gen reads a set of Joomla forms back into a language, and
