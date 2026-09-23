@@ -1253,6 +1253,63 @@ attributes the model cannot hold, the Joomla item chrome on a root form, how lan
 strings are named, and three places where the hand-written files are internally
 inconsistent.
 
+**Started: ER1 is modelled, and the differences are an inventory rather than an argument.**
+`tools/import-forms.php` in Meta-gen reads a set of Joomla forms back into a language, and
+`tests/Fixtures/languages/er1-full.json` is what it made of Exten-gen's twenty-six files: 19
+classifiers, 4 datatypes, `Project` at the root, and `Field` abstract over `Property` and
+`EntityReferenceField`.
+
+**Why a reader rather than typing it.** ER1 is about a hundred and fifty fields. Hand-written
+JSON of that size is something nobody reviews and everybody trusts. What the reader produces
+can be read beside the files it came from - and it says out loud every judgement it makes,
+so the notes are as much the output as the model is.
+
+**What the round trip does and does not prove.** Generating forms from a model derived *from*
+forms shows the two are inverses; it does not show the model is a good one. Two things keep
+it honest: the input is hand-written, so anything the generator does differently shows up as
+a difference instead of being absorbed, and the reader is deliberately naive, so a generator
+convention cannot be quietly encoded in it to make a diff go away. `Er1ModelTest` pins the
+model rather than the reader, because the reader ran once and the model is what ships.
+
+**Two findings, and the second is the one worth having.**
+
+*Five of ER1's twenty-six forms are dead.* `pages.xml` is pointed at by nothing, and it is the
+root of a subtree of four more - `indexpage.xml`, `detailspage.xml` and their two customcode
+forms. The root form reaches `page.xml`, singular, which is a different design. So the
+language is 21 forms, and the generated set is not missing anything. This is 3.1's finding in
+a new place, and Exten-gen has no test for reachability the way Meta-gen's `FormsTest` does;
+adding one belongs here.
+
+*`showon` means two different things, and only one of them is subtyping.* `field.xml` offers
+property or reference and answers each with exactly one subform: every choice covered, none
+shared, the subform *is* the content for that kind. That is a classifier with two subtypes.
+`page.xml` offers five kinds of page and then shows `filters` and `presentationcolumns` for
+an index page and `editfields` for two of the others - which are not kinds of page at all,
+but ordinary containments that only apply sometimes. A page still has a name and an entity
+whichever it is.
+
+The reader calls it subtyping only when the conditional subforms *partition* the choices, and
+reports the rest as a gap - because **LionCore M3 as modelled here cannot say "only when"**. A
+feature has no condition. That is a fourth model gap to set beside the three under 4.2, and
+it is the first one found by trying to model something real rather than by looking for them.
+
+**The rest of 3.5, as an inventory.** Comparing the generated set against the hand-written one
+sorts every difference into six kinds, and each is now a decision with a number on it rather
+than a category:
+
+| Difference | Count | What it needs |
+|---|---|---|
+| Presentation the model cannot hold (`size`, `class`, `min`, `buttons`, `layout`, `default`) | 62 | Somewhere in the model, or a defaults table in the generator |
+| A plain-text label became a language-scoped constant | 44 | Nothing: this is 3.3's decision working. The text moves into the package's `.ini` |
+| `COM_EXTENGEN_*` became `YEPR_ER1_*` | 10 | Nothing, same decision - but the forty-odd existing strings need carrying across |
+| A generated `LIonWeb_key` per form | 20 | Nothing: it is how a stored node says what it is |
+| A field changed type (`editor`, `Slot`, `HtmlTypes` became `textarea`/`text`) | 9 | The custom-field-type gap 4.2 already names |
+| The identity property renders as a text box, not `hidden` | 5 | A real defect: `entity_id` and friends must stay hidden, and the model has no way to say so |
+
+The last row is the one to fix first, because it is the only one that would make a generated
+form *wrong* rather than different.
+
+
 **3.6 Selectors as data.** `Joomla6Selectors::entities()` is PHP hard-keyed to ER1. A
 generator written for an arbitrary metalanguage needs a selector that is a path through
 *that* language's concept model, so `Vocabulary` gains a source half and the rule engine
