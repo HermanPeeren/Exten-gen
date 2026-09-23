@@ -44,7 +44,7 @@ class Com_ExtengenInstallerScript
     /**
      * The oldest library release that has everything this version calls.
      */
-    private const LIBRARY_MINIMUM = '0.7.0';
+    private const LIBRARY_MINIMUM = '0.9.0';
 
     /**
      * The oldest Joomla this runs on.

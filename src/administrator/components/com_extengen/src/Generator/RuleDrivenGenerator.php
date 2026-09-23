@@ -12,6 +12,11 @@ namespace Yepr\Component\Extengen\Administrator\Generator;
 
 use Yepr\Component\Extengen\Administrator\Generator\Rules\Joomla6Derivations;
 use Yepr\Component\Extengen\Administrator\Generator\Rules\Joomla6Selectors;
+use Yepr\Component\Extengen\Administrator\Reference\Er1;
+use Yepr\Gen\Core\Rule\Vocabulary;
+use Yepr\Gen\Core\Rule\Registry;
+use Yepr\Gen\Core\Rule\DataSelectors;
+use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Yepr\Gen\Core\Rule\Rule;
 use Yepr\Gen\Core\Rule\RuleEngine;
 use Yepr\Gen\Core\Rule\RuleSet;
@@ -74,6 +79,48 @@ abstract class RuleDrivenGenerator extends Generator
     }
 
     /**
+     * Which source elements a rule may be written for: step 3.6.
+     *
+     * Read out of the target's own vocabulary, as paths through the model,
+     * rather than out of a PHP class. `Joomla6Selectors::entities()` reached
+     * into `$model->datamodel` - ER1's word for it - so a generator modelled
+     * for another metalanguage could name that selector and get nothing back.
+     * A path says what it means, in the descriptor that already says what a
+     * rule may say.
+     *
+     * **One thing here is still hard-keyed, and it is not the selectors.**
+     * Following a reference needs the language's reference table, and this
+     * takes ER1's. That is honest for now - `Joomla6Derivations` is full of
+     * ER1 besides - but it is the next slice: the table should come from the
+     * language the project is bound to, which is a thing a project has said
+     * since 3.4 and which nothing has yet asked it.
+     *
+     * A vocabulary with no paths falls back to the closures, which is what a
+     * target generating from something other than a modelled language looks
+     * like. Nothing in this component is one; the branch is here so that being
+     * one stays possible.
+     *
+     * @return  Registry
+     *
+     * @since   1.2.0
+     */
+    protected function selectors(): Registry
+    {
+        $vocabulary = Vocabulary::fromFile(
+            \dirname($this->ruleFile()) . '/joomla6.vocabulary.json'
+        );
+
+        if ($vocabulary->paths() === []) {
+            return Joomla6Selectors::registry();
+        }
+
+        return DataSelectors::registry(
+            $vocabulary->paths(),
+            ReferenceIndex::fromTable(Er1::TABLE)
+        );
+    }
+
+    /**
      * Files this generator produces that no rule can express.
      *
      * Overridden by the generators that also emit something - sql, forms,
@@ -101,7 +148,7 @@ abstract class RuleDrivenGenerator extends Generator
 
         $engine = new RuleEngine(
             $this->renderer,
-            Joomla6Selectors::registry(),
+            $this->selectors(),
             $derivations->registry()
         );
 
