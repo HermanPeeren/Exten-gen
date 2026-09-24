@@ -215,12 +215,18 @@ class GenerateModel extends AdminModel
 	 * nothing, every page-shaped rule fires zero times, and what comes out is a
 	 * plausible-looking package missing half its files.
 	 *
-	 * The interesting one is the third. A project written in another language
-	 * is a project this component can open, edit and save perfectly well - 3.4
-	 * made that true - and cannot generate from, because the rules are about
-	 * ER1 and nothing has taught them otherwise. That gap is the whole of what
-	 * is left between here and a generator that is language-neutral, and a
-	 * refusal is how it stays visible instead of being discovered in the output.
+	 * The interesting one is the third, and 4.5 narrowed it. A project written
+	 * in another language is one this component can open, edit and save
+	 * perfectly well - 3.4 made that true - and could not generate from,
+	 * because the rules are about ER1. It still cannot, unless that other
+	 * language *derives* from ER1: a derived language adds and may not remove
+	 * or rename, so every path a rule walks is still there and what the child
+	 * added is simply never read.
+	 *
+	 * Which is what makes the refusal worth keeping rather than widening. A
+	 * language with no ER1 anywhere in its ancestry is still a language these
+	 * rules say nothing about, and running them over it produces a component
+	 * with empty views and no error.
 	 *
 	 * @return  MetalanguageEntry
 	 *
@@ -237,22 +243,13 @@ class GenerateModel extends AdminModel
 			);
 		}
 
-		if ($binding['key'] !== RuleDrivenGenerator::LANGUAGE) {
-			throw new \RuntimeException(
-				Text::sprintf(
-					'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
-					$binding['key'] . ' ' . $binding['version'],
-					RuleDrivenGenerator::LANGUAGE
-				)
-			);
-		}
-
 		$entry = Metalanguages::forProject($database, $binding['key'], $binding['version']);
 
 		if ($entry === null) {
-			// Bound to the right language in a version this site does not have.
-			// Its forms are gone, so its reference table is too, and the join
-			// would silently reach nothing.
+			// Bound to a language this site has not got. Its forms are gone, so
+			// its reference table is too, and the join would silently reach
+			// nothing. Asked before the ancestry, because an ancestry is a walk
+			// from an entry and there is no entry to walk from.
 			throw new \RuntimeException(
 				Text::sprintf(
 					'COM_EXTENGEN_GENERATE_METALANGUAGE_MISSING',
@@ -262,7 +259,28 @@ class GenerateModel extends AdminModel
 			);
 		}
 
-		return $entry;
+		// The language these rules are about, or one it derives from: step 4.5.
+		//
+		// Until now this compared the key and stopped there, which meant a
+		// language built on ER1 was refused for being built on ER1. A derived
+		// language adds and may not remove or rename - `AncestryCheck` refuses
+		// the import otherwise - so every path a rule for the parent walks is
+		// still there, and the nodes the child added are simply never read.
+		$ancestry = Metalanguages::catalogue($database)->ancestry();
+
+		foreach ($ancestry->withSelf($entry) as $candidate) {
+			if ($candidate->key === RuleDrivenGenerator::LANGUAGE) {
+				return $entry;
+			}
+		}
+
+		throw new \RuntimeException(
+			Text::sprintf(
+				'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
+				$entry->label(),
+				RuleDrivenGenerator::LANGUAGE
+			)
+		);
 	}
 
 	/**

@@ -12,6 +12,7 @@
  */
 
 const PACKAGE = 'tests/cypress/fixtures/metalanguage.zip';
+const DERIVED = 'tests/cypress/fixtures/derived.zip';
 
 /**
  * The project the Testlang tests below make, by id.
@@ -35,6 +36,14 @@ describe('metalanguages', () => {
     cy.exec('php tools/make-test-package.php');
     cy.readFile(PACKAGE, null).should((buffer) => {
       expect(buffer.length, 'the package has bytes in it').to.be.greaterThan(200);
+    });
+
+    // And one that derives from the ER1 this component ships: step 4.5. Built
+    // from that package rather than by hand, so it cannot drift from the
+    // concepts the guard is going to ask about.
+    cy.exec('php tools/make-derived-package.php');
+    cy.readFile(DERIVED, null).should((buffer) => {
+      expect(buffer.length, 'the derived package has bytes in it').to.be.greaterThan(200);
     });
   });
 
@@ -238,6 +247,61 @@ describe('metalanguages', () => {
         expect(html, 'the edit-field form carries ' + name).to.contain(name);
       }
     });
+  });
+
+  /**
+   * A language that derives from ER1 imports, and says so: step 4.5.
+   */
+  it('imports a language that derives from the one this component ships', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
+
+    cy.get('input[name="package"]').selectFile(DERIVED);
+    cy.get('button[type="submit"]').click();
+
+    cy.get('#system-message-container', { timeout: 30000 }).should('contain.text', 'DerivedER');
+    cy.get('#metalanguageList').should('contain.text', 'DerivedER');
+  });
+
+  /**
+   * And a project written in it generates: the point of the whole step.
+   *
+   * Until 4.5 this was refused on the key alone, which meant a language built
+   * on ER1 was refused for being built on ER1. A derived language adds and may
+   * not remove or rename - the import refuses it otherwise - so every path a
+   * rule for ER1 walks is still there.
+   *
+   * Nothing but the browser reaches this. The unit suite hands the generators a
+   * model directly: no project, no binding, no ancestry to walk and no table to
+   * walk it against.
+   */
+  it('generates from a project written in a derived language', () => {
+    cy.visit('/administrator/index.php?option=com_extengen&view=project&layout=edit&id=0');
+
+    cy.get('#jform_name', { timeout: 20000 }).clear();
+    cy.get('#jform_name').type('WrittenInDerivedER');
+    cy.get('#jform_metalanguage').select('DerivedER 1.0');
+
+    cy.window().then((w) => w.Joomla.submitbutton('project.apply'));
+
+    // It opens with ER1's forms, because that is what the package carries.
+    cy.get('#jform_datamodel-lbl', { timeout: 30000 }).should('exist');
+
+    cy.url().should('match', /[?&]id=[1-9]\d*/).then((url) => {
+      const id = Number(url.match(/[?&]id=(\d+)/)[1]);
+
+      cy.visit('/administrator/index.php?option=com_extengen&view=projects&list[limit]=0');
+
+      cy.get(`#adminForm a[data-href$="project_id=${id}"]`).then(($link) => {
+        cy.visit($link.attr('data-href'), { failOnStatusCode: false });
+      });
+    });
+
+    // Not the refusal - and said positively, because "the page does not carry
+    // that sentence" is also true of a page that failed for some other reason
+    // entirely. A project created and never modelled reaches the validator,
+    // which is a message from the far side of the language check.
+    cy.get('body', { timeout: 60000 }).should('contain.text', 'The model is not valid');
+    cy.get('body').should('not.contain.text', 'written for ER1');
   });
 
   /**
