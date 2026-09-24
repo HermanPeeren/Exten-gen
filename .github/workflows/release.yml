@@ -89,6 +89,9 @@ jobs:
       - name: Unit tests
         run: composer test
 
+      - name: Browser-side tests
+        run: composer test-js
+
       - name: Static analysis
         run: composer analyse
 

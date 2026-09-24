@@ -43,6 +43,33 @@ describe('generating a component', () => {
   });
 
   /**
+   * And pressing the button points the modal at the project it belongs to.
+   *
+   * The test above reads `data-href` and visits it, which checks the URL and
+   * nothing at all about what happens between the click and the dialog. There
+   * is one modal for the whole list, so the click has to say which project it
+   * means before Bootstrap opens it - and that was twelve lines of inline
+   * script in the template that nothing had ever exercised.
+   *
+   * It is `media/com_extengen/js/generation-modal.js` now, whose rules
+   * `composer test-js` checks over plain objects. What is left for a browser
+   * is this: that the listener is attached, to the right elements, and that
+   * the iframe it finds is the one in the dialog.
+   */
+  it('points the modal at the project whose button was pressed', () => {
+    cy.visitExtengen('projects');
+    cy.shouldHaveRendered();
+
+    cy.get('#adminForm a.dynbutton[data-href*="view=generate"]').first().then(($button) => {
+      const expected = $button.attr('data-href');
+
+      cy.wrap($button).click();
+
+      cy.get('#generationModal iframe').should('have.attr', 'src', expected);
+    });
+  });
+
+  /**
    * The same project, generated into WordPress instead: step 4.4.
    *
    * The unit suite runs both targets over the fixtures with the framework

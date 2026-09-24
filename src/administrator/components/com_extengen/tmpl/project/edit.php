@@ -20,7 +20,9 @@ use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
 HTMLHelper::_('behavior.formvalidator');
-HTMLHelper::_('script', 'com_extengen/admin-extengen-letter.js', array('version' => 'auto', 'relative' => true));
+// A module now, so that `composer test-js` can import the rule it
+// registers - which is the same rule LetterRule.php applies server side.
+$this->getDocument()->getWebAssetManager()->useScript('com_extengen.letter');
 // <extengen-reference>, and the reference index the view put in the page.
 // <yepr-reference>, and the reference index the view put in the page.
 //
