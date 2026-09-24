@@ -2020,6 +2020,43 @@ fixtures the test says it has stopped checking anything rather than passing quie
 
 Exten-gen is now at 351 unit tests and 38 browser specs, all four gates green.
 
+### The same question, asked of the other two
+
+4.5 was the last numbered step, so this is follow-through rather than a step: the defect above
+was not about Exten-gen, it was about a record stored as one JSON blob being written back from
+a form. Meta-gen and Gen-gen both store their models that way, and neither had a spec that ever
+pressed Save. Gen-gen's own `save()` already says so in a comment - *"nothing had noticed
+because nothing had ever saved one: the browser spec opened the screens and read them"* - which
+describes the testing gap precisely and had been left open.
+
+**Meta-gen is clean.** Its forms are static XML rather than merged from a package at runtime, so
+the cause could not be the same one, and the round trip loses nothing: the save only adds the
+empty fields the form declares. `metalanguage-round-trip.cy.js` holds that.
+
+**Gen-gen was not.** Opening the generator that reproduces Exten-gen and pressing Save kept all
+twenty-seven rules and all five groups, and rewrote what was inside every one of them.
+`derivation` and `fragment_template` are lists with no empty entry, so Joomla rendered the first
+option as selected wherever the stored value was empty; `showon` hides such a field but does not
+stop it posting; and the save wrote that first option back. All 115 bindings that named no
+derivation came back deriving `adminLinkPageName` from a fragment template called `LICENSE`.
+
+Nothing in Gen-gen would have reported it. The counts are unchanged, the names are unchanged,
+and the first thing to fail would have been `check-against-extengen.php` - the acceptance check
+that reproduces Exten-gen's output file for file - a long way from the cause and with no
+obvious connection to a Save that happened days earlier.
+
+The fix is an empty option on a vocabulary list that the form has not marked required, so that a
+binding which derives nothing can say so. Required stays as it was: a rule must name a selector
+and a template, and offering "nothing" there would be offering to store a rule that cannot run.
+All 199 bindings now survive a save with every field unchanged, and taking the empty option away
+again turns both tests red with `expected 0 to equal 115`.
+
+The lesson is the one from the discriminator, a third time in a different register: a test that
+reads a screen is not a test that the screen round-trips. All three repositories now have a spec
+that opens a stored record, saves it, and reads it back from a fresh request.
+
+Meta-gen: 250 unit tests, 25 browser specs. Gen-gen: 48 and 13. Both green on every gate.
+
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
 identical to the approved output.
