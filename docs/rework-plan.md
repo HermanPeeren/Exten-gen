@@ -1819,6 +1819,108 @@ a fresh clone is not left with the file unchecked.
 
 *Done:* 319 unit tests, PHPStan, phpcs and 28 Cypress specs green.
 
+**4.5 Language ancestry.** A language may declare that it derives from another, and everything
+that reasons about a language reasons about its ancestry. *Designed, not built - the design is
+below.*
+
+The case is not versioning. ER1 2.0 is one answer to "ER1 plus slots", and the wrong shape for
+the real want: several languages derived from one parent, each with a different purpose, named
+for what they are rather than numbered - `JcbLike`, `HeadlessER`, whatever - and all of them
+still generable by the generators written for the parent. Versioning says *this replaces that*;
+derivation says *this is also that*, which is the relation the family actually needs.
+
+### Where it is declared
+
+**On the language, as `dependsOn`** - LionWeb's own name for it. `Language.dependsOn:
+Language[]` is in LionCore already; LionCore M3 as Meta-gen models it has `name`, `version` and
+`languageEntities` and no dependency at all, so this is adopting a name rather than inventing
+one, and it keeps the LionWeb import and export honest.
+
+So: a new Containment on `Language` holding references to other stored metalanguages, by key
+and version - the pair, because two versions of a parent are two different parents.
+
+### How it travels: nothing new
+
+`PackageManifest` gains `dependsOn`, and **no table changes.** The metalanguages table already
+has a `manifest` text column holding the whole manifest JSON, and `MetalanguageEntry` already
+reads `concepts` back out of it - defended all the way down, because a manifest written by an
+older Meta-gen has no `concepts` in it either. `dependsOn` travels the same road for the same
+reason, and an older package reads as "derives from nothing", which is true.
+
+The package format number goes up, because a reader that ignores `dependsOn` would import a
+derived language as a root one and then quietly refuse every generator written for its parent.
+
+### How it resolves
+
+`MetalanguageCatalogue::ancestry(MetalanguageEntry): MetalanguageEntry[]` - the entry's
+parents, their parents, depth first, nearest first, deduplicated by `key|version`.
+
+Two things it must do rather than may:
+
+- **Refuse a cycle.** A derives from B derives from A is a stack overflow on a screen that was
+  filling a dropdown. Detected on the walk and reported as a problem with the language, the way
+  a package that does not match its own hashes is.
+- **Skip a parent this site has not got**, and say so. A derived language whose parent was
+  never imported is usable for everything except the parent's generators, and that is a better
+  answer than refusing to open it.
+
+### What changes, per repository
+
+| | |
+|---|---|
+| generator-core | `PackageManifest.dependsOn`; `MetalanguageEntry::ancestors()`; `MetalanguageCatalogue::ancestry()`; the import-time guard below |
+| Meta-gen | LionCore M3 gains `dependsOn`; the metalanguage form gains a repeating reference; `PackageFiles` writes it into the manifest |
+| Gen-gen | `RuleSelectorField` offers the union of the language's concepts and its ancestors'; the generators list gains a metalanguage filter that matches the language **or any ancestor** |
+| Exten-gen | `RuleDrivenGenerator::LANGUAGE` stops meaning "the key is ER1" and starts meaning "ER1 is in the ancestry" |
+
+Gen-gen's half is nearly free. `Vocabulary::withConcepts()` already takes a list of names and
+already skips names the target uses, so offering an ancestor's concepts is a longer list rather
+than a new mechanism - and it was built at 3.6 with exactly this shape for exactly this reason.
+
+### The guard that makes it safe, and it is not optional
+
+A derived language may **add** and may not **remove or rename**. Every concept key the parent
+declares has to exist in the child under the same key.
+
+That is checkable mechanically at import, from the two manifests' `concepts` lists, and it has
+to be, because the failure it prevents is silent: a parent's rule selects `Entity`, the child
+renamed it, the selector returns nothing, every rule over it fires zero times, and out comes a
+package missing half its files with no error anywhere. 3.6 found exactly that shape of failure
+by hand and wrote a refusal for it; this is the same refusal one level up.
+
+*Names, not keys, are the loose end.* Selectors are matched by concept **name** - 3.6 decided
+that deliberately, because `for: c-entity` is a rule nobody can check by eye - while references
+are stored by key. So the guard has to check both: the key must survive for stored models to
+resolve, and the name must survive for the parent's rules to select. A child that renames
+`Entity` to `Thing` while keeping the key breaks the rules without breaking the data, which is
+the more confusing half of the two.
+
+### Precedence
+
+The child's own concepts win over an ancestor's; between ancestors, the nearest. Documented
+rather than discovered, and it only bites when the guard above is relaxed - which is a later
+argument, not this one.
+
+### What it deliberately does not do
+
+- **No multiple inheritance of rules.** A language may derive from more than one parent, and
+  the generators offered are the union. Two parents whose rules both write
+  `administrator/.../ProjectModel.php` is a collision the existing last-write-wins already
+  reports; nothing here tries to merge rule sets.
+- **No reference-table merging.** A child's table is its own, generated whole from its own
+  model. It is a superset by construction if the guard holds, which is what makes a parent's
+  `follow` step still resolve.
+- **No runtime substitution.** A model stays written in the language it says. Ancestry decides
+  what *generators* it may be run through, not what forms it opens with.
+
+### Why it is worth doing
+
+The thing that makes this cheap is already proved. Adding four nodes ER1 has no idea about to a
+golden model generates all 103 files unchanged - the validator only checks what it names and
+the generator only reads named paths - so **a derived language already renders as its parent's
+subset**. The only thing in the way is that Exten-gen refuses on the key. Ancestry is what turns
+an accident of the implementation into something a language can say out loud.
+
 ---
 
 ## Decisions outstanding
