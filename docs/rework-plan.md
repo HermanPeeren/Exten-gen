@@ -1882,8 +1882,46 @@ That run also left a row behind, which made the *next* run fail on the leftover 
 the bug - so `tools/forget-metalanguage.php` exists and the spec forgets first. "It was not
 installed" is only observable on a site where it is not already installed.
 
-*Still not checked:* nothing compares a parent's *rule file* against a child. A rule binds by
-path, and a path may walk somewhere no concept or feature name would reveal.
+*And the rule file, checked last.* The argument for why the concept and feature guards were
+enough went: a rule binds by path, a path walks by name, so if every name survives every path
+survives. The hole in it was that nothing had checked the paths only walk by names **the
+language declares** - a rule reaching somewhere else would keep working for ER1 and break for a
+derived language without either having done anything wrong.
+
+`RulePathTest` walks the other way: out of the rule file and the vocabulary, into what the
+shipped package says it has. Eighteen distinct steps across ten paths and four selectors, and
+seventeen are ER1 features. The eighteenth is `name`, which is the project's own name - the
+Joomla chrome that 3.2 decided is not derivable from a language. So the dependency on something
+outside the language is now a *declared* one: the chrome form is read rather than a list of
+exceptions being written, and a third test pins that `name` is the only borrowing there is.
+
+**And it found something that is not about ancestry at all.**
+
+### The discriminator defect
+
+Since 3.5 made ER1 a generated language, its `field.xml` offers a radio with
+`value="Property"` and `value="EntityReferenceField"`, and stores the subtype payload under
+`property` or `entityReferenceField`. Every generator in this component - and the WordPress and
+Drupal ones - compares `field_type` against the lower-case `'property'` and `'reference'`, and
+reads the payload from `->property` and `->reference`. Those were the *hand-written* form's
+names, and the hand-written forms were deleted at 3.5.
+
+So **a project modelled today, through Exten-gen's own screens, generates a component with no
+relations in it.** Reproduced by taking the conference model and changing only the
+discriminator value to the one the generated form produces: three foreign-key columns become
+zero. No error anywhere - the fields are simply not recognised as references, so no column, no
+join, no dropdown.
+
+Nothing caught it because every model in the suite predates 3.5: the golden fixtures, the
+seeded projects, the Cypress specs. `reference-fields.cy.js` exercises the reference *dropdown*
+and never generates from one.
+
+The fix is a decision rather than a line. The generators could learn both spellings, which
+keeps the old models working and is a compatibility shim in fifteen places; or Meta-gen's form
+generator could be taught what a discriminator's values should be; or the generators could stop
+hard-coding either and read the discriminator and the subtype keys out of the language, which
+is the only one of the three that would not be wrong again the next time a concept is renamed.
+That is the next step and it is not this one.
 
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
