@@ -10,6 +10,7 @@
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
 use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 
 /**
@@ -167,22 +168,23 @@ class AdminEntities extends RuleDrivenGenerator
 	 */
 	private function column(object $field, object $entity, array $entities, array &$junctions): ?string
 	{
-		if ($field->field_type === 'property') {
-			return '`' . $field->field_name . '` ' . (self::SQL_TYPES[$field->property->type] ?? 'text');
+		if (FieldKind::isProperty($field)) {
+			return '`' . $field->field_name . '` '
+				. (self::SQL_TYPES[FieldKind::property($field)->type ?? ''] ?? 'text');
 		}
 
-		if ($field->field_type !== 'reference') {
+		if (!FieldKind::isReference($field)) {
 			return null;
 		}
 
-		$referred = $entities[$field->reference->reference];
+		$referred = $entities[FieldKind::reference($field)->reference];
 
 		// An embeddable is stored inline, as text.
 		if (property_exists($referred, 'isvalueobject')) {
 			return '`' . strtolower($field->field_name) . '` TEXT';
 		}
 
-		if (!property_exists($field->reference, 'ismultiple')) {
+		if (!property_exists(FieldKind::reference($field), 'ismultiple')) {
 			// n:1 - a foreign key on this table.
 			return '`' . strtolower($referred->entity_name) . '_id` bigint(20) UNSIGNED';
 		}

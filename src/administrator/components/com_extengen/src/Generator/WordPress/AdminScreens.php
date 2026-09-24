@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generator\WordPress;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
+
 /**
  * The screens: a menu, a list per index page, a form per detail page.
  *
@@ -153,7 +155,7 @@ final class AdminScreens extends WordPressGenerator
         if ($chosen === []) {
             $chosen = array_values(array_filter(
                 $byId,
-                static fn (object $f): bool => ($f->field_type ?? '') === 'property'
+                static fn (object $f): bool => FieldKind::isProperty($f)
             ));
         }
 
@@ -181,11 +183,11 @@ final class AdminScreens extends WordPressGenerator
         $fields = [];
 
         foreach ((array) ($entity->field ?? []) as $field) {
-            if (($field->field_type ?? '') !== 'property') {
+            if (!FieldKind::isProperty($field)) {
                 continue;
             }
 
-            $type = (string) ($field->property->type ?? '');
+            $type = (string) (FieldKind::property($field)->type ?? '');
 
             $fields[] = [
                 'name'  => self::slugify((string) $field->field_name),

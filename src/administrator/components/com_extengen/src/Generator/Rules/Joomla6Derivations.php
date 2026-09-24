@@ -10,6 +10,7 @@
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Rules;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
 use Yepr\Component\Extengen\Administrator\CustomCode\CustomCode;
 use Yepr\Gen\Core\Rule\Registry;
 
@@ -393,7 +394,7 @@ final class Joomla6Derivations
         $names = [];
 
         foreach ((array) ($entity->field ?? []) as $field) {
-            if ($field->field_type === 'property') {
+            if (FieldKind::isProperty($field)) {
                 $names[] = $field->field_name;
             }
         }
@@ -416,7 +417,7 @@ final class Joomla6Derivations
     private function displayField(object $entity): string
     {
         foreach ((array) ($entity->field ?? []) as $field) {
-            if ($field->field_type === 'property' && property_exists($field->property, 'default_ref_display')) {
+            if (FieldKind::isProperty($field) && property_exists(FieldKind::property($field), 'default_ref_display')) {
                 return (string) $field->field_name;
             }
         }
@@ -448,17 +449,17 @@ final class Joomla6Derivations
                 continue;
             }
 
-            if ($field->field_type === 'property') {
+            if (FieldKind::isProperty($field)) {
                 $filters[] = ['fieldName' => $field->field_name, 'columnName' => $field->field_name];
 
                 continue;
             }
 
-            if ($field->field_type !== 'reference') {
+            if (!FieldKind::isReference($field)) {
                 continue;
             }
 
-            $referred = $entities[$field->reference->reference_id] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
 
             if ($referred === null || ($skipValueObject && property_exists($referred, 'isvalueobject'))) {
                 continue;
@@ -492,16 +493,16 @@ final class Joomla6Derivations
         $foreign  = [];
 
         foreach ((array) ($this->pageEntity($page, $model)->field ?? []) as $field) {
-            if ($field->field_type !== 'reference') {
+            if (!FieldKind::isReference($field)) {
                 continue;
             }
 
-            $referred = $entities[$field->reference->reference_id] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
 
             if (
                 $referred === null
                 || property_exists($referred, 'isvalueobject')
-                || property_exists($field->reference, 'ismultiple')
+                || property_exists(FieldKind::reference($field), 'ismultiple')
             ) {
                 continue;
             }
@@ -538,11 +539,11 @@ final class Joomla6Derivations
         $foreign  = [];
 
         foreach ((array) ($this->siteIndexEntity($page, $model)->field ?? []) as $field) {
-            if ($field->field_type !== 'reference' || property_exists($field->reference, 'ismultiple')) {
+            if (!FieldKind::isReference($field) || property_exists(FieldKind::reference($field), 'ismultiple')) {
                 continue;
             }
 
-            $referred = $entities[$field->reference->reference_id] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
 
             if ($referred === null) {
                 continue;
@@ -578,11 +579,11 @@ final class Joomla6Derivations
         $foreign  = [];
 
         foreach ((array) ($this->pageEntity($page, $model)->field ?? []) as $field) {
-            if ($field->field_type !== 'reference') {
+            if (!FieldKind::isReference($field)) {
                 continue;
             }
 
-            $referred = $entities[$field->reference->reference_id] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
 
             if ($referred === null) {
                 continue;
@@ -617,11 +618,11 @@ final class Joomla6Derivations
         $relations = [];
 
         foreach ((array) ($entity->field ?? []) as $field) {
-            if ($field->field_type !== 'reference' || !property_exists($field->reference, 'ismultiple')) {
+            if (!FieldKind::isReference($field) || !property_exists(FieldKind::reference($field), 'ismultiple')) {
                 continue;
             }
 
-            $referred = $entities[$field->reference->reference] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference ?? ''] ?? null;
 
             if ($referred === null || property_exists($referred, 'isvalueobject')) {
                 continue;

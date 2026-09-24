@@ -6,6 +6,14 @@
  *   php tools/seed-project.php                     # balloonplanning, into ./joomla
  *   php tools/seed-project.php conference          # a different fixture
  *   php tools/seed-project.php conference ../site  # a different site
+ *   php tools/seed-project.php conference --saved  # in the spelling the screens write
+ *
+ * That last flag matters more than it reads. The fixtures were all written
+ * before 3.5, when ER1 became a generated language and its forms started
+ * spelling a field's kind with the concept names - so a site seeded from them
+ * holds no project in the shape its own screens produce, and the browser gate
+ * could not see a defect that only appears in that shape. It did not see one,
+ * for months. `--saved` converts the fixture on the way in.
  *
  * The Cypress specs need a project to open and generate from, and a freshly
  * installed component has none. Building one through the form would be a slow
@@ -20,9 +28,14 @@
 
 declare(strict_types=1);
 
-$root    = \dirname(__DIR__);
-$fixture = $argv[1] ?? 'balloonplanning';
-$site    = $argv[2] ?? $root . '/joomla';
+$root = \dirname(__DIR__);
+
+// `--saved` may stand anywhere; everything else is positional.
+$args  = array_values(array_filter(\array_slice($argv, 1), static fn (string $a): bool => $a !== '--saved'));
+$saved = \in_array('--saved', $argv, true);
+
+$fixture = $args[0] ?? 'balloonplanning';
+$site    = $args[1] ?? $root . '/joomla';
 
 $modelPath = $root . '/tests/Fixtures/golden/models/' . $fixture . '.json';
 
@@ -54,7 +67,21 @@ if ($db->connect_error) {
 
 $db->set_charset('utf8mb4');
 
-$json  = (string) file_get_contents($modelPath);
+$json = (string) file_get_contents($modelPath);
+
+if ($saved) {
+    require_once $root . '/vendor/autoload.php';
+
+    // The one rule, in the one place that holds it. A second copy here is
+    // exactly the mistake this flag exists to catch.
+    $json = (string) json_encode(
+        Yepr\Component\Extengen\Tests\Support\FormSpelling::asGeneratedFormsWriteIt(
+            json_decode($json, true, 512, JSON_THROW_ON_ERROR)
+        ),
+        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
+}
+
 $model = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
 $name  = (string) ($model->name ?? $fixture);
 $table = $config->dbprefix . 'extengen_projects';

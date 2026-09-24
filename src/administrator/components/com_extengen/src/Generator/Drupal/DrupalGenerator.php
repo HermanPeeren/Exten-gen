@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Drupal;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
 /**
@@ -179,7 +180,7 @@ abstract class DrupalGenerator extends Generator
             $columns = [];
 
             foreach ((array) ($entity->field ?? []) as $field) {
-                if (($field->field_type ?? '') !== 'property') {
+                if (!FieldKind::isProperty($field)) {
                     // A reference is a column of its own shape and belongs with
                     // the join it implies, which this target does not do yet.
                     continue;
@@ -188,7 +189,7 @@ abstract class DrupalGenerator extends Generator
                 $columns[] = [
                     'name'  => self::machinify((string) $field->field_name),
                     'label' => ucfirst((string) $field->field_name),
-                    'spec'  => self::COLUMN_TYPES[(string) ($field->property->type ?? '')]
+                    'spec'  => self::COLUMN_TYPES[(string) (FieldKind::property($field)->type ?? '')]
                         ?? self::COLUMN_TYPES['Text'],
                 ];
             }
@@ -280,7 +281,7 @@ abstract class DrupalGenerator extends Generator
         if ($chosen === []) {
             $chosen = array_values(array_filter(
                 $byId,
-                static fn (object $f): bool => ($f->field_type ?? '') === 'property'
+                static fn (object $f): bool => FieldKind::isProperty($f)
             ));
         }
 
@@ -305,14 +306,14 @@ abstract class DrupalGenerator extends Generator
         $fields = [];
 
         foreach ((array) ($entity->field ?? []) as $field) {
-            if (($field->field_type ?? '') !== 'property') {
+            if (!FieldKind::isProperty($field)) {
                 continue;
             }
 
             $fields[] = [
                 'name'    => self::machinify((string) $field->field_name),
                 'label'   => ucfirst((string) $field->field_name),
-                'element' => self::ELEMENT_TYPES[(string) ($field->property->type ?? '')] ?? 'textfield',
+                'element' => self::ELEMENT_TYPES[(string) (FieldKind::property($field)->type ?? '')] ?? 'textfield',
             ];
         }
 

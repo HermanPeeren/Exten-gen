@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generator\WordPress;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 
 /**
@@ -174,7 +175,7 @@ abstract class WordPressGenerator extends Generator
             $columns = [];
 
             foreach ((array) ($entity->field ?? []) as $field) {
-                if (($field->field_type ?? '') !== 'property') {
+                if (!FieldKind::isProperty($field)) {
                     // A reference is a column of its own shape and belongs with
                     // the join it implies; this target does not do joins yet,
                     // and writing a column nothing reads would be worse.
@@ -183,7 +184,7 @@ abstract class WordPressGenerator extends Generator
 
                 $columns[] = [
                     'name' => self::slugify((string) $field->field_name),
-                    'type' => self::COLUMN_TYPES[(string) ($field->property->type ?? '')] ?? 'longtext',
+                    'type' => self::COLUMN_TYPES[(string) (FieldKind::property($field)->type ?? '')] ?? 'longtext',
                 ];
             }
 

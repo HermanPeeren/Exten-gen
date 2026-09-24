@@ -1921,7 +1921,44 @@ keeps the old models working and is a compatibility shim in fifteen places; or M
 generator could be taught what a discriminator's values should be; or the generators could stop
 hard-coding either and read the discriminator and the subtype keys out of the language, which
 is the only one of the three that would not be wrong again the next time a concept is renamed.
-That is the next step and it is not this one.
+
+*Done: the third way.* `Generator\Model\FieldKind` is now the only place in this repository
+that knows what a field's kind is called. It states three names - the discriminator `field_type`
+and the concept names `Property` and `EntityReferenceField` - and **derives** the rest: the
+payload key is `lcfirst()` of the concept name, tried before the name itself and before the
+pre-3.5 name, rather than a fourth constant to keep in step. Thirty-six call sites across five
+generators went through it, including the two targets, and no file outside it reads `field_type`
+any more. The comparison is case-insensitive and still accepts `property` and `reference`, so
+every model stored before 3.5 keeps generating exactly what it generated.
+
+The claim is checked rather than asserted. `FieldKindTest` runs all four golden models through
+both spellings and compares the output **byte for byte**, guards that against vacuity by
+counting the references it rewrote, reads the two concept names back out of the shipped
+package's manifest, and reads the discriminator out of the shipped `field.xml` - because
+`field_type` is not a feature of the language at all. It is the name Meta-gen gives the radio
+that chooses between an abstract concept's subtypes, so the manifest cannot confirm it and the
+form is the only witness there is. That test also pins the `lcfirst` rule against the subform
+the form generator actually emits, which is the exact step that broke.
+
+Breaking the comparison on purpose turns four of its ten tests red, and the diff it prints is
+the defect verbatim: a reference field losing its `type="sql"` dropdown.
+
+*And the browser gate said it was worse than the reproduction had.* The reproduction measured
+three foreign-key columns becoming zero. Generating the reseeded project on the real site
+against the not-yet-reinstalled component produced four tables containing nothing but `id` -
+every property gone as well, because a field that matches neither subtype is not a column of any
+kind. The file list, the count and the log were unchanged and there was no warning anywhere.
+
+The gate was structurally blind to this and would have stayed blind: every project on the
+development site was seeded from a pre-3.5 fixture. `tools/seed-project.php` takes `--saved`,
+which converts a fixture to the spelling the screens write on the way in, sharing the one
+conversion rule with the unit test through `tests/Support/FormSpelling` rather than keeping a
+second copy of the names that caused this. `field-kind.cy.js` then checks the two things no unit
+test can reach - what the *installed* form is named, read out of the row template Joomla clones,
+and whether a project stored that way still generates its relations - and asserts the seeded
+project is there instead of skipping when it is not.
+
+Exten-gen is now at 346 unit tests and 34 browser specs, all four gates green.
 
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files

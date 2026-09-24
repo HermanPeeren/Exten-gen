@@ -11,6 +11,7 @@
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Joomla6;
 
+use Yepr\Component\Extengen\Administrator\Generator\Model\FieldKind;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use DOMDocument;
 
@@ -210,9 +211,9 @@ $log = array_merge($log, $append);
 					// Type
 
 					//    - Property
-					if (($field->field_type) == "property") {
+					if (FieldKind::isProperty($field)) {
 						// By default use a standard HtmlType.
-						$property = $field->property;
+						$property = FieldKind::property($field);
 						$type     = $this->standard2HtmlTypes($property->type);
 
 						// Is this field in the editFields?
@@ -267,8 +268,8 @@ $log = array_merge($log, $append);
 					}
 
 					//    - Reference
-					if (($field->field_type) == "reference") {
-						$reference = $field->reference;
+					if (FieldKind::isReference($field)) {
+						$reference = FieldKind::reference($field);
 
 						$refEntity_id = $reference->reference_id;
 						$refEntity    = $entityMap[$refEntity_id];
@@ -310,7 +311,10 @@ $log = array_merge($log, $append);
 							// Find the default field to display this reference
 							$refDisplayFieldName = '';
 							foreach ($refEntity->field as $foreignField) {
-								if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display')) {
+								if (
+									FieldKind::isProperty($foreignField)
+									&& property_exists(FieldKind::property($foreignField), 'default_ref_display')
+								) {
 									$refDisplayFieldName = $foreignField->field_name;
 									break;
 								}
@@ -520,7 +524,7 @@ $log = array_merge($log, $append);
 
 						// Make the query todo: when another value is stored in the db, we need another value for the selected text
 						//    - Property: query the table of this entity
-						if (($field->field_type) == "property") {
+						if (FieldKind::isProperty($field)) {
 							// Make the custom sql to get the values for the dropdown-list todo $db->quoteName i.s.o. directly backticks
 							$table = '#__' . strtolower($componentName) . "_" . strtolower($entity->entity_name);
 							$query = "SELECT DISTINCT `" . $field->field_name . "` AS value, `" . $field->field_name . "` AS text FROM `" . $table . "`";
@@ -528,8 +532,8 @@ $log = array_merge($log, $append);
 						}
 
 						//    - Reference (n:1): query the foreign table
-						if (($field->field_type) == "reference") {
-							$reference = $field->reference;
+						if (FieldKind::isReference($field)) {
+							$reference = FieldKind::reference($field);
 
 							$refEntity_id = $reference->reference_id;
 							$refEntity = $entityMap[$refEntity_id];
@@ -537,7 +541,10 @@ $log = array_merge($log, $append);
 							// Find the default field to display this reference
 							$refDisplayFieldName = '';
 							foreach ($refEntity->field as $foreignField) {
-								if ((($foreignField->field_type) == "property") && property_exists($foreignField->property, 'default_ref_display')) {
+								if (
+									FieldKind::isProperty($foreignField)
+									&& property_exists(FieldKind::property($foreignField), 'default_ref_display')
+								) {
 									$refDisplayFieldName = $foreignField->field_name;
 									break;
 								}
