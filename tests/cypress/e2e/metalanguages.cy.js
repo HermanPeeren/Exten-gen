@@ -13,6 +13,7 @@
 
 const PACKAGE = 'tests/cypress/fixtures/metalanguage.zip';
 const DERIVED = 'tests/cypress/fixtures/derived.zip';
+const BROKEN = 'tests/cypress/fixtures/broken-derived.zip';
 
 /**
  * The project the Testlang tests below make, by id.
@@ -44,6 +45,12 @@ describe('metalanguages', () => {
     cy.exec('php tools/make-derived-package.php');
     cy.readFile(DERIVED, null).should((buffer) => {
       expect(buffer.length, 'the derived package has bytes in it').to.be.greaterThan(200);
+    });
+
+    // And one that breaks what it derives from, for the refusal to refuse.
+    cy.exec('php tools/make-broken-derived-package.php');
+    cy.readFile(BROKEN, null).should((buffer) => {
+      expect(buffer.length, 'the broken package has bytes in it').to.be.greaterThan(200);
     });
   });
 
@@ -260,6 +267,39 @@ describe('metalanguages', () => {
 
     cy.get('#system-message-container', { timeout: 30000 }).should('contain.text', 'DerivedER');
     cy.get('#metalanguageList').should('contain.text', 'DerivedER');
+  });
+
+  /**
+   * A derived language that breaks its parent is refused, and says why.
+   *
+   * The smallest break there is: one feature of one concept renamed, every
+   * concept key untouched. So every stored model still resolves and only the
+   * paths move - which is the failure worth catching, because it produces a
+   * package with a manifest and a third of its files that looks exactly like
+   * one that worked.
+   *
+   * At import, which is the only moment anything can be done about it, and
+   * before anything is written: the language must not appear in the list.
+   */
+  it('refuses a derived language that renames what its parent declared', () => {
+    // Forgotten first, because "it was not installed" is only observable on a
+    // site where it is not already installed - and the run that found the guard
+    // broken left the row behind, so the next run failed on the leftover rather
+    // than on the bug. A spec whose result depends on what an earlier run did
+    // is a spec that stops meaning anything.
+    cy.exec('php tools/forget-metalanguage.php BrokenER 1.0');
+
+    cy.visit('/administrator/index.php?option=com_extengen&view=metalanguages');
+
+    cy.get('input[name="package"]').selectFile(BROKEN);
+    cy.get('button[type="submit"]').click();
+
+    cy.get('#system-message-container', { timeout: 30000 })
+      .should('contain.text', 'entity_name');
+
+    // And nothing was installed: a refusal that left the language behind would
+    // be a refusal only of the message.
+    cy.get('#metalanguageList').should('not.contain.text', 'BrokenER');
   });
 
   /**

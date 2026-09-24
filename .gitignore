@@ -27,3 +27,4 @@
 /tests/cypress/downloads/
 /tests/cypress/fixtures/metalanguage.zip
 /tests/cypress/fixtures/derived.zip
+/tests/cypress/fixtures/broken-derived.zip
