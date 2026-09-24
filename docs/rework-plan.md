@@ -1820,8 +1820,54 @@ a fresh clone is not left with the file unchecked.
 *Done:* 319 unit tests, PHPStan, phpcs and 28 Cypress specs green.
 
 **4.5 Language ancestry.** A language may declare that it derives from another, and everything
-that reasons about a language reasons about its ancestry. *Designed, not built - the design is
-below.*
+that reasons about a language reasons about its ancestry.
+
+**Done, across four repositories.** A metalanguage declares `dependsOn`; Meta-gen offers it on
+the language form; the library walks it and refuses a child that breaks its parent; Exten-gen
+generates from any language with ER1 in its ancestry; Gen-gen offers a parent's concepts as
+selectors and lists a parent's generators under the child.
+
+*Two corrections to the design below, both found by building it.*
+
+**The format number.** The design said it goes up, and it does - to 2, for `dependsOn`. What it
+did not say is that the reader has to learn a *range*: strict equality would have made the new
+reader refuse every package ever built, including the ER1 Exten-gen ships. Refusing a newer
+format is the point, refusing an older one is the opposite of it, and 1 and 2 differ only by a
+field whose absence is meaningful. `OLDEST_READABLE_FORMAT` is what the next format change has
+to argue with.
+
+**Two library releases, not one.** 0.11.0 shipped `AncestryCheck` and nothing called it, which
+is worse than not having it: a guard nobody runs reads like a guarantee. 0.12.0 wires it into
+`MetalanguageImporter`, before anything is written.
+
+*And one thing the design got right for a reason it did not give.* `Ancestry` is a class of its
+own with a resolver passed in, because a catalogue needs a `DatabaseInterface` and the library's
+suite boots no framework. That is the same split as `MetalanguageInstaller` and it is what made
+the walk testable at all - the cycle, the shared grandparent, the two versions of one parent,
+the uninstalled parent.
+
+*What the browser caught, twice, and nothing else could.* Meta-gen's metalanguage edit template
+renders fields by name, one call each, so the new `dependsOn` field was on the form and not on
+the screen: every unit test passed against a form whose new field nothing drew. And `PackageTest`
+caught the design error before that - the first attempt declared the picker's field class on the
+*model*, which put `Yepr\Component\Metagen` into a generated package, and nothing in a package
+may name a component because a package is loaded by more than one. 3.5 wrote that rule down;
+4.5 tried to break it within the hour.
+
+*A gap this step found rather than made.* Gen-gen's generators list has no filter bar. The
+filter form has existed since 0.1 and the template has never rendered it, so `target` is
+reachable by request and by nothing else - and now `metalanguage` is too. The filtering is
+asserted; the bar is not there to assert.
+
+*Still not checked, and named rather than half-closed:* `AncestryCheck` compares concepts and
+not features. A child that removed a *property* would break a parent's binding, and catching
+that needs the parent's rule file rather than its manifest.
+
+*Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
+and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
+identical to the approved output.
+
+*The design as it was written, for the record:*
 
 The case is not versioning. ER1 2.0 is one answer to "ER1 plus slots", and the wrong shape for
 the real want: several languages derived from one parent, each with a different purpose, named
