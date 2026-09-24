@@ -1859,9 +1859,31 @@ filter form has existed since 0.1 and the template has never rendered it, so `ta
 reachable by request and by nothing else - and now `metalanguage` is too. The filtering is
 asserted; the bar is not there to assert.
 
-*Still not checked, and named rather than half-closed:* `AncestryCheck` compares concepts and
-not features. A child that removed a *property* would break a parent's binding, and catching
-that needs the parent's rule file rather than its manifest.
+*And the feature gap, closed afterwards.* `AncestryCheck` compared concepts and not features,
+so a child that removed or renamed a *property* broke a parent's bindings silently. It checks
+both now: a package's manifest carries the features of every concept, effective ones with
+inheritance already resolved, and the same two-sided comparison applies one level down - a
+stored model keys its data by the feature's name and a rule's path walks by name, so a name
+that disappears is a binding that renders an empty string into a generated file.
+
+An absent feature list and an empty one are different things, and that distinction is
+asserted. A package built before this says nothing and is not checked, because refusing on
+that would mean nothing could derive from a language imported before today.
+
+*It also took two goes, and the second one is the lesson.* 0.13.0 added the check and it did
+nothing: `MetalanguageEntry` normalised a stored concept to a key and a name, dropping the
+features, and the guard compares a package against the **stored** manifest of its parent. Three
+unit suites were green. The browser imported a language that renames `Entity.entity_name` and
+said "Imported". `fromRow()` takes a plain object and was always testable - nobody had asked it
+that question, and now a test does, handing its result straight to `AncestryCheck` so the two
+cannot drift apart again.
+
+That run also left a row behind, which made the *next* run fail on the leftover rather than on
+the bug - so `tools/forget-metalanguage.php` exists and the spec forgets first. "It was not
+installed" is only observable on a site where it is not already installed.
+
+*Still not checked:* nothing compares a parent's *rule file* against a child. A rule binds by
+path, and a path may walk somewhere no concept or feature name would reveal.
 
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
