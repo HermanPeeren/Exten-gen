@@ -76,6 +76,41 @@ describe('generating a component', () => {
     cy.get('body').should('not.contain.text', 'install.mysql.utf8.sql');
   });
 
+  /**
+   * And into a Drupal module, which is a third answer again.
+   *
+   * Drupal is the case 4.4 deliberately did not take - another PHP framework
+   * with entities, a container and classes found by namespace, close enough to
+   * Joomla that a badly placed abstraction could have fitted anyway. It is here
+   * because the seam held for WordPress, and adding it cost one line in
+   * `Targets`.
+   *
+   * What this reaches that the unit suite cannot is the same list as above, plus
+   * one more: a Drupal module is mostly YAML, and a template set that renders
+   * YAML is a template set Twig has to find on a real filesystem beside two
+   * others.
+   */
+  it('generates the same project into a Drupal module', () => {
+    cy.visitExtengen('projects');
+    cy.shouldHaveRendered();
+
+    cy.get('#adminForm a[data-href*="view=generate"]').first().then(($link) => {
+      cy.visit($link.attr('data-href') + '&target=drupal');
+    });
+
+    cy.get('body', { timeout: 60000 }).should('contain.text', 'files');
+    cy.get('body').should('not.contain', 'Fatal error');
+    cy.get('body').should('not.contain', 'Warning:');
+
+    cy.get('body').should('contain.text', '/drupal/');
+    cy.get('body').should('contain.text', '.info.yml generated');
+    cy.get('body').should('contain.text', '.routing.yml generated');
+
+    // Neither of the other two targets' answers to a schema.
+    cy.get('body').should('not.contain.text', 'install.mysql.utf8.sql');
+    cy.get('body').should('not.contain.text', 'activator');
+  });
+
   it('leaves the model alone', () => {
     // Generation reads; it must not write to the project it generated from.
     // A run that quietly edited the model would show up as a changed list.

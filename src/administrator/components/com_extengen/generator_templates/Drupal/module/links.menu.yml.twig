@@ -1,0 +1,9 @@
+{% for screen in screens %}
+{{ machine }}.{{ screen.route }}:
+  title: '{{ screen.label }}'
+  description: '{{ screen.label }} held by {{ moduleName }}.'
+  route_name: {{ machine }}.{{ screen.route }}
+  parent: system.admin_content
+  weight: {{ loop.index0 }}
+
+{% endfor %}

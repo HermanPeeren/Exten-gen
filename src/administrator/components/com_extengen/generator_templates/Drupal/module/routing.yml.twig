@@ -1,0 +1,21 @@
+{% for screen in screens %}
+{{ machine }}.{{ screen.route }}:
+  path: '/admin/content/{{ machine }}/{{ screen.path }}'
+  defaults:
+    _controller: '\Drupal\{{ machine }}\Controller\{{ screen.class }}Controller::page'
+    _title: '{{ screen.label }}'
+  requirements:
+    _permission: '{{ permission }}'
+
+{% endfor %}
+{% for form in forms %}
+{{ machine }}.{{ form.route }}:
+  path: '/admin/content/{{ machine }}/{{ form.path }}/edit/{id}'
+  defaults:
+    _form: '\Drupal\{{ machine }}\Form\{{ form.class }}Form'
+    _title: '{{ form.label }}'
+    id: 0
+  requirements:
+    _permission: '{{ permission }}'
+
+{% endfor %}

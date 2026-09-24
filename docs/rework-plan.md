@@ -1764,6 +1764,46 @@ collide.
 
 *Done:* 291 unit tests, PHPStan, phpcs and 27 Cypress specs green.
 
+**And then a third: Drupal.** Not a numbered step - asked for afterwards, and worth recording
+here because it is the measurement that turns 4.4's result from an argument into a number.
+
+Drupal is the case 4.4 deliberately did *not* take. It is another PHP framework with entities,
+a service container and classes found by namespace, close enough to Joomla that a badly placed
+abstraction could have fitted anyway - so taking it first would have proved nothing, and taking
+it second proves the cost.
+
+**The cost was one line in `Targets`**, three generators and seven templates. Nothing in the
+pipeline, the model, the `Generator` base class or the other two targets.
+
+*A third answer to what a schema is, which settles the question.* Joomla writes
+`sql/install.mysql.utf8.sql`, runs it once and records the version in `#__schemas`. WordPress
+writes a `dbDelta()` call in an activation hook and re-runs it on every activation, so the same
+statement is the install and every upgrade after it. Drupal writes neither: `hook_schema()`
+returns a PHP array *describing* the tables, and Drupal builds the statements itself for
+whichever driver the site runs on - so a Drupal module installs on MySQL, PostgreSQL and SQLite
+without saying anything about any of them.
+
+Two targets could have been a coincidence, one file format against another. Three is the shape
+of the thing: a schema is not a file, a statement or a description, it is whichever of those
+the target says - and the only thing all three share is the columns, which is what an ER1 model
+holds. `SecondTargetTest` asserts that, reading the column names out of the model rather than
+naming them, so the list cannot be wrong in a fourth place.
+
+*The same story for a screen.* Joomla: an MVC triple found by name. WordPress: a callback
+registered against a hook. Drupal: a route in YAML naming a controller method and a permission,
+where nothing is discovered and a page missing from the file is a 404 whatever classes sit
+beside it.
+
+*One report from the second target, confirmed by the third.* `WordPressTarget` said the
+`LanguageStringUtil` the `Generator` base asks for was constructed and never used, and that two
+targets was not enough to know what that should be. `DrupalTarget` does not use it either - a
+module's strings go through `$this->t()` in the file that uses them - so the seam belongs to
+the Joomla target rather than to every target. That is now a finding rather than a suspicion,
+and still not a change: three is enough to say where it belongs and not yet enough to say what
+should replace it.
+
+*Done:* 319 unit tests, PHPStan, phpcs and 28 Cypress specs green.
+
 ---
 
 ## Decisions outstanding

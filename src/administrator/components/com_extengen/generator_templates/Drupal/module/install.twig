@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Install and schema hooks for {{ moduleName }}.
+ */
+
+/**
+ * Implements hook_schema().
+ *
+ * Drupal reads this array and creates the tables itself, on whichever database
+ * driver the site runs - which is why nothing here is SQL. It is also the only
+ * description: an update hook that changes a table changes this too, and
+ * `drush entity:updates` compares the two.
+ */
+function {{ machine }}_schema(): array {
+  $schema = [];
+
+{% for entity in entities %}
+  $schema['{{ entity.table }}'] = [
+    'description' => '{{ entity.label }}.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary key.',
+      ],
+{% for column in entity.columns %}
+      '{{ column.name }}' => [
+{% for key, value in column.spec %}
+        '{{ key }}' => {{ value }},
+{% endfor %}
+        'description' => '{{ column.label }}.',
+      ],
+{% endfor %}
+    ],
+    'primary key' => ['id'],
+  ];
+
+{% endfor %}
+  return $schema;
+}

@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine }}\Form;
+
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * The {{ form.label }} form.
+ */
+final class {{ form.class }}Form extends FormBase {
+
+  /**
+   * Constructs the form.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database this module's tables live in.
+   */
+  public function __construct(protected readonly Connection $database) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static($container->get('database'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return '{{ machine }}_{{ form.path }}_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, int $id = 0): array {
+    $record = $id > 0
+      ? $this->database->select('{{ form.table }}', 't')
+        ->fields('t')
+        ->condition('t.id', $id)
+        ->execute()
+        ->fetchAssoc()
+      : [];
+
+    $record = $record ?: [];
+
+    $form['id'] = [
+      '#type' => 'value',
+      '#value' => $id,
+    ];
+
+{% for field in form.fields %}
+    $form['{{ field.name }}'] = [
+      '#type' => '{{ field.element }}',
+      '#title' => $this->t('{{ field.label }}'),
+      '#default_value' => $record['{{ field.name }}'] ?? '',
+    ];
+
+{% endfor %}
+    $form['actions'] = [
+      '#type' => 'actions',
+      'submit' => [
+        '#type' => 'submit',
+        '#value' => $this->t('Save'),
+      ],
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * merge() rather than insert-or-update by hand: it is one statement on every
+   * driver Drupal supports, and it is what makes a form that was opened twice
+   * save once.
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $values = [
+{% for field in form.fields %}
+      '{{ field.name }}' => $form_state->getValue('{{ field.name }}'),
+{% endfor %}
+    ];
+
+    $id = (int) $form_state->getValue('id');
+
+    if ($id > 0) {
+      $this->database->merge('{{ form.table }}')
+        ->key(['id' => $id])
+        ->fields($values)
+        ->execute();
+    }
+    else {
+      $this->database->insert('{{ form.table }}')
+        ->fields($values)
+        ->execute();
+    }
+
+    $this->messenger()->addStatus($this->t('Saved.'));
+  }
+
+}

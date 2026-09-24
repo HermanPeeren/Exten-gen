@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine }}\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Database\Connection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * The {{ screen.label }} listing.
+ */
+final class {{ screen.class }}Controller extends ControllerBase {
+
+  /**
+   * Constructs the controller.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database this module's tables live in.
+   */
+  public function __construct(protected readonly Connection $database) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static($container->get('database'));
+  }
+
+  /**
+   * Builds the listing.
+   *
+   * A render array rather than markup: Drupal decides how a table is drawn,
+   * caches the result against the tags below, and invalidates it when anything
+   * writes to the table - which is why nothing here echoes anything.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function page(): array {
+    $rows = [];
+
+    $records = $this->database->select('{{ screen.table }}', 't')
+      ->fields('t')
+      ->orderBy('t.id')
+      ->execute()
+      ->fetchAll();
+
+    foreach ($records as $record) {
+      $rows[] = [
+{% for column in screen.columns %}
+        $record->{{ column.name }} ?? '',
+{% endfor %}
+      ];
+    }
+
+    return [
+      '#type' => 'table',
+      '#header' => [
+{% for column in screen.columns %}
+        $this->t('{{ column.label }}'),
+{% endfor %}
+      ],
+      '#rows' => $rows,
+      '#empty' => $this->t('Nothing here yet.'),
+      '#cache' => [
+        'tags' => ['{{ machine }}:{{ screen.path }}'],
+      ],
+    ];
+  }
+
+}

@@ -25,6 +25,9 @@ use Yepr\Gen\Core\Target\TargetRegistry;
  * ever put two things in one, because there was only ever one target to put
  * there. 4.4 is where that stops being true, and this is the list.
  *
+ * Three of them now. The third cost one line here, which is the number that
+ * says whether the second one proved anything.
+ *
  * The default is Joomla 6, and deliberately by name rather than "the first
  * one": a registry is unordered as far as anybody reading this is concerned,
  * and a default that moved when somebody added a target would be a surprise
@@ -53,7 +56,8 @@ final class Targets
     {
         return new TargetRegistry(
             new Joomla6Target($templateRoot, $cacheDirectory),
-            new WordPressTarget($templateRoot, $cacheDirectory)
+            new WordPressTarget($templateRoot, $cacheDirectory),
+            new DrupalTarget($templateRoot, $cacheDirectory)
         );
     }
 }

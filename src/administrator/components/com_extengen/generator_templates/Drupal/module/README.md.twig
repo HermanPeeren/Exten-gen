@@ -1,0 +1,29 @@
+# {{ moduleName }}
+
+{{ description }}
+
+## What it stores
+
+{% for entity in entities %}
+- **{{ entity.label }}**, in `{{ entity.table }}`
+{% endfor %}
+
+## Install
+
+Copy this directory into `modules/custom/{{ machine }}` and enable it:
+
+```
+drush en {{ machine }}
+```
+
+The tables are created from `hook_schema()` when the module is installed, and
+dropped when it is uninstalled. Nothing here writes SQL: Drupal builds the
+statements for whichever driver the site runs on.
+
+## Screens
+
+Under **Content**, granted by the `{{ permission }}` permission.
+
+{% for screen in screens %}
+- {{ screen.label }} — `/admin/content/{{ machine }}/{{ screen.path }}`
+{% endfor %}
