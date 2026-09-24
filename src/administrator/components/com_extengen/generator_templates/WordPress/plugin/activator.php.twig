@@ -1,0 +1,40 @@
+<?php
+/**
+ * Creates {{ pluginName }}'s tables.
+ */
+
+defined('ABSPATH') || exit;
+
+class {{ prefix }}_Activator
+{
+    /**
+     * Run on activation, and on every activation after an update.
+     *
+     * dbDelta() compares the statement against what is there and alters rather
+     * than replaces, so this is also the upgrade path - which is why the
+     * statements are written the way dbDelta insists on: two spaces after
+     * PRIMARY KEY, one field per line, and the key defined inline.
+     */
+    public static function activate(): void
+    {
+        global $wpdb;
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        $charset = $wpdb->get_charset_collate();
+
+{% for entity in entities %}
+        dbDelta(
+            "CREATE TABLE {$wpdb->prefix}{{ entity.table }} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+{% for column in entity.columns %}
+                {{ column.name }} {{ column.type }},
+{% endfor %}
+                PRIMARY KEY  (id)
+            ) {$charset};"
+        );
+
+{% endfor %}
+        add_option('{{ slug }}_version', '{{ version }}');
+    }
+}

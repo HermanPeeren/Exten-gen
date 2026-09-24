@@ -48,7 +48,7 @@ use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageContext;
 use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
-use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
+use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
@@ -81,6 +81,13 @@ class GenerateModel extends AdminModel
 	protected int $projectId;
 
 	/**
+	 * Which target the project is generated into.
+	 *
+	 * @var   string
+	 */
+	protected string $targetId = Targets::DEFAULT;
+
+	/**
 	 * The type of output we generate files for, for instance "Joomla6".
 	 * There must be a subdirectory with this name with the concrete generators.
 	 * When templates are used, they must be in a subdirectory under /generator_templates with that same name. todo: templates in db
@@ -97,6 +104,23 @@ class GenerateModel extends AdminModel
 	public function setProjectId(int $projectId): void
 	{
 		$this->projectId = $projectId;
+	}
+
+	/**
+	 * Set which target to generate into: step 4.4.
+	 *
+	 * Silently ignored when the id is not one this component has. A screen
+	 * reached with `&target=` typed by hand should produce the default
+	 * rather than an error page, and there is no user input to validate
+	 * here - the registry is the whitelist.
+	 *
+	 * @param   string  $targetId  A registered target id.
+	 *
+	 * @return  void
+	 */
+	public function setTargetId(string $targetId): void
+	{
+		$this->targetId = $targetId;
 	}
 
 	/**
@@ -139,10 +163,18 @@ class GenerateModel extends AdminModel
 	 */
 	private function runGenerators(Project $project): void
 	{
-		$target = new Joomla6Target(
+		// Out of the registry rather than constructed by name. 4.4 added a
+		// second target and this is the line that had to change for it - one
+		// line, in the model, and nothing in the pipeline, which is what 0.4
+		// was for.
+		$targets = Targets::registry(
 			JPATH_ROOT . '/administrator/components/com_extengen/generator_templates',
 			JPATH_ROOT . '/administrator/components/com_extengen/compilation_cache'
 		);
+
+		$target = $targets->has($this->targetId)
+			? $targets->get($this->targetId)
+			: $targets->get(Targets::DEFAULT);
 
 		$generators = $target->generators();
 
@@ -170,7 +202,7 @@ class GenerateModel extends AdminModel
 			}
 		}
 
-		$this->write($files, $project);
+		$this->write($files, $project, $target->id());
 	}
 
 	/**
@@ -241,11 +273,23 @@ class GenerateModel extends AdminModel
 	 *
 	 * @return  void
 	 */
-	private function write(FileCollection $files, Project $project): void
+	private function write(FileCollection $files, Project $project, string $targetId): void
 	{
 		$componentName = $project->componentName();
-		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/' . $componentName;
-		$root          = $generated . '/Joomla6/com_' . strtolower($componentName);
+		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/'
+			. $componentName . '/' . $targetId;
+
+		// Under the target's own directory since 4.4, both of them. Two
+		// targets writing a zip into one folder is a folder where
+		// `glob('*.zip')` returns whichever the filesystem felt like -
+		// which is what `tools/install-generated.php` does, and it would
+		// have handed Joomla a WordPress plugin.
+		//
+		// And named for the project rather than `com_<project>`. That
+		// prefix is Joomla's word for a component and it was sitting in
+		// the path of a WordPress plugin - a small thing, and exactly the
+		// kind of small thing a second target is for finding.
+		$root = $generated . '/' . strtolower($componentName);
 
 		if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root)) {
 			throw new \RuntimeException('Cannot create ' . $root);
@@ -264,7 +308,7 @@ class GenerateModel extends AdminModel
 		// folder full of identically named packages says nothing about which
 		// is which, and the one that matters is rarely the newest by date.
 		$version = trim((string) ($project->manifest()->version ?? '')) ?: '0.0.0';
-		$archive = $generated . '/com_' . strtolower($componentName) . '-' . $version . '.zip';
+		$archive = $generated . '/' . strtolower($componentName) . '-' . $version . '.zip';
 
 		$writer->write($files, $archive);
 

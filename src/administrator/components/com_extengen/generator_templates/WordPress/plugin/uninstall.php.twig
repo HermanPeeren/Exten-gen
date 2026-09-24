@@ -1,0 +1,23 @@
+<?php
+/**
+ * Removes everything {{ pluginName }} put in the database.
+ *
+ * WordPress includes this file itself when the plugin is deleted, so it must
+ * not assume the plugin is loaded: nothing here has run.
+ */
+
+defined('WP_UNINSTALL_PLUGIN') || exit;
+
+global $wpdb;
+
+foreach (
+    [
+{% for entity in entities %}
+        '{{ entity.table }}',
+{% endfor %}
+    ] as $table
+) {
+    // No placeholder: $wpdb->prepare() cannot parameterise an identifier, and
+    // the names come from the model rather than from a request.
+    $wpdb->query('DROP TABLE IF EXISTS ' . $wpdb->prefix . $table);
+}

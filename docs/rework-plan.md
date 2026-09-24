@@ -1713,6 +1713,57 @@ is. The stronger claim needs the generator to stop being half the component - wh
 **4.4 A second target**, Drupal or WordPress, which is the real proof that 0.4 was done
 correctly.
 
+**Done: WordPress, and 0.4 was done correctly.** The same ER1 model that produces a Joomla 6
+component now also produces a WordPress plugin - a main file whose header comment is the whole
+of what WordPress reads, an `uninstall.php` it includes by that name, a `readme.txt`, a
+`dbDelta()` activation hook, a `WP_List_Table` per index page and a form partial per detail
+page.
+
+*WordPress rather than Drupal, and deliberately.* Drupal is another PHP framework with
+entities, a service container and annotated classes - close enough to Joomla that a badly
+placed abstraction would still fit, which would have proved nothing. WordPress has no MVC, no
+XML forms, no namespaces by convention, no manifest and no schema installer.
+
+**What did not have to change, which is the whole of the claim.** The pipeline. The model -
+ER1 turns out never to have mentioned a CMS. The `Generator` base class, which gives a
+renderer and a file collection and stops there. And `ProjectValidator`, shared between the
+two targets: everything it refuses - no component name, no entities, no pages - makes a model
+unusable whatever it is generated into, so a rule that had really been about Joomla would have
+been in the wrong class since 1.0 and this is the first thing that could have noticed.
+
+**What had to change was one line in `GenerateModel`**, from constructing `Joomla6Target` by
+name to asking a `TargetRegistry` - which has been in the library since 0.4 and had never held
+two of anything, because there had never been two.
+
+*The difference worth pointing at is the schema.* The two CMSs do not disagree about the
+columns; they disagree about what a schema **is**. Joomla runs
+`sql/install.mysql.utf8.sql` once and records it in `#__schemas`. A WordPress plugin calls
+`dbDelta()` from its activation hook, and WordPress compares that statement against the
+database and alters - so the same statement is the install and every upgrade after it. A
+generator that had assumed "a schema is a .sql file" would have had that assumption somewhere
+above the target. `SecondTargetTest` asserts the difference rather than describing it.
+
+*Two Joomla-isms the second target found, both in paths.* Generated output went to
+`generated/<Project>/Joomla6/com_<project>/`, and both halves of that are Joomla's words. The
+`com_` prefix was sitting in the path of a WordPress plugin; and both targets would have
+written a zip into one directory, where `tools/install-generated.php` does `glob('*.zip')` and
+takes the first - which is how a site gets handed a WordPress plugin to install as a Joomla
+component. Output is under the target's own directory now, named for the project.
+
+*One seam that is narrower than it looks, said out loud rather than hidden.* The `Generator`
+base takes a `LanguageStringUtil` because the Joomla generators collect `COM_X_*` constants
+through it while their templates render. A WordPress plugin writes `__('Text', 'domain')`
+inline, so `WordPressTarget` constructs one and never asks it for anything. Two targets is
+enough to see the shape of that and not enough to know what it should be; a third would say.
+
+*Verified in the browser*, because everything above runs with the framework replaced by two
+constants. `generate.cy.js` generates the same project into WordPress through the real screen,
+with the target arriving from the address bar, the registry resolving it inside Joomla, Twig
+finding a second template set on a real filesystem, and the output landing where it does not
+collide.
+
+*Done:* 291 unit tests, PHPStan, phpcs and 27 Cypress specs green.
+
 ---
 
 ## Decisions outstanding

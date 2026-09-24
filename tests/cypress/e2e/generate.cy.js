@@ -42,6 +42,40 @@ describe('generating a component', () => {
     cy.get('body').should('contain.text', '.zip');
   });
 
+  /**
+   * The same project, generated into WordPress instead: step 4.4.
+   *
+   * The unit suite runs both targets over the fixtures with the framework
+   * replaced by two constants. What it cannot see is any of this: the target
+   * arriving from the address bar, the registry resolving it inside Joomla, Twig
+   * finding a second template set on a real filesystem, and the output landing
+   * somewhere that does not collide with the first target's.
+   *
+   * That last one is not hypothetical. Both targets write a zip, and until 4.4
+   * they would have written it into one directory - where
+   * `tools/install-generated.php` does `glob('*.zip')` and takes the first,
+   * which is how a site gets handed a WordPress plugin to install as a Joomla
+   * component.
+   */
+  it('generates the same project into a WordPress plugin', () => {
+    cy.visitExtengen('projects');
+    cy.shouldHaveRendered();
+
+    cy.get('#adminForm a[data-href*="view=generate"]').first().then(($link) => {
+      cy.visit($link.attr('data-href') + '&target=wordpress');
+    });
+
+    cy.get('body', { timeout: 60000 }).should('contain.text', 'files');
+    cy.get('body').should('not.contain', 'Fatal error');
+    cy.get('body').should('not.contain', 'Warning:');
+
+    // What it wrote, and where. The plugin's main file is named for the
+    // project, and everything is under the target's own directory.
+    cy.get('body').should('contain.text', '/wordpress/');
+    cy.get('body').should('contain.text', 'readme.txt generated');
+    cy.get('body').should('not.contain.text', 'install.mysql.utf8.sql');
+  });
+
   it('leaves the model alone', () => {
     // Generation reads; it must not write to the project it generated from.
     // A run that quietly edited the model would show up as a changed list.

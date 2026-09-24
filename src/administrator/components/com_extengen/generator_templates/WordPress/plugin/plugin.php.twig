@@ -1,0 +1,33 @@
+<?php
+/**
+ * Plugin Name: {{ pluginName }}
+ * Description: {{ description }}
+ * Version:     {{ version }}
+ * Author:      {{ authorName }}
+ * Author URI:  {{ authorUrl }}
+ * License:     {{ license }}
+ * Text Domain: {{ slug }}
+ * Domain Path: /languages
+ */
+
+defined('ABSPATH') || exit;
+
+define('{{ constant }}_VERSION', '{{ version }}');
+define('{{ constant }}_DIR', plugin_dir_path(__FILE__));
+
+require_once {{ constant }}_DIR . 'includes/class-{{ slug }}-activator.php';
+require_once {{ constant }}_DIR . 'admin/class-{{ slug }}-admin.php';
+
+register_activation_hook(__FILE__, [{{ prefix }}_Activator::class, 'activate']);
+
+add_action('plugins_loaded', static function (): void {
+    load_plugin_textdomain(
+        '{{ slug }}',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+});
+
+if (is_admin()) {
+    add_action('admin_menu', [{{ prefix }}_Admin::class, 'menu']);
+}

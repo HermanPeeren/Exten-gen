@@ -1,0 +1,89 @@
+<?php
+/**
+ * The {{ screen.label }} list.
+ */
+
+defined('ABSPATH') || exit;
+
+if (!class_exists('WP_List_Table')) {
+    require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+}
+
+class {{ prefix }}_{{ screen.class }}_Table extends WP_List_Table
+{
+    public function __construct()
+    {
+        parent::__construct([
+            'singular' => '{{ screen.singular }}',
+            'plural'   => '{{ screen.slug }}',
+            'ajax'     => false,
+        ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function get_columns(): array
+    {
+        return [
+{% for column in screen.columns %}
+            '{{ column.name }}' => __('{{ column.label }}', '{{ slug }}'),
+{% endfor %}
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    public function get_sortable_columns(): array
+    {
+        return [
+{% for column in screen.columns %}
+            '{{ column.name }}' => ['{{ column.name }}', false],
+{% endfor %}
+        ];
+    }
+
+    /**
+     * Read the rows.
+     *
+     * Ordering is checked against the columns this table declares rather than
+     * passed through, because an ORDER BY cannot be a bound parameter and
+     * $_GET['orderby'] is whatever somebody put in the address bar.
+     */
+    public function prepare_items(): void
+    {
+        global $wpdb;
+
+        $this->_column_headers = [$this->get_columns(), [], $this->get_sortable_columns()];
+
+        $orderby = isset($_GET['orderby']) ? sanitize_key(wp_unslash($_GET['orderby'])) : 'id';
+        $order   = isset($_GET['order']) && strtolower(sanitize_key(wp_unslash($_GET['order']))) === 'desc'
+            ? 'DESC'
+            : 'ASC';
+
+        if (!array_key_exists($orderby, $this->get_sortable_columns())) {
+            $orderby = 'id';
+        }
+
+        $table = $wpdb->prefix . '{{ screen.table }}';
+
+        $this->items = $wpdb->get_results(
+            "SELECT * FROM {$table} ORDER BY {$orderby} {$order}",
+            ARRAY_A
+        ) ?: [];
+    }
+
+    /**
+     * @param   array<string, mixed>  $item
+     */
+    public function column_default($item, $column_name): string
+    {
+        return esc_html((string) ($item[$column_name] ?? ''));
+    }
+
+    public function no_items(): void
+    {
+        esc_html_e('Nothing here yet.', '{{ slug }}');
+    }
+}

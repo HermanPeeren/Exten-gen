@@ -1,0 +1,52 @@
+<?php
+/**
+ * The {{ form.label }} form.
+ *
+ * Included by the admin screen, so $row is already in scope: the stored row as
+ * an associative array, or an empty one for something new.
+ */
+
+defined('ABSPATH') || exit;
+
+/** @var array<string, mixed> $row */
+$row = $row ?? [];
+?>
+<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+    <input type="hidden" name="action" value="{{ slug }}_save_{{ form.slug }}">
+    <input type="hidden" name="id" value="<?php echo esc_attr((string) ($row['id'] ?? '')); ?>">
+    <?php wp_nonce_field('{{ slug }}_save_{{ form.slug }}'); ?>
+
+    <table class="form-table" role="presentation">
+        <tbody>
+{% for field in form.fields %}
+        <tr>
+            <th scope="row">
+                <label for="{{ form.slug }}-{{ field.name }}">
+                    <?php esc_html_e('{{ field.label }}', '{{ slug }}'); ?>
+                </label>
+            </th>
+            <td>
+{% if field.input == 'textarea' %}
+                <textarea
+                    id="{{ form.slug }}-{{ field.name }}"
+                    name="{{ field.name }}"
+                    rows="5"
+                    class="large-text"
+                ><?php echo esc_textarea((string) ($row['{{ field.name }}'] ?? '')); ?></textarea>
+{% else %}
+                <input
+                    type="{{ field.input }}"
+                    id="{{ form.slug }}-{{ field.name }}"
+                    name="{{ field.name }}"
+                    class="regular-text"
+                    value="<?php echo esc_attr((string) ($row['{{ field.name }}'] ?? '')); ?>"
+                >
+{% endif %}
+            </td>
+        </tr>
+{% endfor %}
+        </tbody>
+    </table>
+
+    <?php submit_button(__('Save', '{{ slug }}')); ?>
+</form>

@@ -1,0 +1,72 @@
+<?php
+/**
+ * {{ pluginName }}'s admin screens.
+ */
+
+defined('ABSPATH') || exit;
+
+{% for screen in screens %}
+require_once {{ constant }}_DIR . 'admin/class-{{ slug }}-{{ screen.slug }}-table.php';
+{% endfor %}
+
+class {{ prefix }}_Admin
+{
+    /**
+     * Register the menu and its pages.
+     *
+     * The first index page is the plugin's own menu entry; the rest hang under
+     * it. A submenu whose slug equals its parent's replaces the entry WordPress
+     * would otherwise generate, which is how the first one gets a readable name
+     * instead of repeating the plugin's.
+     */
+    public static function menu(): void
+    {
+{% if screens is not empty %}
+        add_menu_page(
+            __('{{ pluginName }}', '{{ slug }}'),
+            __('{{ pluginName }}', '{{ slug }}'),
+            'manage_options',
+            '{{ slug }}',
+            [self::class, '{{ screens|first.method }}'],
+            'dashicons-database'
+        );
+
+{% for screen in screens %}
+        add_submenu_page(
+            '{{ slug }}',
+            __('{{ screen.label }}', '{{ slug }}'),
+            __('{{ screen.label }}', '{{ slug }}'),
+            'manage_options',
+{% if loop.first %}
+            '{{ slug }}',
+{% else %}
+            '{{ slug }}-{{ screen.slug }}',
+{% endif %}
+            [self::class, '{{ screen.method }}']
+        );
+
+{% endfor %}
+{% endif %}
+    }
+
+{% for screen in screens %}
+    /**
+     * The {{ screen.label }} screen.
+     */
+    public static function {{ screen.method }}(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to view this page.', '{{ slug }}'));
+        }
+
+        $table = new {{ prefix }}_{{ screen.class }}_Table();
+        $table->prepare_items();
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('{{ screen.label }}', '{{ slug }}') . '</h1>';
+        $table->display();
+        echo '</div>';
+    }
+
+{% endfor %}
+}

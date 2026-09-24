@@ -24,7 +24,11 @@ if ($project === null) {
 }
 
 $directory = $site . '/administrator/components/com_extengen/generated/' . $project;
-$packages  = glob($directory . '/*.zip') ?: [];
+
+// Under the target's own directory since 4.4, because a second target writes a
+// zip too and `glob('*.zip')` over both would hand Joomla a WordPress plugin.
+// The bare directory is still read, for output generated before that.
+$packages = glob($directory . '/joomla6/*.zip') ?: (glob($directory . '/*.zip') ?: []);
 
 if ($packages === []) {
     fwrite(STDERR, "No generated package under {$directory}. Generate the project first.\n");

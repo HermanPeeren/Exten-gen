@@ -1,0 +1,29 @@
+=== {{ pluginName }} ===
+Contributors: {{ authorName }}
+Requires at least: 6.4
+Tested up to: 6.7
+Requires PHP: 8.1
+Stable tag: {{ version }}
+License: {{ license }}
+
+{{ description }}
+
+== Description ==
+
+{{ description }}
+
+This plugin stores:
+
+{% for entity in entities %}
+* {{ entity.label }}
+{% endfor %}
+
+== Installation ==
+
+1. Upload the plugin folder to `/wp-content/plugins/`.
+2. Activate it through the Plugins screen. The tables are created on activation.
+
+== Changelog ==
+
+= {{ version }} =
+* Generated.

@@ -47,6 +47,13 @@ class HtmlView extends BaseHtmlView
 		$projectId = Factory::getApplication()->getInput()->getInt('project_id');
 		$model->setProjectId($projectId);
 
+		// Which target, since 4.4. Absent means the default, and a name the
+		// registry does not have means the default too - the model decides
+		// that, because the registry is the only thing that knows the list.
+		$model->setTargetId(
+			(string) Factory::getApplication()->getInput()->getCmd('target', '')
+		);
+
 		// Todo: also get the output-type (now fixed on 'Joomla6' in GenerateModel)
 		$model->generate();
 		$log = $model->log;
