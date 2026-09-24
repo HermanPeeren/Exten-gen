@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Extengen\Administrator\Rule" addfieldprefix="Yepr\Component\Extengen\Administrator\Field">
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_NAME_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_NAME_DESC" validate="Letter"/>
+    <field name="form_data" type="textarea" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_FORM_DATA_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_FORM_DATA_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+  <fieldset name="binding" label="COM_EXTENGEN_PROJECT_FIELDSET_BINDING_LABEL">
+    <field name="metalanguage_key" type="metalanguage" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_KEY_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_KEY_DESC"/>
+    <field name="metalanguage_version" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_VERSION_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_METALANGUAGE_VERSION_DESC"/>
+  </fieldset>
+</form>

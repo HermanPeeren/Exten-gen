@@ -1658,6 +1658,58 @@ the engine from Stage 0, working generation from Stage 1, modelled generators fr
 byte-identical output against the hand-written component, the same way 2.3 checks a
 modelled generator.
 
+**Done, and the criterion is wrong.** Exten-gen is modelled in ER1 -
+`tests/Fixtures/golden/models/extengen.json`, the two tables it stores, field for field out
+of its own install SQL, with an index page and a detail page for each - and it generates 35
+files from that model. None of them is byte-identical to the hand-written component, and the
+number that explains it is this:
+
+| What com_extengen is | Files |
+|---|---|
+| the generator itself: `src/Generator/` and the Twig template set | 51 |
+| the shape a generated component has | 36 |
+| field classes, rules, slots, metalanguage store, reference index | 11 |
+| manifest, root files, service providers | 4 |
+| **total** | **102** |
+
+**Half of this component is a code generator, and a generator of data-driven components does
+not produce one.** The criterion was written before anybody counted. Generating
+`src/Generator/` byte for byte would need a model of *generators*, which is Gen-gen's
+subject and not ER1's - and 2.3 already checks that a modelled generator reproduces a
+hand-written one, which is the same claim at the scale where it means something.
+
+*What the exercise was worth anyway, and it was worth a lot.* The self-model sits in
+`Fixtures/golden/models` beside the other three, so its output goes through every check they
+do: the golden comparison, the PHP, XML, INI and SQL parsers, name resolution, the
+template-tag sweep. **Exten-gen generates a valid component from a model of itself** - the
+manifest, the services provider, the SQL, the language files, and a controller, model, table,
+view and layout per entity, on the paths this component keeps them at. Twenty-four of the
+thirty-five land on a file that exists; the other eleven are the second entity's screens and
+the site half, which this component has never needed.
+
+And it is the first model written in ER1 1.1 in earnest rather than in a test: the project
+name is validated by `Letter`, the two binding columns are a group of their own, and the
+metalanguage picker is named as a field class.
+
+*The distance, where it is not structural.* `services/provider.php` comes out the same length
+as the hand-written one and differs in its header comment and the order of its imports.
+`ProjectModel.php` is a quarter of the size of the real one, because the real one merges an
+imported metalanguage's forms onto the Joomla half - custom code, which the model can hold in
+a slot and this model does not. The first kind is cosmetic and would mean tuning the template
+set to one target; the second is a modelling exercise on a component that is half out of
+scope either way. Neither is what the step was for.
+
+*Pinned rather than remembered.* `SelfHostingTest` re-measures all of it: that the model still
+matches the schema it claims to describe, that the generator is still most of what this
+component is, that the output still lands where the component keeps its files, and that
+nothing is byte-identical yet. That last one is an assertion, so the day something does match
+it fails - which is news, and this is where news belongs.
+
+**What the criterion should have been**, and what this step therefore leaves behind:
+*Exten-gen generates the part of Exten-gen that is a component, and that output is pinned.* It
+is. The stronger claim needs the generator to stop being half the component - which is what
+4.1 did for plug-gen and what this repository has not done for itself.
+
 **4.4 A second target**, Drupal or WordPress, which is the real proof that 0.4 was done
 correctly.
 

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fields name="filter">
+    <field name="search" type="text" inputmode="search" label="COM_EXTENGEN_PROJECTS_FIELD_SEARCH_LABEL" description="COM_EXTENGEN_PROJECTS_FIELD_SEARCH_DESC" hint="JSEARCH_FILTER"/>
+    <field name="name" type="sql" query="SELECT DISTINCT `name` AS value, `name` AS text FROM `#__extengen_project`" header="COM_EXTENGEN_PROJECTS_FILTER_FIELD_NAME_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_EXTENGEN_PROJECTS_FILTER_FIELD_NAME_LABEL" description="COM_EXTENGEN_PROJECTS_FILTER_FIELD_NAME_DESC"/>
+    <field name="metalanguage_key" type="sql" query="SELECT DISTINCT `metalanguage_key` AS value, `metalanguage_key` AS text FROM `#__extengen_project`" header="COM_EXTENGEN_PROJECTS_FILTER_FIELD_METALANGUAGE_KEY_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_EXTENGEN_PROJECTS_FILTER_FIELD_METALANGUAGE_KEY_LABEL" description="COM_EXTENGEN_PROJECTS_FILTER_FIELD_METALANGUAGE_KEY_DESC"/>
+  </fields>
+</form>

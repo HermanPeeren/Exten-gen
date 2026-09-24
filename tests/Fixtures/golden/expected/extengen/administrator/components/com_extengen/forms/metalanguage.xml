@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\Extengen\Administrator\Rule" addfieldprefix="Yepr\Component\Extengen\Administrator\Field">
+    <field name="lang_key" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_LANG_KEY_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_LANG_KEY_DESC"/>
+    <field name="version" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_VERSION_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_VERSION_DESC"/>
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_NAME_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_NAME_DESC"/>
+    <field name="root" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_ROOT_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_ROOT_DESC"/>
+    <field name="form_root" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_FORM_ROOT_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_FORM_ROOT_DESC"/>
+    <field name="language_file" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_LANGUAGE_FILE_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_LANGUAGE_FILE_DESC"/>
+    <field name="manifest" type="textarea" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_MANIFEST_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_MANIFEST_DESC"/>
+    <field name="imported" type="calendar" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_METALANGUAGE_FIELD_IMPORTED_LABEL" description="COM_EXTENGEN_METALANGUAGE_FIELD_IMPORTED_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

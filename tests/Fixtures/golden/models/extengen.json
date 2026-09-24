@@ -1,0 +1,411 @@
+{
+    "id": "1",
+    "name": "Extengen",
+    "datamodel": {
+        "datamodel0": {
+            "entity_name": "Project",
+            "field": {
+                "field0": {
+                    "field_name": "name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "b8579d8d-ab97-572b-a125-06f2e1ca99c6",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                },
+                "field1": {
+                    "field_name": "form_data",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c42f5274-e493-5c9a-a7bb-c5aca99a055b",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                },
+                "field2": {
+                    "field_name": "metalanguage_key",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "da133125-7da0-5f82-8bfe-34014fab689d",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                },
+                "field3": {
+                    "field_name": "metalanguage_version",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "14e96d0f-a450-511a-a956-81916db8497c",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                }
+            },
+            "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+        },
+        "datamodel1": {
+            "entity_name": "Metalanguage",
+            "field": {
+                "field0": {
+                    "field_name": "lang_key",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text",
+                        "default_ref_display": "1"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "3a66058e-fe4e-5752-b070-179742744678",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field1": {
+                    "field_name": "version",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "b07f177e-21cf-55cf-8962-3f897404facd",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field2": {
+                    "field_name": "name",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "cb1e6e29-d088-5b1b-860d-adaf97ade3e8",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field3": {
+                    "field_name": "root",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "ee77ad00-f306-5fa0-ae54-38f448876efa",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field4": {
+                    "field_name": "form_root",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "252b0763-9898-57f5-b36c-8b67d5a0df42",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field5": {
+                    "field_name": "language_file",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Short_Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "dd5e678e-eef5-5103-9b0e-4f736ebf9f2b",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field6": {
+                    "field_name": "manifest",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Text"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "a63f0524-d620-5d28-8076-00ca740e332f",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                },
+                "field7": {
+                    "field_name": "imported",
+                    "field_type": "property",
+                    "property": {
+                        "type": "DateTime"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "8ea91fd4-355e-5571-bb78-3ab6fc996ddb",
+                    "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                }
+            },
+            "entity_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+        }
+    },
+    "pages": {
+        "pages0": {
+            "page_name": "Projects",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                }
+            },
+            "filters": {
+                "filters0": {
+                    "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference": "b8579d8d-ab97-572b-a125-06f2e1ca99c6",
+                    "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference_id": "b8579d8d-ab97-572b-a125-06f2e1ca99c6"
+                },
+                "filters1": {
+                    "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference": "da133125-7da0-5f82-8bfe-34014fab689d",
+                    "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference_id": "da133125-7da0-5f82-8bfe-34014fab689d"
+                }
+            },
+            "presentationcolumns": {
+                "presentationcolumns0": {
+                    "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference": "b8579d8d-ab97-572b-a125-06f2e1ca99c6",
+                    "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference_id": "b8579d8d-ab97-572b-a125-06f2e1ca99c6"
+                },
+                "presentationcolumns1": {
+                    "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference": "da133125-7da0-5f82-8bfe-34014fab689d",
+                    "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference_id": "da133125-7da0-5f82-8bfe-34014fab689d"
+                },
+                "presentationcolumns2": {
+                    "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference": "14e96d0f-a450-511a-a956-81916db8497c",
+                    "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "field_reference_id": "14e96d0f-a450-511a-a956-81916db8497c"
+                }
+            },
+            "page_id": "e29a052e-37bd-5e9c-acc4-04f470aaa407"
+        },
+        "pages1": {
+            "page_name": "Project",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                    "reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                }
+            },
+            "editfields": {
+                "editfields0": {
+                    "attribute": {
+                        "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference": "b8579d8d-ab97-572b-a125-06f2e1ca99c6",
+                        "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference_id": "b8579d8d-ab97-572b-a125-06f2e1ca99c6"
+                    },
+                    "htmltype": "text",
+                    "parameters": [],
+                    "validate": "Letter"
+                },
+                "editfields1": {
+                    "attribute": {
+                        "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference": "c42f5274-e493-5c9a-a7bb-c5aca99a055b",
+                        "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference_id": "c42f5274-e493-5c9a-a7bb-c5aca99a055b"
+                    },
+                    "htmltype": "textarea",
+                    "parameters": []
+                },
+                "editfields2": {
+                    "attribute": {
+                        "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference": "da133125-7da0-5f82-8bfe-34014fab689d",
+                        "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference_id": "da133125-7da0-5f82-8bfe-34014fab689d"
+                    },
+                    "htmltype": "metalanguage",
+                    "parameters": [],
+                    "fieldset": "binding"
+                },
+                "editfields3": {
+                    "attribute": {
+                        "entity_reference": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference": "14e96d0f-a450-511a-a956-81916db8497c",
+                        "entity_reference_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3",
+                        "field_reference_id": "14e96d0f-a450-511a-a956-81916db8497c"
+                    },
+                    "htmltype": "text",
+                    "parameters": [],
+                    "fieldset": "binding"
+                }
+            },
+            "page_id": "2b10645e-8177-5502-a855-9ed61e4e50a9"
+        },
+        "pages2": {
+            "page_name": "Metalanguages",
+            "page_type": "indexpage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                }
+            },
+            "filters": {
+                "filters0": {
+                    "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference": "3a66058e-fe4e-5752-b070-179742744678",
+                    "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference_id": "3a66058e-fe4e-5752-b070-179742744678"
+                }
+            },
+            "presentationcolumns": {
+                "presentationcolumns0": {
+                    "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference": "cb1e6e29-d088-5b1b-860d-adaf97ade3e8",
+                    "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference_id": "cb1e6e29-d088-5b1b-860d-adaf97ade3e8"
+                },
+                "presentationcolumns1": {
+                    "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference": "3a66058e-fe4e-5752-b070-179742744678",
+                    "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference_id": "3a66058e-fe4e-5752-b070-179742744678"
+                },
+                "presentationcolumns2": {
+                    "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference": "b07f177e-21cf-55cf-8962-3f897404facd",
+                    "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference_id": "b07f177e-21cf-55cf-8962-3f897404facd"
+                },
+                "presentationcolumns3": {
+                    "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference": "ee77ad00-f306-5fa0-ae54-38f448876efa",
+                    "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "field_reference_id": "ee77ad00-f306-5fa0-ae54-38f448876efa"
+                }
+            },
+            "page_id": "41febdb8-75ec-5203-a26c-c42571741873"
+        },
+        "pages3": {
+            "page_name": "Metalanguage",
+            "page_type": "detailspage",
+            "entity_ref": {
+                "entity_ref0": {
+                    "reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                    "reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a"
+                }
+            },
+            "editfields": {
+                "editfields0": {
+                    "attribute": {
+                        "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference": "cb1e6e29-d088-5b1b-860d-adaf97ade3e8",
+                        "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference_id": "cb1e6e29-d088-5b1b-860d-adaf97ade3e8"
+                    },
+                    "htmltype": "text",
+                    "parameters": []
+                },
+                "editfields1": {
+                    "attribute": {
+                        "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference": "3a66058e-fe4e-5752-b070-179742744678",
+                        "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference_id": "3a66058e-fe4e-5752-b070-179742744678"
+                    },
+                    "htmltype": "text",
+                    "parameters": []
+                },
+                "editfields2": {
+                    "attribute": {
+                        "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference": "b07f177e-21cf-55cf-8962-3f897404facd",
+                        "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference_id": "b07f177e-21cf-55cf-8962-3f897404facd"
+                    },
+                    "htmltype": "text",
+                    "parameters": []
+                },
+                "editfields3": {
+                    "attribute": {
+                        "entity_reference": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference": "ee77ad00-f306-5fa0-ae54-38f448876efa",
+                        "entity_reference_id": "a457e124-a9f6-58a4-afd7-1eb1d6ebfe6a",
+                        "field_reference_id": "ee77ad00-f306-5fa0-ae54-38f448876efa"
+                    },
+                    "htmltype": "text",
+                    "parameters": []
+                }
+            },
+            "page_id": "b7c258fe-6d31-5e37-a9f4-fb6a6b88707d"
+        }
+    },
+    "extensions": {
+        "component": {
+            "component_name": "Extengen",
+            "component_description": "Model a Joomla extension, and generate it.",
+            "Sections": {
+                "backendsection": {
+                    "backendsection0": {
+                        "page_reference": "e29a052e-37bd-5e9c-acc4-04f470aaa407",
+                        "page_reference_id": "e29a052e-37bd-5e9c-acc4-04f470aaa407"
+                    },
+                    "backendsection1": {
+                        "page_reference": "2b10645e-8177-5502-a855-9ed61e4e50a9",
+                        "page_reference_id": "2b10645e-8177-5502-a855-9ed61e4e50a9"
+                    },
+                    "backendsection2": {
+                        "page_reference": "41febdb8-75ec-5203-a26c-c42571741873",
+                        "page_reference_id": "41febdb8-75ec-5203-a26c-c42571741873"
+                    },
+                    "backendsection3": {
+                        "page_reference": "b7c258fe-6d31-5e37-a9f4-fb6a6b88707d",
+                        "page_reference_id": "b7c258fe-6d31-5e37-a9f4-fb6a6b88707d"
+                    }
+                },
+                "frontendsection": {}
+            },
+            "manifest": {
+                "copyright": "Yepr, Herman Peeren",
+                "license": "GPL 3.0",
+                "link": "https://yepr.nl",
+                "version": "1.1.0",
+                "author_name": "Herman Peeren",
+                "author_email": "herman@yepr.nl",
+                "author_url": "https://yepr.nl",
+                "creation_date": "2026-09-24",
+                "company_namespace": "Yepr"
+            },
+            "languages": {
+                "languages0": {
+                    "language_code": "en",
+                    "country_code": "GB",
+                    "key_value_pairs": []
+                }
+            }
+        }
+    },
+    "tags": []
+}

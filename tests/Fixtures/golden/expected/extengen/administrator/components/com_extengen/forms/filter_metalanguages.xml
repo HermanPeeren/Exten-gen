@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fields name="filter">
+    <field name="search" type="text" inputmode="search" label="COM_EXTENGEN_METALANGUAGES_FIELD_SEARCH_LABEL" description="COM_EXTENGEN_METALANGUAGES_FIELD_SEARCH_DESC" hint="JSEARCH_FILTER"/>
+    <field name="lang_key" type="sql" query="SELECT DISTINCT `lang_key` AS value, `lang_key` AS text FROM `#__extengen_metalanguage`" header="COM_EXTENGEN_METALANGUAGES_FILTER_FIELD_LANG_KEY_HEADER" onchange="this.form.submit();" key_field="value" value_field="text" label="COM_EXTENGEN_METALANGUAGES_FILTER_FIELD_LANG_KEY_LABEL" description="COM_EXTENGEN_METALANGUAGES_FILTER_FIELD_LANG_KEY_DESC"/>
+  </fields>
+</form>

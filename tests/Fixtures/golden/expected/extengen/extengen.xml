@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" version="4.3" method="upgrade">
+	<name>com_extengen</name>
+	<creationDate>2026-09-24</creationDate>
+	<author>Herman Peeren</author>
+	<authorEmail>herman@yepr.nl</authorEmail>
+	<authorUrl>https://yepr.nl</authorUrl>
+	<copyright>Yepr, Herman Peeren</copyright>
+	<license>GPL 3.0</license>
+	<version>1.1.0</version>
+	<description>COM_EXTENGEN_DESCRIPTION</description>
+	<namespace path="src">Yepr\Component\Extengen</namespace>
+
+	<!-- Scripts to run on installation -->
+	<!--
+		No scriptfile. Nothing generates a script.php, and a manifest that
+		names one that is not in the package is a manifest saying something
+		untrue - Joomla tolerates it by quietly ignoring the declaration,
+		which is worse than refusing it. It comes back when the model can
+		say what an install script should do.
+	-->
+
+	<!-- Runs on install -->
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<!-- Runs on uninstall -->
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<!-- Runs on update -->
+	<update>
+		<schemas>
+			<!--todo: <schemapath type="mysql">sql/updates/mysql</schemapath>-->
+		</schemas>
+	</update>
+
+	<!-- Media files -->
+	<media folder="media/com_extengen" destination="com_extengen">
+
+		<!--<folder>attachments</folder>
+		<folder>css</folder>
+		<folder>fonts</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+
+		<filename>joomla.asset.json</filename>-->
+	</media>
+
+	<!-- Front-end files -->
+	<files folder="components/com_extengen">
+		<folder>language</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+	</files>
+
+	<!-- Back-end files -->
+	<administration>
+		<!-- Menu entries --><!--todo: sys-language-string?  , '', 'Administrator', true-->
+		<menu view="">COM_EXTENGEN_MENUNAME</menu>
+		<submenu>
+			<!-- all backend index pages as submenu item -->
+			
+			<menu link="option=com_extengen&amp;view=projects">COM_EXTENGEN_SUBMENUNAME_PROJECTS
+			<params>
+				<menu-quicktask-title>COM_EXTENGEN_SUBMENUNAME_PROJECTS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_extengen&amp;view=projects</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_extengen&amp;view=metalanguages">COM_EXTENGEN_SUBMENUNAME_METALANGUAGES
+			<params>
+				<menu-quicktask-title>COM_EXTENGEN_SUBMENUNAME_METALANGUAGES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_extengen&amp;view=metalanguages</menu-quicktask>
+			</params>
+			</menu>
+					</submenu>
+
+		<!-- Core files -->
+		<files folder="administrator/components/com_extengen">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<!--<filename>version.php</filename>-->
+			<filename>LICENSE.txt</filename>
+
+			<folder>forms</folder>
+			<folder>language</folder>
+			<!--<folder>layouts</folder>-->
+			<folder>services</folder>
+			<folder>sql</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+		</files>
+	</administration>
+
+	<!-- Update servers -->
+	<!--<updateservers>
+		<server type="extension" priority="1" name="Extengen">/extengen</server>
+	</updateservers>-->
+</extension>
