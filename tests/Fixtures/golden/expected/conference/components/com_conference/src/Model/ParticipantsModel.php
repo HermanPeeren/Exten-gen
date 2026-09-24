@@ -90,8 +90,13 @@ class ParticipantsModel extends ListModel
 				->bind(':organisation', $organisation, ParameterType::STRING);
 		}
 
+		// <extengen id="site.listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="site.listmodel.methods">
+	// </extengen>
 
 }

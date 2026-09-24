@@ -83,8 +83,13 @@ class FlightsModel extends ListModel
 		);
 
 
+		// <extengen id="site.listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="site.listmodel.methods">
+	// </extengen>
 
 }

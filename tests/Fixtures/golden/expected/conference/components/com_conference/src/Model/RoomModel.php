@@ -158,4 +158,7 @@ class RoomModel extends AdminModel
 	return parent::getTable($name, $prefix, $options);
 	}
 
+	// <extengen id="site.detailsmodel.methods">
+	// </extengen>
+
 }

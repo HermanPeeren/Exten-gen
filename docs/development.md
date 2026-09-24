@@ -344,6 +344,21 @@ made in the output despite all of the above is not eaten. A region the new
 output no longer has is reported by path and id, because its content is then
 only in the file on disk.
 
+**Ten slots, five back end and five front.** The back-end five extend the table
+and the two admin models. The front-end five are their own ids, prefixed
+`site.`, rather than the back-end ones being reused - the site templates
+generate a second list model and a second details model with the same method
+names, so a shared slot would put one body in two files without saying so, and a
+visitor's list would quietly gain an editor's conditions.
+
+**The two layout slots work differently from the other eight.** A `tmpl` file is
+`include`d, so a slot at the top of one can either add markup above what was
+generated or render the page itself and `return;` - which ends the include and
+leaves the generated layout unexecuted. That is how a front end gets a custom
+template without the model needing a way to say "replace this", and it is why
+those two sit above the generated markup rather than below it. Their bodies are
+PHP like every other slot's; a body that wants markup echoes it.
+
 **One place writes a marker.** Templates emit `{{ slots['table.check']|raw }}`
 and never see a body. A template that wrote its own markers could drift from the
 pattern the merger matches, and the drift would show up only as somebody's code

@@ -40,12 +40,26 @@ namespace Yepr\Component\Extengen\Administrator\CustomCode;
  * the mechanism: it carries back edits somebody made in the output despite all
  * of this, so that a regeneration does not silently eat them.
  *
- * **Back end only, for now.** Every slot names exactly one generated file per
- * object, which is what lets a person say where their code will end up. The
- * site templates generate a second list model and a second details model with
- * the same method names, so a shared slot would put one body in two files
- * without saying so. Site slots would be their own ids, and wait until 1.12
- * settles whether the front end is in v1 at all.
+ * **Every slot names exactly one generated file per object**, which is what
+ * lets a person say where their code will end up. The site templates generate a
+ * second list model and a second details model with the same method names, so a
+ * shared slot would put one body in two files without saying so - which is why
+ * the front-end ones are their own ids, prefixed `site.`, rather than the
+ * back-end ones being reused.
+ *
+ * They were left out at first, waiting on 1.12 to settle whether the front end
+ * was in v1 at all. It did, and they stayed out; this is that overdue.
+ *
+ * **The two layout slots are the ones people actually ask for**, and they work
+ * differently from the rest. A `tmpl` file is `include`d, so a slot at the top
+ * of one can either add markup above what was generated or render the page
+ * itself and `return;` - which ends the include and leaves the generated
+ * layout unexecuted. That is how a front end gets a custom template without the
+ * model needing a way to say "replace this", and it is why those two sit at the
+ * top of their file rather than at the bottom.
+ *
+ * Their bodies are PHP, like every other slot's. A layout file is PHP, the
+ * markers are PHP comments, and a body that wants markup echoes it.
  *
  * @since  1.0.0
  */
@@ -112,6 +126,50 @@ final class SlotCatalogue
             'pageType'    => 'detailspage',
             'label'       => 'Extra methods on the details model',
             'description' => 'Whole methods, added to the end of the details model class.',
+        ],
+        'site.listmodel.query' => [
+            'indent'      => 2,
+            'owner'       => 'Page',
+            'pageType'    => 'indexpage',
+            'label'       => 'Extra conditions on the front-end list query',
+            'description' => 'Runs at the end of the site list model\'s getListQuery(), where $query is'
+                . ' the query about to be returned and $db the database it will run against. Its own'
+                . ' slot rather than the administrator one, because a visitor and an editor rarely'
+                . ' should see the same rows.',
+        ],
+        'site.listmodel.methods' => [
+            'indent'      => 1,
+            'owner'       => 'Page',
+            'pageType'    => 'indexpage',
+            'label'       => 'Extra methods on the front-end list model',
+            'description' => 'Whole methods, added to the end of the site list model class.',
+        ],
+        'site.detailsmodel.methods' => [
+            'indent'      => 1,
+            'owner'       => 'Page',
+            'pageType'    => 'detailspage',
+            'label'       => 'Extra methods on the front-end details model',
+            'description' => 'Whole methods, added to the end of the site details model class.',
+        ],
+        'site.index.layout' => [
+            'indent'      => 0,
+            'owner'       => 'Page',
+            'pageType'    => 'indexpage',
+            'label'       => 'The front-end list page itself',
+            'description' => 'PHP at the top of the site layout, where $this is the view and'
+                . ' $this->items holds the rows. Echo markup to put it above the generated table, or'
+                . ' render the whole page and call return; - a layout file is included, so returning'
+                . ' from it leaves the rest of the generated layout unexecuted.',
+        ],
+        'site.details.layout' => [
+            'indent'      => 0,
+            'owner'       => 'Page',
+            'pageType'    => 'detailspage',
+            'label'       => 'The front-end details page itself',
+            'description' => 'PHP at the top of the site layout, where $this is the view and'
+                . ' $this->item holds the record. Echo markup to put it above the generated table, or'
+                . ' render the whole page and call return;. The generated details layout is an empty'
+                . ' table, so for now this is the page.',
         ],
     ];
 

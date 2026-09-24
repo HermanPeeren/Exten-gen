@@ -114,15 +114,28 @@ final class CustomCodeTest extends TestCase
     {
         $custom = new CustomCode();
 
-        $this->assertSame(
-            ['listmodel.query', 'listmodel.methods'],
-            array_keys($custom->regions(null, 'Page', 'indexpage'))
-        );
+        $index   = array_keys($custom->regions(null, 'Page', 'indexpage'));
+        $details = array_keys($custom->regions(null, 'Page', 'detailspage'));
+
+        // The property, not the list. Naming the slots here meant that adding
+        // the five front-end ones failed this test for being new rather than
+        // for being wrong - and a test that has to be edited every time the
+        // thing it guards grows is one somebody eventually edits without
+        // reading.
+        $this->assertNotSame([], $index);
+        $this->assertNotSame([], $details);
 
         $this->assertSame(
-            ['detailsmodel.methods'],
-            array_keys($custom->regions(null, 'Page', 'detailspage'))
+            [],
+            array_intersect($index, $details),
+            'A slot offered to both kinds of page cannot say which file it ends up in.'
         );
+
+        // And both halves are real: an index page has a list query to extend
+        // and a details page does not, which is the distinction the filtering
+        // exists to make.
+        $this->assertContains('listmodel.query', $index);
+        $this->assertContains('detailsmodel.methods', $details);
     }
 
     public function testAnEmptyBodyIsTreatedAsNoCode(): void

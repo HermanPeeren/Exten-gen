@@ -667,6 +667,9 @@
             },
             "filters": {
                 "derive": "siteIndexFilters"
+            },
+            "slots": {
+                "derive": "pageSlots"
             }
         }
     },
@@ -709,6 +712,9 @@
             },
             "foreign": {
                 "derive": "siteDetailsForeign"
+            },
+            "slots": {
+                "derive": "pageSlots"
             }
         }
     },
@@ -826,6 +832,9 @@
             },
             "entity": {
                 "derive": "pageEntityArray"
+            },
+            "slots": {
+                "derive": "pageSlots"
             }
         }
     },
@@ -883,6 +892,9 @@
             },
             "pageName": {
                 "derive": "pageName"
+            },
+            "slots": {
+                "derive": "pageSlots"
             }
         }
     },

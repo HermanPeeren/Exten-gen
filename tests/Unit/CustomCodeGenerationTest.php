@@ -133,6 +133,86 @@ final class CustomCodeGenerationTest extends TestCase
     }
 
     /**
+     * A front-end layout that renders the page itself.
+     *
+     * `return;` is the whole point of where this slot sits: a `tmpl` file is
+     * included, so returning from it leaves the generated layout below
+     * unexecuted. That is how a model asks for a custom front-end template
+     * without needing a way to say "replace this".
+     */
+    private const LAYOUT = <<<'PHP'
+        echo '<h1>' . count($this->items) . ' flights</h1>';
+        return;
+        PHP;
+
+    /**
+     * And a condition a visitor's list should have that an editor's should not.
+     */
+    private const SITE_QUERY = <<<'PHP'
+        $query->where($db->quoteName('flight.published') . ' = 1');
+        PHP;
+
+    /**
+     * Front-end code lands in the front-end files, and nowhere else.
+     *
+     * The five `site.` slots exist because the site templates generate a second
+     * list model and a second details model with the same method names as the
+     * administrator ones. A shared slot would have put one body in two files
+     * without saying so - a visitor's list quietly gaining an editor's
+     * conditions, or the other way round, which is the sort of thing that is
+     * found by somebody seeing rows they should not.
+     *
+     * So this checks both halves: the code is in the site model, and it is not
+     * in the administrator one.
+     */
+    public function testFrontEndCodeLandsInTheFrontEndFilesOnly(): void
+    {
+        $files = $this->generate();
+
+        $site  = $files['components/com_balloonplanning/src/Model/FlightsModel.php'];
+        $admin = $files['administrator/components/com_balloonplanning/src/Model/FlightsModel.php'];
+
+        $this->assertStringContainsString(self::SITE_QUERY, $site);
+        $this->assertStringNotContainsString(
+            self::SITE_QUERY,
+            $admin,
+            "A visitor's condition reached the administrator's list."
+        );
+    }
+
+    /**
+     * A layout slot puts the body above the layout it can replace.
+     *
+     * Above, because the body may `return;` - and a return that came after the
+     * generated markup would have rendered it first, which is the one thing a
+     * custom template must not do.
+     */
+    public function testALayoutSlotSitsAboveTheLayoutItCanReplace(): void
+    {
+        $layout = $this->generate()['components/com_balloonplanning/tmpl/flights/default.php'];
+
+        $this->assertStringContainsString(self::LAYOUT, $layout);
+
+        $this->assertLessThan(
+            strpos($layout, '<form action='),
+            strpos($layout, self::LAYOUT),
+            'The custom layout runs after the generated one, so returning from it renders both.'
+        );
+
+        // And the imports are above it, because a body that calls HTMLHelper
+        // should read as though it may. Asserted present first: strpos() of a
+        // needle that is not there is false, which compares as 0, which would
+        // have made "the imports come first" true by their absence.
+        $this->assertStringContainsString('use \Joomla\CMS\HTML\HTMLHelper;', $layout);
+
+        $this->assertLessThan(
+            strpos($layout, self::LAYOUT),
+            strpos($layout, 'use \\Joomla\\CMS\\HTML\\HTMLHelper;'),
+            'The custom layout sits above the imports.'
+        );
+    }
+
+    /**
      * Generate the balloonplanning model with custom code added to one entity.
      *
      * @return array<string, string>
@@ -157,6 +237,15 @@ final class CustomCodeGenerationTest extends TestCase
                 $entity->customcode = (object) [
                     'customcode0' => (object) ['slot' => 'table.check', 'code' => self::CHECK],
                     'customcode1' => (object) ['slot' => 'table.methods', 'code' => self::METHOD],
+                ];
+            }
+        }
+
+        foreach ($model->pages as $page) {
+            if (($page->page_name ?? '') === 'Flights') {
+                $page->customcode = (object) [
+                    'customcode0' => (object) ['slot' => 'site.index.layout', 'code' => self::LAYOUT],
+                    'customcode1' => (object) ['slot' => 'site.listmodel.query', 'code' => self::SITE_QUERY],
                 ];
             }
         }

@@ -20,6 +20,9 @@ use \Joomla\CMS\Language\Text;
 use \Joomla\CMS\Session\Session;
 use Joomla\Utilities\ArrayHelper;
 
+// <extengen id="site.details.layout">
+// </extengen>
+
 ?>
 
 <div class="item_fields">

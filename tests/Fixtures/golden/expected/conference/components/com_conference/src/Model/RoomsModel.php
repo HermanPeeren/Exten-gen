@@ -88,8 +88,13 @@ class RoomsModel extends ListModel
 				->bind(':position', $position, ParameterType::STRING);
 		}
 
+		// <extengen id="site.listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="site.listmodel.methods">
+	// </extengen>
 
 }

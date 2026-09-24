@@ -119,8 +119,13 @@ class ProgramModel extends ListModel
 				->bind(':title', $title, ParameterType::STRING);
 		}
 
+		// <extengen id="site.listmodel.query">
+		// </extengen>
+
 		return $query;
 	}
 
+	// <extengen id="site.listmodel.methods">
+	// </extengen>
 
 }

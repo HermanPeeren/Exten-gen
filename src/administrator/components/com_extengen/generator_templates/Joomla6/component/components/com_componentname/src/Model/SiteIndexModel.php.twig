@@ -96,8 +96,11 @@ class {{ pageName }}Model extends ListModel
 {% endfor %}
 {% endif %}
 
+{{ slots['site.listmodel.query']|raw }}
+
 		return $query;
 	}
 
+{{ slots['site.listmodel.methods']|raw }}
 
 }
