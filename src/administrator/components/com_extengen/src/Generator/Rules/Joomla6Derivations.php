@@ -459,7 +459,7 @@ final class Joomla6Derivations
                 continue;
             }
 
-            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference ?? ''] ?? null;
 
             if ($referred === null || ($skipValueObject && property_exists($referred, 'isvalueobject'))) {
                 continue;
@@ -497,7 +497,7 @@ final class Joomla6Derivations
                 continue;
             }
 
-            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference ?? ''] ?? null;
 
             if (
                 $referred === null
@@ -543,7 +543,7 @@ final class Joomla6Derivations
                 continue;
             }
 
-            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference ?? ''] ?? null;
 
             if ($referred === null) {
                 continue;
@@ -583,7 +583,7 @@ final class Joomla6Derivations
                 continue;
             }
 
-            $referred = $entities[FieldKind::reference($field)->reference_id ?? ''] ?? null;
+            $referred = $entities[FieldKind::reference($field)->reference ?? ''] ?? null;
 
             if ($referred === null) {
                 continue;

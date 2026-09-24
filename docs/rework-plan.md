@@ -1958,7 +1958,67 @@ test can reach - what the *installed* form is named, read out of the row templat
 and whether a project stored that way still generates its relations - and asserts the seeded
 project is there instead of skipping when it is not.
 
-Exten-gen is now at 346 unit tests and 34 browser specs, all four gates green.
+*And adding that browser check found two more, in the screen it had to use.*
+
+### The empty subform defect
+
+Opening a saved project showed its name and its language and **no model at all**. Four entities
+rendered as zero rows, and `component_name` came up blank on a project called Conference. No
+warning, nothing in the log.
+
+`loadForm()` binds the stored data inside itself, and this component merged the metalanguage's
+forms in after it returned - so when Joomla went looking for somewhere to put `datamodel`,
+`pages` and `extensions`, the form still held only `project_chrome.xml`. `Form::bindLevel()`
+treats a key it has no field for as a *group*, recurses, finds nothing and returns. That is why
+`name` and `metalanguage` bound and the model did not: those two are chrome.
+
+The merge moved into `preprocessForm()`, which is the point Joomla provides for exactly this -
+core calls it between building the form and binding, so that plugins may add fields the data
+will then be bound into.
+
+**That fixed the screen and not the damage.** With the render path repaired the form looked
+entirely normal, 216 inputs and all, and saving still replaced the project with four keys.
+`FormController` builds its model with `ignore_request => true`, which sets the flag that
+suppresses `populateState()` - so on the one request that writes to the database, the model did
+not know which row it was. `getItem()` came back empty, the merge was skipped for a second and
+different reason, the validation form had no model half, `Form::filter()` dropped everything it
+did not recognise, and `save()` serialised the remainder. 18941 bytes to 63.
+
+The only thing between that and ordinary use was that `component_name` is required, so Joomla
+refused the empty form. Filling in the one field it had marked red - the obvious thing to do -
+completed the save and destroyed the model. Verified, not inferred, on a project seeded for the
+purpose.
+
+`recordId()` resolves the id from the request when the state has none, which is the same source
+`populateState()` and `FormController` both read, and it is used by `getItem()` so that
+`metalanguage()` and `getReferenceIndex()` are answered about the right row too. Without that,
+a project could have been validated against another language's forms.
+
+`project-binds.cy.js` holds all of it: a row per entity, the fields inside them, the half that
+is not repeatable, and the round trip. The last one needed a marker on `window` to wait for -
+an assertion on a selector that exists on both pages passed happily against the document that
+had not navigated yet, while the save destroyed the project behind it.
+
+### And a third reader of a name nothing writes
+
+With saving repaired, a round-tripped model generated with `Undefined property:
+stdClass::$reference_id`. The language declares `reference` on `EntityReferenceField`; no form
+has ever written `reference_id`. The fixtures carry both, holding the same value, so four call
+sites could read the one that does not exist and every test stayed green - while a project
+saved through the screens generated with its relations dropped.
+
+Three defects of one shape now: `field_type`, the subtype payload key, and this. Each was fixed
+where it was found and none of those fixes would have caught the next, so `DeclaredKeysTest`
+states the general property instead. It takes each golden model, removes every key the language
+does not declare - features and concepts from the shipped package, fields from
+`project_chrome.xml`, and the three names `FieldKind` derives - and requires the output not to
+move. A key nothing reads vanishes without consequence; a key a generator depends on takes the
+output with it. Restoring `reference_id` turns three of the four fixtures red.
+
+It also names `reference_id` in its vacuity guard, so the day somebody tidies it out of the
+fixtures the test says it has stopped checking anything rather than passing quietly.
+
+Exten-gen is now at 351 unit tests and 38 browser specs, all four gates green.
 
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files

@@ -106,6 +106,43 @@ class ProjectModel extends AdminModel
 			return false;
 		}
 
+		// The model half is merged in preprocessForm(), which is the only
+		// place it can be. loadForm() binds the stored data before it
+		// returns, and a field that did not exist at that moment has
+		// nothing in it - which is what left a saved project opening with
+		// its whole model missing.
+		return $form;
+	}
+
+	/**
+	 * Merge in the half of the form that comes from a metalanguage.
+	 *
+	 * **Called from preprocessForm(), and it has to be.** Joomla builds the
+	 * form, loads the data and then does `$form->bind($data)`, all inside
+	 * `loadForm()` - so by the time getForm() has a Form object in its hand,
+	 * binding is over. Merging the model half there produced a form with
+	 * every field on it and nothing in any of them: `bindLevel()` treats a
+	 * key it has no field for as a group, recurses, finds nothing, and
+	 * returns without a word. Name and language bound, because those are
+	 * chrome; the model did not.
+	 *
+	 * That was not only invisible, it was destructive. `save()` serialises
+	 * what the form posted, so a screen that rendered no model posted none,
+	 * and saving replaced a stored project with four keys. The only reason
+	 * it was not worse is that the unbound `component_name` is required, so
+	 * Joomla refused the submit - until somebody filled in the one field it
+	 * had marked red.
+	 *
+	 * preprocessForm() runs between the load and the bind, which is what it
+	 * is for: Joomla core calls it so that plugins may add fields the data
+	 * will then be bound into. This is the same need.
+	 *
+	 * @param   Form  $form  The form being built, chrome only on the way in.
+	 *
+	 * @return  void
+	 */
+	private function loadModelHalf(Form $form): void
+	{
 		// A project that does not exist yet gets the chrome and nothing else.
 		// The language is chosen on this screen, and until it is saved there
 		// is no answer to "which forms" - so showing one language's model half
@@ -117,7 +154,7 @@ class ProjectModel extends AdminModel
 		// So a project is created, and then modelled. That is what binding at
 		// creation means.
 		if ((int) ($this->getItem()->id ?? 0) === 0) {
-			return $form;
+			return;
 		}
 
 		// And the half that is a model, from whichever metalanguage this
@@ -146,7 +183,7 @@ class ProjectModel extends AdminModel
 				'warning'
 			);
 
-			return $form;
+			return;
 		}
 
 		$source = JPATH_ROOT . '/' . $entry->rootFormPath();
@@ -164,7 +201,7 @@ class ProjectModel extends AdminModel
 				'warning'
 			);
 
-			return $form;
+			return;
 		}
 
 		// No xpath. Form::load() with one runs it against the file and merges
@@ -184,8 +221,6 @@ class ProjectModel extends AdminModel
 				JPATH_ROOT . '/' . rtrim($entry->formRoot, '/')
 			);
 		}
-
-		return $form;
 	}
 
 	/**
@@ -311,6 +346,37 @@ class ProjectModel extends AdminModel
 	}
 
 	/**
+	 * Which project this is, even when Joomla has not worked it out.
+	 *
+	 * `populateState()` is what normally puts the record id in the state, and
+	 * on a save it never runs: `FormController` builds the model with
+	 * `ignore_request => true`, which sets the flag that suppresses it. So on
+	 * the one request that writes to the database, the model did not know
+	 * which row it was - `getItem()` came back empty, and everything that asks
+	 * it a question got the answer for a project that does not exist.
+	 *
+	 * That is not a cosmetic gap. It meant the validation form was built
+	 * without the metalanguage half, so `Form::filter()` dropped the entire
+	 * model out of the posted data and `save()` serialised what was left:
+	 * four keys, over the top of the project. It also meant `metalanguage()`
+	 * was asked which language an empty row is written in, which is how a
+	 * project could have been validated against another language's forms.
+	 *
+	 * The request is the same source `populateState()` and `FormController`
+	 * both read the id from, so this agrees with Joomla rather than guessing
+	 * around it. Zero for a project that does not exist yet, which is what a
+	 * new one is.
+	 *
+	 * @return  int  The record id, or 0.
+	 */
+	private function recordId(): int
+	{
+		$id = (int) $this->getState($this->getName() . '.id');
+
+		return $id > 0 ? $id : Factory::getApplication()->getInput()->getInt('id');
+	}
+
+	/**
 	 * Method to get a single record.
 	 *
 	 * @param   integer  $pk  The id of the primary key.
@@ -319,7 +385,7 @@ class ProjectModel extends AdminModel
 	 */
 	public function getItem($pk = null)
 	{
-		$item = parent::getItem($pk);
+		$item = parent::getItem($pk ?: $this->recordId());
 
 		// Load associated extengen items
 		$assoc = Associations::isEnabled();
@@ -356,6 +422,10 @@ class ProjectModel extends AdminModel
 	 */
 	protected function preprocessForm(Form $form, $data, $group = 'content')
 	{
+		// First, because everything below it should see the whole form -
+		// and because the data is bound the moment this returns.
+		$this->loadModelHalf($form);
+
 		// Association contact items
 		if (Associations::isEnabled()) {
 			$languages = LanguageHelper::getContentLanguages(false, true, null, 'ordering', 'asc');

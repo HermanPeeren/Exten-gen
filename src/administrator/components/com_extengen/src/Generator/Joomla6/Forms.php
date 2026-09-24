@@ -271,7 +271,7 @@ $log = array_merge($log, $append);
 					if (FieldKind::isReference($field)) {
 						$reference = FieldKind::reference($field);
 
-						$refEntity_id = $reference->reference_id;
+						$refEntity_id = $reference->reference;
 						$refEntity    = $entityMap[$refEntity_id];
 
 						// In case of an embeddable: refer to a subform
@@ -535,7 +535,7 @@ $log = array_merge($log, $append);
 						if (FieldKind::isReference($field)) {
 							$reference = FieldKind::reference($field);
 
-							$refEntity_id = $reference->reference_id;
+							$refEntity_id = $reference->reference;
 							$refEntity = $entityMap[$refEntity_id];
 
 							// Find the default field to display this reference
