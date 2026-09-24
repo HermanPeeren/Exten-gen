@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
+use Yepr\Component\Extengen\Tests\Support\Yaml;
 use Yepr\Gen\Core\Output\FileCollection;
 use Yepr\Gen\Core\Pipeline;
 
@@ -189,29 +190,39 @@ final class SecondTargetTest extends TestCase
     }
 
     /**
-     * The YAML is YAML, as far as anything here can tell.
+     * The YAML parses, and says what the PHP beside it says.
      *
-     * Not through a parser: neither `ext-yaml` nor `symfony/yaml` is installed,
-     * and pulling in a dependency to read six generated files would be a larger
-     * change than the thing it checks. So this asserts the one mistake that is
-     * actually likely - a tab, which YAML forbids in indentation and which
-     * arrives from a template sitting beside tab-indented PHP - plus even
-     * indentation and no duplicate keys at the top level, which is what a
-     * generated routing file gets wrong when two pages derive one name.
+     * Read back through `symfony/yaml` rather than pattern-matched. Joomla
+     * ships that parser under `libraries/vendor`, so there is nothing to add to
+     * `composer.json`: it is the one an installed Joomla would hand the
+     * component at run time, and `/joomla` is already what PHPStan resolves
+     * against.
+     *
+     * **Parsing is the cheap half.** What matters is that the files agree with
+     * each other, because a Drupal module is four files describing one thing and
+     * nothing checks them at install time - a route naming a controller class
+     * that was never generated is a 404, a menu link naming a route that is not
+     * there is an empty menu, and a permission nobody declared denies everybody.
+     * All three fail silently, which is the whole family of bug this repository
+     * keeps finding by looking.
+     *
+     * The structural checks stay and run even without a parser, so the file is
+     * never entirely unchecked on a fresh clone. A tab is the one that actually
+     * happens: YAML forbids it in indentation, and these templates sit beside
+     * tab-indented PHP.
      */
     #[DataProvider('models')]
     public function testEveryGeneratedYamlFileIsWellFormed(string $name, string $targetId): void
     {
+        $files   = $this->generate($name, $targetId);
         $checked = 0;
 
-        foreach ($this->generate($name, $targetId)->all() as $path => $contents) {
+        foreach ($files->all() as $path => $contents) {
             if (!str_ends_with($path, '.yml')) {
                 continue;
             }
 
             $this->assertStringNotContainsString("\t", $contents, $path . ' indents with a tab.');
-
-            $keys = [];
 
             foreach (explode("\n", $contents) as $number => $line) {
                 if (trim($line) === '') {
@@ -225,31 +236,101 @@ final class SecondTargetTest extends TestCase
                     $indent % 2,
                     $path . ' line ' . ($number + 1) . ' is indented by ' . $indent . '.'
                 );
-
-                if ($indent === 0 && preg_match('/^([^:]+):/', $line, $key) === 1) {
-                    $keys[] = $key[1];
-                }
             }
 
-            $this->assertSame(
-                $keys,
-                array_values(array_unique($keys)),
-                $path . ' declares the same top-level key twice.'
-            );
+            if (Yaml::available()) {
+                $this->assertIsArray(
+                    Yaml::parse($contents),
+                    $path . ' does not parse as a mapping.'
+                );
+            }
 
             $checked++;
         }
 
-        if ($targetId === 'drupal') {
-            $this->assertGreaterThan(3, $checked, 'A Drupal module with no YAML in it is not a module.');
+        if ($targetId !== 'drupal') {
+            // WordPress has no configuration files at all - everything is a hook
+            // call in PHP - so finding one here would mean a template had been
+            // copied across from the target next door.
+            $this->assertSame(0, $checked, 'A WordPress plugin does not carry YAML.');
 
             return;
         }
 
-        // WordPress has no configuration files at all - everything is a hook
-        // call in PHP - so finding one here would mean a template had been
-        // copied across from the target next door.
-        $this->assertSame(0, $checked, 'A WordPress plugin does not carry YAML.');
+        $this->assertGreaterThan(3, $checked, 'A Drupal module with no YAML in it is not a module.');
+
+        if (!Yaml::available()) {
+            $this->markTestSkipped(
+                'No YAML parser, so only the structure was checked.'
+                . ' Joomla ships one: run composer install-local, or fetch a Joomla into /joomla.'
+            );
+        }
+
+        $this->assertTheModuleAgreesWithItself($name, $files);
+    }
+
+    /**
+     * The four YAML files and the classes they name describe one module.
+     *
+     * @param  FileCollection  $files  The generated module.
+     */
+    private function assertTheModuleAgreesWithItself(string $name, FileCollection $files): void
+    {
+        $module = explode('/', $files->paths()[0])[0];
+
+        $info = Yaml::parse($files->get($module . '/' . $module . '.info.yml'));
+
+        $this->assertSame('module', $info['type'] ?? null);
+        $this->assertNotEmpty($info['name'] ?? '', 'A module with no name is one Drupal will not list.');
+        $this->assertNotEmpty($info['core_version_requirement'] ?? '');
+
+        $permissions = Yaml::parse($files->get($module . '/' . $module . '.permissions.yml'));
+        $routes      = Yaml::parse($files->get($module . '/' . $module . '.routing.yml'));
+        $links       = Yaml::parse($files->get($module . '/' . $module . '.links.menu.yml'));
+
+        $this->assertIsArray($routes, $name . ' generated no routes.');
+        $this->assertNotSame([], $routes);
+
+        foreach ($routes as $route => $definition) {
+            $this->assertStringStartsWith(
+                $module . '.',
+                $route,
+                'A route not prefixed with the module name is one that will collide.'
+            );
+
+            $this->assertArrayHasKey('path', $definition, $route . ' has no path.');
+            $this->assertStringStartsWith('/', $definition['path']);
+
+            // Whatever the route points at has to have been generated. Drupal
+            // checks this at request time, by returning a 500 to the visitor.
+            $class = $definition['defaults']['_controller'] ?? $definition['defaults']['_form'] ?? null;
+
+            $this->assertNotNull($class, $route . ' names neither a controller nor a form.');
+
+            $file = $module . '/src/'
+                . (isset($definition['defaults']['_controller']) ? 'Controller/' : 'Form/')
+                . basename(str_replace(['\\'], '/', explode('::', $class)[0])) . '.php';
+
+            $this->assertTrue($files->has($file), $route . ' points at ' . $file . ', which was not generated.');
+
+            // And the permission it is behind has to be one somebody declared.
+            $permission = $definition['requirements']['_permission'] ?? null;
+
+            $this->assertNotNull($permission, $route . ' is behind no permission at all.');
+            $this->assertArrayHasKey(
+                $permission,
+                $permissions,
+                $route . ' requires "' . $permission . '", which nothing grants.'
+            );
+        }
+
+        foreach ($links as $link => $definition) {
+            $this->assertArrayHasKey(
+                $definition['route_name'] ?? '',
+                $routes,
+                $link . ' points at a route that is not there, so the menu entry does nothing.'
+            );
+        }
     }
 
     /**

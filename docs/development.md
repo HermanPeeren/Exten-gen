@@ -164,7 +164,7 @@ solve it.
 ## Running it
 
 ```
-composer test           # PHPUnit
+composer test           # PHPUnit; deeper with /joomla, see below
 composer analyse        # PHPStan level 5, needs /joomla
 composer cs             # coding standard
 composer install-local  # build the package and install it into ./joomla
@@ -175,6 +175,27 @@ npm run cypress         # the browser specs, against that install
 package there - it is git-ignored. PHPStan resolves the component's base classes
 against it, and `composer install-local` installs the built package into it
 through Joomla's own CLI, which needs no login and no browser.
+
+**The unit suite borrows one thing from it: a YAML parser.** The Drupal target
+generates routes, menu links, permissions and an info file, and a generated
+routing file that does not parse is a module whose every page is a 404 with
+nothing to say why - so `SecondTargetTest` reads them back rather than
+pattern-matching them, and checks that they agree with each other: every route
+names a controller class that was generated, every menu link names a route that
+exists, every permission is one something grants.
+
+Joomla ships `symfony/yaml` under `libraries/vendor`, so there is nothing to add
+to `composer.json` - the parser is the one an installed Joomla would hand the
+component at run time. Without `/joomla` the structural checks still run (a tab
+in YAML indentation is the mistake that actually happens, these templates
+sitting beside tab-indented PHP) and the cross-file half skips, saying so.
+
+That is also why CI fetches Joomla **before** it runs the tests rather than
+after: the other order is the difference between the deep half running in CI and
+skipping in CI, which is exactly the kind of silence everything else on this page
+exists to prevent. Loading that autoloader is not booting the framework - no
+application, no container, no database. The two defined constants the generators
+read are still the whole of the bootstrap.
 
 **Cypress needs a login, and it comes from `cypress.env.json`.** Copy
 `cypress.env.json.dist`, fill in the two fields; the file is git-ignored.

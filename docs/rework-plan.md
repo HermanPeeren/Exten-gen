@@ -1802,6 +1802,21 @@ the Joomla target rather than to every target. That is now a finding rather than
 and still not a change: three is enough to say where it belongs and not yet enough to say what
 should replace it.
 
+*And the YAML is read back rather than pattern-matched.* Joomla ships `symfony/yaml` under
+`libraries/vendor`, so there is nothing to add to `composer.json`: the parser is the one an
+installed Joomla would hand the component at run time, and `/joomla` is already what PHPStan
+resolves against. Parsing is the cheap half - what matters is that the four files agree with
+each other, because a Drupal module is four files describing one thing and nothing checks them
+at install time. A route naming a controller that was never generated is a 404, a menu link
+naming a route that is not there is an empty menu, and a permission nobody declared denies
+everybody; all three fail silently. `SecondTargetTest` checks all three, and the checks bite -
+mistyping the controller name in the template fails it for every model.
+
+Which moved a step in CI. The unit tests ran before Joomla was fetched, so the deep half would
+have skipped there and said nothing - the same silence everything else in this plan exists to
+prevent. Both workflows fetch Joomla first now. The structural checks still run without one, so
+a fresh clone is not left with the file unchecked.
+
 *Done:* 319 unit tests, PHPStan, phpcs and 28 Cypress specs green.
 
 ---
