@@ -101,6 +101,24 @@ jobs:
             --db-prefix=ci_ \
             --no-interaction
 
+      # Joomla works out its own root from the request, and under PHP's built-in
+      # server it gets it wrong: a request to /administrator/index.php leaves it
+      # believing the site root *is* /administrator, so every admin redirect
+      # comes back as /administrator/administrator/index.php and 404s. The login
+      # succeeds and the page it lands on does not exist.
+      #
+      # `$live_site` is the override Joomla provides for exactly this: when it is
+      # set, nothing is detected. Pinned to the address this run serves on, which
+      # is the address Cypress is pointed at below.
+      - name: Tell Joomla where it lives
+        run: |
+          sed -i "s|public \$live_site = '';|public \$live_site = '${SITE_URL}';|" joomla/configuration.php
+          grep -q "live_site = '${SITE_URL}'" joomla/configuration.php || {
+            echo "live_site was not set - the default line has changed shape"
+            grep -n live_site joomla/configuration.php
+            exit 1
+          }
+
       # PHP's own server, with workers: a single-threaded one deadlocks the
       # moment a page asks the site for a second thing while the first is still
       # being served, which the generated front end does.
