@@ -2106,6 +2106,51 @@ something. It cost one wrong tag and no wrong release.
 Exten-gen: 363 unit tests, 14 browser-side, 39 browser specs. Meta-gen: 250, 8 and 26. Gen-gen:
 48 and 13.
 
+### One copy of the generate-modal script
+
+Extracting that inline script twice produced two identical files, and two copies of one rule is
+what `field_type`, the subtype payload key and `reference_id` each were. The risk was not
+theoretical for a week: the `closest()` fix landed in both copies in the same hour, which is the
+only reason they still agreed.
+
+`lib_yepr_gen` 0.15.0 carries it, beside `reference.js`, with its test - `composer test-js`
+there runs 35. Both components ask for `lib_yepr_gen.generation-modal`, registering the
+library's asset file by name first, the way the reference element already is.
+
+Meta-gen therefore owns no browser JavaScript again, so its `test-js` would have run over an
+empty directory and passed. It goes, with its CI and release steps, the Node setup that existed
+only for it, and its `src/media` - an asset file declaring nothing inside a media block naming
+an empty folder. `CLAUDE.md` there says why, so it does not come back. Exten-gen keeps its own,
+because the name validator is still its own.
+
+That also closed the last item the audit had left: Meta-gen had been pinned to `^0.13` since
+0.14, harmlessly - it calls nothing that release fixed - and is now on 0.15 with everything
+else. Two checkouts turned out to be further behind than their own constraints: Exten-gen was
+running 0.13 against `^0.14`, and Gen-gen 0.12 against `^0.14`, including for the tests meant to
+cover the feature check that arrived in 0.14. The lock file is git-ignored, so CI had always
+resolved correctly and only the working copies had drifted. Both were refreshed; everything
+still passes.
+
+Gen-gen stays at `^0.14`. It needs nothing from 0.15, and a minimum raised without a reason is
+an upgrade forced on a site for nothing.
+
+### The browser gate, in CI
+
+Written, and then found to be wrong in the way only CI could show. The first run got MySQL, the
+install, the serving, the component and the seed right, and then every spec failed identically
+on "the admin has rendered". The screenshot it uploaded said why: the login landed on
+`/administrator/administrator/index.php`. Joomla works its own root out from the request and
+under PHP's built-in server decides the root *is* `/administrator`.
+
+Reproduced on a laptop rather than guessed at - a fresh 6.1.3 installed with the same flags
+against a throwaway database, served the same way - and `$live_site` fixes both the doubled form
+action and the assets 404ing from `/administrator/media`. Worth keeping: the first reading said
+the fix changed nothing, because it was taken within a second of the edit and the built-in
+server revalidates timestamps on a delay, so the response came from the compile before it.
+
+Meta-gen and Gen-gen get the same workflow once this one is green. Gen-gen's is the awkward one:
+its specs run against Exten-gen's site, with both components installed on it.
+
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
 identical to the approved output.
