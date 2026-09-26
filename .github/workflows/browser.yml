@@ -154,11 +154,29 @@ jobs:
       - name: Install the component
         run: composer install-local
 
-      # One project to open and generate from. The specs seed whatever else
-      # they need themselves - packages, menu items, the conference project in
-      # the spelling the screens write - and say so where they do it.
-      - name: Seed a project
-        run: php tools/seed-project.php
+      # A fresh Joomla starts a guided tour at the admin, and a tour navigates:
+      # two seconds after a spec opens a list, the browser is on the Home
+      # Dashboard and every element the spec was about has gone. It is the
+      # single reason most of these failed - reference-fields went from 0 of 4
+      # to 4 of 4, and from a minute to fifteen seconds, with this one line.
+      #
+      # The statistics plugin goes too. It asks the administrator a question on
+      # first sight, which is a dialog over the page under test.
+      #
+      # A development site has had both dealt with long ago, which is exactly
+      # why neither showed up until this ran somewhere clean.
+      - name: Quieten a fresh Joomla
+        run: |
+          mysql -h 127.0.0.1 -uroot -pjoomla joomla_ci -e             "UPDATE ci_extensions SET enabled = 0 WHERE type = 'plugin' AND element IN ('guidedtours', 'stats');"
+
+      # Two projects. BalloonPlanning is what generate, views-render and the
+      # front-end specs open; the conference one, in the spelling the screens
+      # write, is what field-kind.cy.js is about and it says so if it is absent.
+      # The specs seed whatever else they need themselves.
+      - name: Seed the projects
+        run: |
+          php tools/seed-project.php
+          php tools/seed-project.php conference --saved
 
       - name: Browser tests
         run: npx cypress run

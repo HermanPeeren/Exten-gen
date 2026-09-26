@@ -86,6 +86,25 @@ $model = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
 $name  = (string) ($model->name ?? $fixture);
 $table = $config->dbprefix . 'extengen_projects';
 
+// Which language the project says it is written in. Nothing else can decide
+// what forms open it, and a project with an empty binding renders the Joomla
+// half and no model - so the edit screen comes up without the fields and the
+// generate screen is a 500.
+//
+// It was never set here, and nothing had noticed: the component's install
+// stamps any project it finds, so on a development site - seeded first,
+// component installed after - every project got bound on the way past. In the
+// other order, which is the order CI does it in, nothing ever does.
+//
+// Read from the site rather than written down, because the version moves: the
+// fixtures are ER1 models and the site has whichever ER1 the component
+// shipped. If the language is not there at all the binding stays empty, which
+// is what it was before and is the honest answer on a site that has no ER1.
+$binding = $db->query(
+    "SELECT lang_key, version FROM `{$config->dbprefix}extengen_metalanguages`"
+    . " WHERE lang_key = 'ER1' ORDER BY version DESC LIMIT 1"
+)->fetch_assoc() ?: ['lang_key' => '', 'version' => ''];
+
 $existing = $db->prepare("SELECT id FROM `{$table}` WHERE name = ?");
 $existing->bind_param('s', $name);
 $existing->execute();
@@ -93,8 +112,10 @@ $id = ($existing->get_result()->fetch_assoc()['id'] ?? null);
 $existing->close();
 
 if ($id !== null) {
-    $update = $db->prepare("UPDATE `{$table}` SET form_data = ? WHERE id = ?");
-    $update->bind_param('si', $json, $id);
+    $update = $db->prepare(
+        "UPDATE `{$table}` SET form_data = ?, metalanguage_key = ?, metalanguage_version = ? WHERE id = ?"
+    );
+    $update->bind_param('sssi', $json, $binding['lang_key'], $binding['version'], $id);
     $update->execute();
     $update->close();
 
@@ -104,13 +125,15 @@ if ($id !== null) {
 }
 
 $insert = $db->prepare(
-    "INSERT INTO `{$table}` (name, alias, form_data, published, access, language, ordering, state)"
-    . ' VALUES (?, ?, ?, 1, 1, ' . "'*'" . ', 0, 1)'
+    "INSERT INTO `{$table}`"
+    . ' (name, alias, form_data, metalanguage_key, metalanguage_version,'
+    . ' published, access, language, ordering, state)'
+    . ' VALUES (?, ?, ?, ?, ?, 1, 1, ' . "'*'" . ', 0, 1)'
 );
 
 $alias = strtolower(preg_replace('/[^A-Za-z0-9]+/', '-', $name) ?? $fixture);
 
-$insert->bind_param('sss', $name, $alias, $json);
+$insert->bind_param('sssss', $name, $alias, $json, $binding['lang_key'], $binding['version']);
 $insert->execute();
 
 printf("seeded %s (id %d)\n", $name, $db->insert_id);

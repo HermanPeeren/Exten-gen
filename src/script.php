@@ -112,6 +112,19 @@ class Com_ExtengenInstallerScript
 
         $library = $this->installLibrary($type, $parent);
 
+        // A library installed during this request is not in Joomla's namespace
+        // map yet: that file is built from the extension records and was loaded
+        // before any of this ran. Its own composer autoloader maps `Yepr\Gen`
+        // and everything under it, so requiring it is the whole of the fix.
+        //
+        // Only a first install needs it, which is why nothing had noticed: on a
+        // development site the library is always already there.
+        $autoload = JPATH_LIBRARIES . '/yepr_gen/vendor/autoload.php';
+
+        if (is_file($autoload)) {
+            require_once $autoload;
+        }
+
         // The languages only after the library, because importing one needs
         // `Yepr\Gen\Joomla\Metalanguage` and that arrives with it.
         $this->installLanguages($parent);
@@ -144,6 +157,23 @@ class Com_ExtengenInstallerScript
 
         if ($packages === []) {
             return;
+        }
+
+        // Joomla reads a component's namespace out of the extension records it
+        // loaded when the request began, and on a first install this component
+        // was not among them - so its own classes do not autoload here, in its
+        // own install script. On an update they do, because the row already
+        // existed, which is why this went unseen: a development site only ever
+        // updates. A clean site got the warning below and no ER1, leaving every
+        // project unopenable and the generate screen a 500.
+        if (!class_exists(Metalanguages::class)) {
+            \JLoader::registerNamespace(
+                'Yepr\\Component\\Extengen\\Administrator',
+                JPATH_ADMINISTRATOR . '/components/com_extengen/src',
+                false,
+                false,
+                'psr4'
+            );
         }
 
         $database = Factory::getContainer()->get(DatabaseInterface::class);

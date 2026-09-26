@@ -29,7 +29,13 @@ describe('reference fields', () => {
       const links = $body.find('#adminForm a[href*="task=project.edit"]');
 
       if (links.length > 0) {
-        cy.wrap(links.first()).click();
+        // Queried again rather than clicking the element found above. That one
+        // came out of a snapshot, and Joomla's own table script re-renders the
+        // list after it loads - so on a server slower than a laptop's the
+        // wrapped element is detached by the time the click lands, and Cypress
+        // says the page updated while it was working. `cy.get` retries against
+        // the live DOM.
+        cy.get('#adminForm a[href*="task=project.edit"]').first().click();
       } else {
         // task=project.add is a POST target; this is the form it
         // redirects to.
