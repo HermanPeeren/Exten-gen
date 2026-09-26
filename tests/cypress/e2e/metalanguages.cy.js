@@ -18,11 +18,16 @@ const BROKEN = 'tests/cypress/fixtures/broken-derived.zip';
 /**
  * The project the Testlang tests below make, by id.
  *
- * By id and not by name, because this site accumulates them: every run leaves
- * another `WrittenInTestlang` behind, and the oldest ones date from before a
- * binding was stored at all - so the install script stamped them ER1. Picking
- * "the row that says WrittenInTestlang" found one of those, which is written in
- * ER1, which generates, which is the opposite of what the test below is for.
+ * By id and not by name. This used to be because the site accumulated them -
+ * every run left another `WrittenInTestlang` behind, and the oldest dated from
+ * before a binding was stored at all, so the install script had stamped them
+ * ER1. Picking "the row that says WrittenInTestlang" found one of those, which
+ * is written in ER1, which generates, which is the opposite of what the test
+ * below is for.
+ *
+ * `before()` now forgets them all first, so that particular trap is gone. The
+ * id stays, because it is the right way to refer to a thing you just made and
+ * it does not depend on the cleanup having worked.
  */
 let testlangProject = null;
 
@@ -34,6 +39,13 @@ describe('metalanguages', () => {
     // is that a package actually landed, because a tool that writes nothing
     // and exits 0 would otherwise leave every test below failing for the
     // wrong reason.
+    // Nothing named like the projects these tests create. They make one
+    // through the screens on purpose and never took it away again, so the
+    // site had reached 64 of them - and a suite whose behaviour depends on
+    // which leftovers are lying about will eventually pass for the wrong
+    // reason. It did, once.
+    cy.exec('php tools/forget-test-projects.php');
+
     cy.exec('php tools/make-test-package.php');
     cy.readFile(PACKAGE, null).should((buffer) => {
       expect(buffer.length, 'the package has bytes in it').to.be.greaterThan(200);
