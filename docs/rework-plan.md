@@ -2018,7 +2018,7 @@ output with it. Restoring `reference_id` turns three of the four fixtures red.
 It also names `reference_id` in its vacuity guard, so the day somebody tidies it out of the
 fixtures the test says it has stopped checking anything rather than passing quietly.
 
-Exten-gen is now at 351 unit tests and 38 browser specs, all four gates green.
+Exten-gen stood at 351 unit tests and 38 browser specs by then, all four gates green.
 
 ### The same question, asked of the other two
 
@@ -2056,6 +2056,55 @@ reads a screen is not a test that the screen round-trips. All three repositories
 that opens a stored record, saves it, and reads it back from a fresh request.
 
 Meta-gen: 250 unit tests, 25 browser specs. Gen-gen: 48 and 13. Both green on every gate.
+
+### The gate the conventions file had always claimed
+
+`composer test-js` was documented in two of these repositories and existed in neither. Adding
+the script alone would have been worse than leaving it out: `node --test` over an empty
+directory exits 0, so the gate would have passed while covering nothing - which is the failure
+this repository keeps being caught by, deliberately introduced.
+
+So it had to cover something, and what it should cover was inline script in a template: code no
+test can import. Both components had the same twelve lines, the generate button that tells one
+modal which row it belongs to, each carrying a note asking to be moved out. Both are now
+`generation-modal.js`, and both stopped reading `data-href` off whatever was clicked - which is
+the same thing as reading it off the button only for as long as the button holds no icon.
+
+**And the second thing it covers found a real difference.** A project's name becomes the
+component name, the namespace and every generated class name, so `validate-letter` is strict;
+the rule is written twice, here and in `LetterRule.php`. The first attempt to pin them together
+was fake - compiling the PHP pattern with `new RegExp` compares JavaScript with JavaScript and
+reports agreement whatever PCRE does - and the difference was exactly where that test could not
+look: PCRE's `$` also matches before a final newline, so `LetterRule` accepted a name with a
+trailing newline while the browser refused it. The authoritative check was the looser one, and a
+name with a line break in it goes into a namespace and every generated class name. `LetterRule`
+takes the `D` modifier now.
+
+The pattern is exported from one place and compared as text, and `LetterRuleTest` covers the
+twelve cases on the PHP side.
+
+Gen-gen gets no such script: it owns no browser JavaScript at all, only Joomla's own assets, and
+its conventions file correctly never claimed otherwise. Both gates run in CI and in the release
+workflow, as generator-core's already did - a gate nobody runs is a gate only for whoever
+remembers to type it.
+
+`admin-extengen-modal.js` went too. It defined `jSelectExtengen` and read `xtd-extengen`, and
+nothing referenced either name; it had been shipping because the manifest packages the whole
+folder.
+
+### Released
+
+Everything above was on `main` and in no released package, including both pieces of data loss.
+`com_extengen 1.2.0`, `com_gengen 0.3.0` and `com_metagen 0.2.0` close that. No schema changed
+in any of them, so none carries an update file.
+
+One thing to keep: Exten-gen was first tagged `v0.2.0` by mistake, and the release workflow
+refused it - *"Tag v0.2.0 does not match the manifest version 1.2.0"*. That check exists because
+3.7 found a tag that had nothing listening to it, and this is the first time it has stopped
+something. It cost one wrong tag and no wrong release.
+
+Exten-gen: 363 unit tests, 14 browser-side, 39 browser specs. Meta-gen: 250, 8 and 26. Gen-gen:
+48 and 13.
 
 *Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
 and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
@@ -2165,11 +2214,11 @@ an accident of the implementation into something a language can say out loud.
 
 ## Decisions outstanding
 
-Each is flagged at the step where it bites.
+None. The one that stood here is recorded below.
 
-| Step | Decision |
-|---|---|
-| 1.1 | Whether to filter `testForm.json` out of the history during the mirror push |
+| Step | Decision | Outcome |
+|---|---|---|
+| 1.1 | Whether to filter `testForm.json` out of the history during the mirror push | **Left in.** Read out of history before deciding: it is a modelled metalanguage called `XML`, a development fixture, with nothing sensitive in it. Rewriting the history of a repository that is already published costs more than the clutter does. |
 
 ## Suggested entry point
 
