@@ -18,17 +18,6 @@
       "version": "b0a8df19948936e693d5c710d22673ed9ad760a3"
     },
     {
-      "name": "com_extengen.generation-modal",
-      "type": "script",
-      "uri": "com_extengen/generation-modal.js",
-      "dependencies": [
-        "core"
-      ],
-      "attributes": {
-        "type": "module"
-      }
-    },
-    {
       "name": "com_extengen.letter",
       "type": "script",
       "uri": "com_extengen/admin-extengen-letter.js",

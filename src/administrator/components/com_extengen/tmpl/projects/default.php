@@ -19,9 +19,14 @@ use Joomla\CMS\Router\Route;
 use Joomla\CMS\Session\Session;
 
 // The generate button has to tell the one modal which project it means,
-// before Bootstrap opens it. A file rather than inline script so that
-// `composer test-js` can import it.
-$this->getDocument()->getWebAssetManager()->useScript('com_extengen.generation-modal');
+// before Bootstrap opens it. The library's, because Meta-gen's list needs the
+// same twelve lines and two copies of one rule is how three defects got in.
+//
+// A library carries media but does not get its asset file registered the way
+// the active component does, so it is asked for by name first.
+$wa = $this->getDocument()->getWebAssetManager();
+$wa->getRegistry()->addExtensionRegistryFile('lib_yepr_gen');
+$wa->useScript('lib_yepr_gen.generation-modal');
 
 $canChange  = true;
 $assoc = Associations::isEnabled();

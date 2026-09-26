@@ -43,8 +43,12 @@ class Com_ExtengenInstallerScript
 
     /**
      * The oldest library release that has everything this version calls.
+     *
+     * 0.15.0 for `lib_yepr_gen.generation-modal`, the script the projects list
+     * uses to tell the generate modal which row was pressed. It was this
+     * component's own until Meta-gen turned out to need the same twelve lines.
      */
-    private const LIBRARY_MINIMUM = '0.14.0';
+    private const LIBRARY_MINIMUM = '0.15.0';
 
     /**
      * The oldest Joomla this runs on.
