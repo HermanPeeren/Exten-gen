@@ -1,0 +1,158 @@
+name: Browser
+
+# The gate CLAUDE.md calls the one that matters most, and the only one that had
+# never run anywhere but a laptop.
+#
+# Everything in `CI` reads source or runs generation with two constants standing
+# in for Joomla; none of it boots the framework. Four times now a change has
+# passed every one of those and been broken on screen: a guard on a constant
+# Joomla 6 removed, a field type that only resolved on a case-insensitive
+# filesystem, a reference index the view never put in the page, and a saved
+# project whose entire model the edit form silently dropped - the last of which
+# also destroyed the project on save.
+#
+# It is a separate workflow rather than more steps in `CI` because it is the
+# slow one and because it can fail for reasons that are about the runner rather
+# than the code. Keeping it apart means a red browser run is legible as itself.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cypress:
+    runs-on: ubuntu-latest
+
+    services:
+      # Joomla's installer wants a database that already exists; MYSQL_DATABASE
+      # makes it. The credentials are this container's and live nowhere else.
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: joomla
+          MYSQL_DATABASE: joomla_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pjoomla"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      JOOMLA_VERSION: 6.1.3
+      SITE_URL: http://127.0.0.1:8080
+      # A Super User for this run only. Joomla requires twelve characters.
+      ADMIN_USERNAME: ci-admin
+      ADMIN_PASSWORD: ci-password-for-one-run
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          # What Joomla asks for, plus zip for the packages this component
+          # builds and unpacks.
+          extensions: zip, mysqli, pdo_mysql, intl, gd, mbstring, simplexml
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      # Cypress itself, from the lockfile. Its binary is a separate download
+      # that npm fetches on install; the npm cache above keeps the packages
+      # between runs.
+      - name: Install Cypress
+        run: npm ci
+
+      - name: Fetch Joomla
+        run: |
+          url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
+          curl -sSL -o joomla.tar.gz "$url"
+          mkdir -p joomla
+          tar -xzf joomla.tar.gz -C joomla
+
+      # Joomla's own CLI installer, which is why the *full* package is fetched
+      # above: `installation/` is only in that one, and it removes itself when
+      # it is done.
+      - name: Install Joomla
+        run: |
+          php joomla/installation/joomla.php install \
+            --site-name="Exten-gen CI" \
+            --admin-user="CI" \
+            --admin-username="${ADMIN_USERNAME}" \
+            --admin-password="${ADMIN_PASSWORD}" \
+            --admin-email="ci@example.invalid" \
+            --db-type=mysqli \
+            --db-host=127.0.0.1 \
+            --db-user=root \
+            --db-pass=joomla \
+            --db-name=joomla_ci \
+            --db-prefix=ci_ \
+            --no-interaction
+
+      # PHP's own server, with workers: a single-threaded one deadlocks the
+      # moment a page asks the site for a second thing while the first is still
+      # being served, which the generated front end does.
+      - name: Serve the site
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t joomla > php-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sSf -o /dev/null "${SITE_URL}/administrator/"; then
+              echo "serving after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "the site never came up"
+          cat php-server.log
+          exit 1
+
+      # Git-ignored, because on a laptop it holds a real login. Here it holds
+      # the throwaway one this run just created.
+      - name: Point Cypress at it
+        run: |
+          cat > cypress.env.json <<JSON
+          {
+            "baseUrl": "${SITE_URL}",
+            "adminUser": "${ADMIN_USERNAME}",
+            "adminPassword": "${ADMIN_PASSWORD}"
+          }
+          JSON
+
+      # Builds the package and installs it through Joomla's CLI, which is also
+      # what imports the shipped ER1 - so the metalanguage the specs open
+      # projects with arrives by the route a real install uses.
+      - name: Install the component
+        run: composer install-local
+
+      # One project to open and generate from. The specs seed whatever else
+      # they need themselves - packages, menu items, the conference project in
+      # the spelling the screens write - and say so where they do it.
+      - name: Seed a project
+        run: php tools/seed-project.php
+
+      - name: Browser tests
+        run: npx cypress run
+
+      - name: What it saw when it failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: tests/cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: What the server said
+        if: failure()
+        run: tail -100 php-server.log
