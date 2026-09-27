@@ -167,7 +167,7 @@ jobs:
       # why neither showed up until this ran somewhere clean.
       - name: Quieten a fresh Joomla
         run: |
-          mysql -h 127.0.0.1 -uroot -pjoomla joomla_ci -e             "UPDATE ci_extensions SET enabled = 0 WHERE type = 'plugin' AND element IN ('guidedtours', 'stats');"
+          mysql -h 127.0.0.1 -uroot -pjoomla joomla_ci -e "UPDATE ci_extensions SET enabled = 0 WHERE type = 'plugin' AND element IN ('guidedtours', 'stats');"
 
       # Two projects. BalloonPlanning is what generate, views-render and the
       # front-end specs open; the conference one, in the spelling the screens
