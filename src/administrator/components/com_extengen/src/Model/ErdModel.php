@@ -48,8 +48,19 @@ use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 
 /**
  * ERD Model: to get the project data from the db
+ *
+ * **`Erd`, not `ERD`, and that is not a slip.** Joomla builds this class's
+ * name from the view that wants it: `AbstractView::getName()` lower-cases the
+ * last segment of the view's namespace, so `View\ERD` becomes `erd`, and
+ * `MVCFactory::createModel()` `ucfirst`s that back to `Erd`. The file it
+ * autoloads is whatever that spells.
+ *
+ * As `ERDModel.php` it resolved on Windows and existed nowhere on Linux, so
+ * the view would have been handed null and the screen would have been a 500.
+ * No spec opens this view, so nothing had said so. `ViewModelNamesTest` keeps
+ * the pair in step.
  */
-class ERDModel extends AdminModel
+class ErdModel extends AdminModel
 {
 	/**
 	 * The (internal) id of the project for which we generate files

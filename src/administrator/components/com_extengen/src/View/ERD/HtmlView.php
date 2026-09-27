@@ -42,7 +42,7 @@ class HtmlView extends BaseHtmlView
 	 */
 	public function display($tpl = null): void
 	{
-		/** @var \Yepr\Component\Extengen\Administrator\Model\ERDModel $model */
+		/** @var \Yepr\Component\Extengen\Administrator\Model\ErdModel $model */
 		$model = $this->getModel();
 
 		// Get the project_id and put it in the model
