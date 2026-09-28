@@ -2148,12 +2148,36 @@ action and the assets 404ing from `/administrator/media`. Worth keeping: the fir
 the fix changed nothing, because it was taken within a second of the edit and the built-in
 server revalidates timestamps on a delay, so the response came from the compile before it.
 
-Meta-gen and Gen-gen get the same workflow once this one is green. Gen-gen's is the awkward one:
-its specs run against Exten-gen's site, with both components installed on it.
+Meta-gen and Gen-gen now have the same workflow, and all three are green. Gen-gen's is the
+awkward one: its specs run against Exten-gen's site, with both components installed on it.
 
-*Done:* generator-core 0.12.0 with 222 tests; Meta-gen 248 and 23 browser specs; Exten-gen 331
-and 30; Gen-gen 48, 11 browser specs, and the acceptance check still reproducing 263 files
-identical to the approved output.
+*What it found, which is the point of it.* Three defects that every other gate passed:
+
+- **A first install did not import ER1.** Exten-gen's `script.php` imported it without first
+  registering the component's namespace or requiring the library's autoloader, so the import
+  failed on any site where nothing had loaded them yet - which is every real first install and
+  no development machine.
+- **A view could not find its model on a filesystem that cares about case**, in Meta-gen *and*
+  Exten-gen. `AbstractView::getName()` lowercases the last namespace segment, so `View\ERD` asks
+  for `ErdModel` and `View\GenerateForms` for `GenerateformsModel`. Named the obvious way, both
+  files resolved on Windows and nowhere else: `createModel()` returned null, the controller
+  skipped `setModel()`, the view called a method on null, and the log said `Undefined array
+  key ""` from inside Joomla. Nothing named the file that was missing.
+- **The same defect one layer along.** Renaming the model left
+  `MetalanguageController::export()` asking for `getModel('GenerateForms')`, and
+  `MVCFactory::createModel()` treats that string exactly as it treats a view's name: `ucfirst`
+  it, autoload a class of that name. A rename does not touch a model asked for by string, so it
+  survived the round that fixed the layer above it and was caught by this same gate a round
+  later.
+
+`ViewModelNamesTest`, in all three repositories, is both halves written down: every view that
+calls `getModel()`, and every model asked for by name, checked against a `scandir` listing
+compared as strings. Not `is_file`, which on Windows answers the question the test exists to ask
+- it finds `GenerateFormsModel.php` when asked for `GenerateformsModel.php`, which is the bug.
+
+*Done:* generator-core 0.15.0; Meta-gen 256 unit tests and 26 browser specs; Exten-gen 370 and
+39; Gen-gen 53 and 13, with the acceptance check still reproducing Exten-gen's approved output
+file for file.
 
 *The design as it was written, for the record:*
 

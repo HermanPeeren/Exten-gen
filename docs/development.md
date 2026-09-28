@@ -99,6 +99,34 @@ storage tables: the modal project picker, the associations helper and the
 administrator HTML service all query `#__extengen_projects` for a name or an id,
 which is an ordinary query and not a second copy of how a model is loaded.
 
+## Two naming rules Joomla imposes, both invisible on Windows
+
+Neither is about style. Both decide whether a class loads at all, and both
+resolve on a case-insensitive filesystem and fail on a case-sensitive one — so
+they pass every gate on a laptop and 500 on a server.
+
+- **A model file is named from what the view *derives*, not from what the view
+  is called.** The controller does not pass `view=` along: `prepareViewModel()`
+  asks the view its name — `AbstractView::getName()`, which takes the last
+  segment of the view's namespace and **lowercases all of it** — and hands that
+  to `MVCFactory::createModel()`, which `ucfirst`s it back and autoloads the
+  class of that name. So `View/ERD/` loads `Model/ErdModel.php`. Named
+  `ERDModel.php`, `createModel()` returned null, the controller skipped
+  `setModel()`, and the view called a method on null. Nothing in the error named
+  the file that was missing.
+- **A model asked for by name is spelled the way its file is.**
+  `getModel('Generateforms')` goes through the same `ucfirst`-and-autoload, so
+  the argument is the filename, not the prose name. This is the one a rename
+  falls through: renaming a class updates its `use` statements and its docblocks
+  and does not touch a model fetched by string. In Meta-gen it left a controller
+  asking for the old spelling, which 500ed on Linux a round after the layer
+  above it was fixed.
+
+`ViewModelNamesTest` is both of these, over every view that calls `getModel()`
+and every model asked for by name. It compares against a `scandir` listing as
+strings rather than calling `is_file` — `is_file` on Windows answers the question
+the test exists to ask, finding `ERDModel.php` when asked for `ErdModel.php`,
+which is exactly the bug.
 ## Quality gates
 
 ```
