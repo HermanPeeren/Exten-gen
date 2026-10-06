@@ -261,6 +261,15 @@ script will refuse. It names a release asset by file name, which is why the
 workflow checks it: a stale one either hides the release or offers a download
 that 404s, and no test on your own machine can see either.
 
+Once the release is published, the workflow writes the download's SHA-512 into
+`updates.xml` with `php build/update-xml.php --checksum` and commits that to
+`main` itself. Joomla checks a downloaded update against it and warns when
+there is none. It has to come from the workflow because a zip built on another
+machine has different timestamps and line endings, so its hash does not match.
+Pull `main` after a release, before the next version bump. Without `--checksum`
+the script keeps a committed checksum while the download stays the same, and
+drops it when the version changes.
+
 1.0.0 was tagged and pushed before any of this existed, and nothing happened at
 all - no release, no failure, no mail. A tag is only a release procedure once
 something is listening for it.
