@@ -14,6 +14,7 @@
 		<downloads>
 			<downloadurl type="full" format="zip">https://github.com/HermanPeeren/Exten-gen/releases/download/v1.3.0/com_extengen-1.3.0.zip</downloadurl>
 		</downloads>
+		<sha512>e4d1c8ee8f3fda53bbb9b6e569d557ada5eb4b8fb348e351412730dc4cb9e4d37cf6cf628bf07e09f578884d9a37eaca135ca87f80f34563022afcb2e89e63c4</sha512>
 		<maintainer>Herman Peeren</maintainer>
 		<maintainerurl>https://yepr.nl</maintainerurl>
 		<targetplatform name="joomla" version="6\..*"/>
