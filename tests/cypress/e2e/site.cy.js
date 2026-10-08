@@ -79,11 +79,13 @@ describe('the frontend', () => {
     cy.get('#extengen-new-project').click();
 
     cy.get('#jform_name', { timeout: 20000 }).type('VisitorProject');
-    cy.get('#jform_metalanguage option').then(($options) => {
-      const er1 = [...$options].find((o) => o.value.startsWith('ER1|1.2'));
+    cy.shippedEr1Version().then((version) => {
+      cy.get('#jform_metalanguage option').then(($options) => {
+        const er1 = [...$options].find((o) => o.value === `ER1|${version}`);
 
-      expect(er1, 'ER1 1.2 is offered').to.exist;
-      cy.get('#jform_metalanguage').select(er1.value);
+        expect(er1, `the shipped ER1 ${version} is offered`).to.exist;
+        cy.get('#jform_metalanguage').select(er1.value);
+      });
     });
     cy.get('#extengen-save').click();
 

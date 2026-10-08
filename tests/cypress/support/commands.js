@@ -112,3 +112,15 @@ Cypress.Commands.add('loginToSite', () => {
     );
   });
 });
+
+/**
+ * The version of ER1 this checkout ships, read off its package in `packages/`.
+ *
+ * Never written into a spec. Twice a spec named the version - 'ER1 1.1', then
+ * 'ER1 1.2' - and went on passing here, where the site still had the old row,
+ * and failed in CI, where a fresh site has only the shipped one.
+ */
+Cypress.Commands.add('shippedEr1Version', () => cy
+  .exec(`node -e "process.stdout.write(require('fs').readdirSync('packages').find((f) => f.startsWith('ER1-')))"`)
+  .its('stdout')
+  .then((file) => file.replace(/^ER1-|\.zip$/g, '')));
