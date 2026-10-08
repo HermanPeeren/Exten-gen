@@ -113,6 +113,15 @@ class PresentationTable extends Table implements TaggableTableInterface
 			$this->publish_down = null;
 		}*/
 
+		// A date or a time left empty on the form arrives as '', which MySQL
+		// refuses for a date column in strict mode. NULL is what "no date" is,
+		// and store() writes nulls, so clearing a date also clears it in the row.
+		foreach ($this->getFields() as $name => $field) {
+			if (isset($this->$name) && $this->$name === '' && preg_match('/^(date|datetime|time|timestamp)\b/i', (string) $field->Type)) {
+				$this->$name = null;
+			}
+		}
+
 		// <extengen id="table.check">
 		// </extengen>
 

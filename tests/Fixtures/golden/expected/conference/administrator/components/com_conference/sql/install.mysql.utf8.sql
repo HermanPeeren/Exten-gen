@@ -25,7 +25,7 @@ PRIMARY KEY (`id`)
 CREATE TABLE IF NOT EXISTS `#__conference_program` (
 `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
 `title` varchar(255),
-`time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+`time` datetime DEFAULT NULL,
 `talk_id` bigint(20) UNSIGNED,
 `room_id` bigint(20) UNSIGNED,
 PRIMARY KEY (`id`)

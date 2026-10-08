@@ -2548,6 +2548,21 @@ DEFAULT '0000-00-00 00:00:00'`, which MySQL 8 refuses in strict mode. It showed 
 self-model's golden output when `created` was added. That is a generator defect with its own
 golden-file consequences, so it is a step of its own.
 
+**Fixed after 1.3.0.** A `DateTime` property is `datetime DEFAULT NULL`, as nullable dates have
+been in Joomla's own tables since 4.0. The column alone was half of it: a calendar field left
+empty posts `''`, and MySQL 8 refuses that in a date column too, with "Incorrect datetime
+value". So the generated Table's `check()` turns an empty date, time or datetime into NULL,
+reading the column types from `getFields()` rather than from a list the template would have to
+be given. `store()` already writes nulls, so clearing a date clears it in the row.
+
+Checked on the MySQL 8.3 this machine runs, in a scratch database with
+`STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE`: the old conference schema stops at
+"Invalid default value for 'time'", the new one installs, `NULL` stores, and `''` is refused.
+The development server's global `sql_mode` is empty, which is why nothing here had failed.
+`StrictSqlTest` states the rule over every approved Joomla schema. The golden diff is three
+columns and the same nine lines in each of the 17 Table classes. Gen-gen's acceptance check
+still reproduces it, because a template change is not a rule change.
+
 **5.8 Release.** All gates in all three repositories. Exten-gen 1.3.0, Meta-gen 0.3.0,
 Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
 Meta-gen's none. Herman pushes and tags.

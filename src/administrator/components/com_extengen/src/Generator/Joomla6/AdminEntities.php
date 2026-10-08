@@ -49,7 +49,11 @@ class AdminEntities extends RuleDrivenGenerator
 		'Short_Text' => 'varchar(255)',
 		'Time'       => 'time',
 		'Date'       => 'date',
-		'DateTime'   => "datetime NOT NULL DEFAULT '0000-00-00 00:00:00'",
+		// NULL is what "no date" is. The zero date this used to default to is
+		// refused by MySQL 8 in strict mode, so a component with a DateTime
+		// property did not install there, and Joomla's own tables dropped it in
+		// 4.0. The generated Table turns an empty date from the form into NULL.
+		'DateTime'   => 'datetime DEFAULT NULL',
 		'File'       => 'varchar(255)',
 		'Link'       => 'varchar(255)',
 		'Image'      => 'varchar(255)',
