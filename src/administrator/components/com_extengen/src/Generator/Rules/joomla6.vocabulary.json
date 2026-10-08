@@ -29,7 +29,8 @@
         "siteIndexFilters",
         "siteIndexForeign",
         "siteIndexPropertyFieldNames",
-        "siteLinkPageName"
+        "siteLinkPageName",
+        "siteRouterViews"
     ],
     "templates": [
         "LICENSE",
@@ -58,6 +59,7 @@
         "component/components/com_componentname/src/Controller/SiteIndexController.php.twig",
         "component/components/com_componentname/src/Model/SiteDetailsModel.php.twig",
         "component/components/com_componentname/src/Model/SiteIndexModel.php.twig",
+        "component/components/com_componentname/src/Service/Router.php.twig",
         "component/components/com_componentname/src/View/Details/HtmlView.php.twig",
         "component/components/com_componentname/src/View/Index/HtmlView.php.twig",
         "component/components/com_componentname/tmpl/details/default.php.twig",

@@ -63,6 +63,27 @@ describe('a generated component', () => {
     cy.get('body').should('not.contain', 'There is no ');
   });
 
+  /**
+   * The menu links to it, which needs the component's router.
+   *
+   * The tests above type the address. A visitor follows the menu, and until
+   * the generator wrote a site router the menu could not build that link:
+   * the component says it routes its own links, Joomla's router factory
+   * found no router class, `Route::_()` returned null, and the menu entry
+   * pointed at the home page - with a PHP deprecation from mod_menu above
+   * it, the only sign anything was wrong.
+   */
+  it('is reached from its menu item, as a visitor reaches it', () => {
+    cy.visit('/');
+
+    cy.contains('a', 'Flights').should('have.attr', 'href').and('match', new RegExp(`/${MENU_ALIAS}$`));
+    cy.get('body').should('not.contain', 'Deprecated');
+
+    cy.contains('a', 'Flights').click();
+    cy.location('pathname').should('match', new RegExp(`/${MENU_ALIAS}$`));
+    cy.get(`#${VIEW}List`).should('exist');
+  });
+
   it('shows translated column headings rather than language keys', () => {
     cy.visit(`/index.php/${MENU_ALIAS}`);
 

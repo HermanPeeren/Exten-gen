@@ -26,9 +26,22 @@ const generateLinkOfAnEr1Project = () => {
     .closest('tr').find('a[data-href*="view=generate"]').invoke('attr', 'data-href');
 };
 
+/**
+ * How many rules the good package holds, as the tool that built it says.
+ *
+ * Read rather than written here: it is the target's rule count minus one, and
+ * the target gains rules - the number in this spec went stale the day it
+ * gained its site router.
+ */
+let packageRules = 0;
+
 describe('generators', () => {
   before(() => {
-    cy.exec('php tools/make-test-generator.php');
+    cy.exec('php tools/make-test-generator.php').its('stdout').then((out) => {
+      packageRules = Number((out.match(/^generator\.zip: (\d+) rules$/m) || [])[1]);
+
+      expect(packageRules, 'the tool says how many rules it packed').to.be.greaterThan(0);
+    });
     cy.exec('php tools/set-option.php allow_install 0');
   });
 
@@ -64,11 +77,11 @@ describe('generators', () => {
     cy.get('input[name="package"]').selectFile(PACKAGE);
     cy.get('button[type="submit"]').click();
 
-    cy.get('#system-message-container', { timeout: 30000 }).should('contain.text', '26 rules');
+    cy.get('#system-message-container', { timeout: 30000 }).should('contain.text', `${packageRules} rules`);
     cy.get(`#generatorList tr[data-id="${IMPORTED}"]`)
       .should('contain.text', 'Joomla 6 without a licence file')
       .and('contain.text', 'Joomla component')
-      .and('contain.text', '26');
+      .and('contain.text', String(packageRules));
   });
 
   it('offers the imported generator for an ER1 project, and runs its rules', () => {

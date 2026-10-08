@@ -115,7 +115,61 @@ final class Joomla6Derivations
             ->register('siteIndexPropertyFieldNames', fn (object $n, object $m): array
                 => $this->propertyFieldNames($this->siteIndexEntity($n, $m)))
             ->register('siteIndexForeign', fn (object $n, object $m): array => $this->siteIndexForeign($n, $m))
-            ->register('siteDetailsForeign', fn (object $n, object $m): array => $this->siteDetailsForeign($n, $m));
+            ->register('siteDetailsForeign', fn (object $n, object $m): array => $this->siteDetailsForeign($n, $m))
+            ->register('siteRouterViews', fn (mixed $n, object $m): array => $this->routerViews($m));
+    }
+
+    /**
+     * The views the site router knows: every frontend page, by the name in its URL.
+     *
+     * A list page is a view of its own. A details page is keyed by `id`, and
+     * sits under the list page that links to it, which is how the list's
+     * links are built - `view=<details>&id=` - so a menu item on the list
+     * gives its details pages addresses under it. A details page no list
+     * links to has no parent and gets an address of its own.
+     *
+     * List pages come first, so a parent is always registered before the
+     * child that names it.
+     *
+     * @param   object  $model  The decoded project.
+     *
+     * @return  array<int, array{name: string, key: bool, parent: ?string}>
+     *
+     * @since   1.3.3
+     */
+    private function routerViews(object $model): array
+    {
+        $pages = Joomla6Selectors::pages($model, 'frontendsection');
+        $lists = [];
+        $items = [];
+
+        foreach ($pages as $page) {
+            $name = strtolower((string) $page->page_name);
+
+            if ($name === '') {
+                continue;
+            }
+
+            if ($page->page_type === 'indexpage') {
+                $lists[$name] = ['name' => $name, 'key' => false, 'parent' => null];
+            } else {
+                $items[$name] = ['name' => $name, 'key' => true, 'parent' => null];
+            }
+        }
+
+        foreach ($pages as $page) {
+            if ($page->page_type !== 'indexpage') {
+                continue;
+            }
+
+            $target = strtolower($this->linkPageName($page, $model, false));
+
+            if (isset($items[$target]) && $items[$target]['parent'] === null) {
+                $items[$target]['parent'] = strtolower((string) $page->page_name);
+            }
+        }
+
+        return array_values($lists + $items);
     }
 
     /**

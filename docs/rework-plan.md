@@ -2563,6 +2563,26 @@ The development server's global `sql_mode` is empty, which is why nothing here h
 columns and the same nine lines in each of the 17 Table classes. Gen-gen's acceptance check
 still reproduces it, because a template change is not a rule change.
 
+**And a site router, after 1.3.2.** The gap Exten-gen's own frontend had was also in what it
+generates. A generated component says it routes its own links, with `RouterServiceInterface`
+on the component and a `RouterFactory` in its provider, but it shipped no
+`Site\Service\Router`. So Joomla's factory threw "No router available", `Route::_()` returned
+null, and a menu item on a generated page linked to the home page. The only visible sign was a
+PHP deprecation from `mod_menu`, passing that null to `htmlspecialchars()`.
+`generated-front-end.cy.js` typed the page's address, so it never followed the menu.
+
+Now a rule, `site.mvc.router`, renders `src/Service/Router.php` for every generated component:
+a `RouterView` whose views come from a new derivation, `siteRouterViews`. A list page is a view
+of its own. A details page is keyed by `id` and sits under the list page that links to it, the
+link the list's layout already builds. It is generated even with no frontend pages, because the
+component declares a router either way. The spec now follows the menu link from the home page
+and fails on a deprecation there.
+
+Gen-gen's model of the Joomla 6 generator gained the rule, through `import-vocabularies` and
+`import-generator`, so a generator modelled in Gen-gen produces the router too. The acceptance
+check reproduces all 267 files, the new routers included. Two Gen-gen tests had the rule count
+written in as 27; one now compares with the imported rule file, the other is a floor.
+
 **5.8 Release.** All gates in all three repositories. Exten-gen 1.3.0, Meta-gen 0.3.0,
 Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
 Meta-gen's none. Herman pushes and tags.

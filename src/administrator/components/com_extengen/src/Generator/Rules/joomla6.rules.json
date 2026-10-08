@@ -947,5 +947,34 @@
                 "derive": "defaultFrontendIndexPage"
             }
         }
+    },
+    {
+        "id": "site.mvc.router",
+        "for": "root",
+        "template": "component/components/com_componentname/src/Service/Router.php.twig",
+        "target": "components/com_{componentName|lower}/src/Service/Router.php",
+        "bind": {
+            "componentName": {
+                "derive": "componentName"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "views": {
+                "derive": "siteRouterViews"
+            }
+        }
     }
 ]
