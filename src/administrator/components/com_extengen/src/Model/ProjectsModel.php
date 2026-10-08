@@ -18,12 +18,69 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\MVC\Model\ListModel;
 use Joomla\Utilities\ArrayHelper;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrait;
+use Yepr\Component\Extengen\Administrator\Generators\PackageLocation;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareTrait;
 
 /**
  * Model with methods supporting a list of projects.
+ *
+ * The generator catalogue and the project repository are handed over by the
+ * component's MVC factory, for the packages column.
  */
-class ProjectsModel extends ListModel
+class ProjectsModel extends ListModel implements GeneratorCatalogueAwareInterface, ProjectRepositoryAwareInterface
 {
+	use GeneratorCatalogueAwareTrait;
+	use ProjectRepositoryAwareTrait;
+
+	/**
+	 * The packages that have been generated for the projects on this page.
+	 *
+	 * One per generator that has written a package for a project's current
+	 * version - the one `generate.download` hands out, so every link in the
+	 * list is one the download task will honour. Looked for on disk rather
+	 * than recorded anywhere, because the folder is the only record there is:
+	 * a package removed by hand is not offered.
+	 *
+	 * @param   object[]  $items  The rows on the page.
+	 * @param   ?string   $root   Where output goes; the administrator's when null.
+	 *
+	 * @return  array<int, array<int, array{generator: string, label: string, file: string}>>  By project id.
+	 *
+	 * @since   1.3.4
+	 */
+	public function packages(array $items, ?string $root = null): array
+	{
+		$root       = $root ?? JPATH_ROOT . '/' . PackageLocation::ADMIN_ROOT;
+		$generators = $this->getGeneratorCatalogue()->all();
+		$packages   = [];
+
+		foreach ($items as $item) {
+			$id      = (int) ($item->id ?? 0);
+			$project = $id > 0 ? $this->getProjectRepository()->find($id) : null;
+
+			if ($project === null || $project->componentName() === '') {
+				continue;
+			}
+
+			foreach ($generators as $generator) {
+				$archive = PackageLocation::archive($root, $id, $project, $generator->id);
+
+				if (is_file($archive)) {
+					$packages[$id][] = [
+						'generator' => $generator->id,
+						'label'     => $generator->label(),
+						'file'      => basename($archive),
+					];
+				}
+			}
+		}
+
+		return $packages;
+	}
+
 	/**
 	 * Constructor.
 	 *

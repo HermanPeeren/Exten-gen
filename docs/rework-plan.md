@@ -2464,6 +2464,15 @@ built-in generator the id is the target's, so existing paths did not move.
 `write()` was handed a code generator. Every unit test passed, because none of them goes
 through the model.
 
+**And in the projects list, after 1.3.3.** A *Packages* column links to each generator's
+package for the project's current version, through the same `generate.download` task.
+Adding it showed that the folder was keyed by component name alone. Two projects modelling a
+component called Conference shared one folder, overwrote each other's package, and the list
+offered one project's package under both. Output is in `<project id>-<Component>/` now, and
+`Generators\PackageLocation` is the one place the layout is spelled out, for writing, download
+and the list. Packages generated before that are not listed until the project is generated
+again.
+
 **5.6 Install the generated extension directly (optional, default off).** A component
 option, `allow_install`, off by default. Its description warns that a generated extension is
 code built from whatever is in the model, slots included, so on a site where people other

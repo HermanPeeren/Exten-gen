@@ -76,6 +76,9 @@ if ($saveOrder && !empty($this->items))
 									<?php echo Text::_('COM_EXTENGEN_TABLE_TABLEHEAD_GENERATION'); ?>
 
 								</th>
+								<th scope="col" style="width:15%" class="d-none d-md-table-cell">
+									<?php echo Text::_('COM_EXTENGEN_TABLE_TABLEHEAD_PACKAGES'); ?>
+								</th>
 								<th scope="col">
 									<?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>
 								</th>
@@ -146,6 +149,29 @@ if ($saveOrder && !empty($this->items))
 										<?php echo Text::_('COM_EXTENGEN_BUTTON_GENERATE'); ?>
                                     </a>
                                 </td>
+								<?php /*
+									The packages generated for this project, one per generator,
+									through the same download task the generate screen links to:
+									it is given a project and a generator, never a path.
+								*/ ?>
+								<td class="d-none d-md-table-cell project-packages">
+									<?php if (empty($this->packages[(int) $item->id])) : ?>
+										<span class="text-muted">-</span>
+									<?php else : ?>
+										<ul class="list-unstyled mb-0">
+											<?php foreach ($this->packages[(int) $item->id] as $package) : ?>
+												<li>
+													<a href="<?php echo Route::_('index.php?option=com_extengen&task=generate.download&project_id=' . (int) $item->id . '&generator=' . urlencode($package['generator']) . '&' . Session::getFormToken() . '=1'); ?>"
+													   title="<?php echo $this->escape($package['file']); ?>"
+													   data-generator="<?php echo $this->escape($package['generator']); ?>">
+														<span class="icon-download" aria-hidden="true"></span>
+														<?php echo $this->escape($package['label']); ?>
+													</a>
+												</li>
+											<?php endforeach; ?>
+										</ul>
+									<?php endif; ?>
+								</td>
 								<td class="d-none d-md-table-cell">
 									<?php echo $item->id; ?>
 								</td>

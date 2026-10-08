@@ -23,12 +23,17 @@ if ($project === null) {
     exit(1);
 }
 
-$directory = $site . '/administrator/components/com_extengen/generated/' . $project;
+$generated = $site . '/administrator/components/com_extengen/generated';
+$directory = $generated . '/<id>-' . $project;
 
+// In a folder per project since 1.3.4, `<project id>-<Component>`, because two
+// projects can model a component of the same name - so this looks in every
+// project's folder for that component, and the newest package below wins.
 // Under the target's own directory since 4.4, because a second target writes a
 // zip too and `glob('*.zip')` over both would hand Joomla a WordPress plugin.
-// The bare directory is still read, for output generated before that.
-$packages = glob($directory . '/joomla6/*.zip') ?: (glob($directory . '/*.zip') ?: []);
+// The older layouts are still read, for output generated before each change.
+$packages = glob($generated . '/*-' . $project . '/joomla6/*.zip')
+    ?: (glob($generated . '/' . $project . '/joomla6/*.zip') ?: (glob($generated . '/' . $project . '/*.zip') ?: []));
 
 if ($packages === []) {
     fwrite(STDERR, "No generated package under {$directory}. Generate the project first.\n");

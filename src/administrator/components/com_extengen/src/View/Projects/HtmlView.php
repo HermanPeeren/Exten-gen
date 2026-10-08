@@ -74,6 +74,13 @@ class HtmlView extends BaseHtmlView
 	protected $sidebar;
 
 	/**
+	 * The generated packages of the projects on this page, by project id.
+	 *
+	 * @var  array<int, array<int, array{generator: string, label: string, file: string}>>
+	 */
+	public $packages = [];
+
+	/**
 	 * Method to display the view.
 	 *
 	 * @param   string  $tpl  A template file to load. [optional]
@@ -93,6 +100,7 @@ class HtmlView extends BaseHtmlView
 		$model->setUseExceptions(true);
 
 		$this->items         = $model->getItems();
+		$this->packages      = $model->packages($this->items ?: []);
 		$this->pagination    = $model->getPagination();
 		$this->filterForm    = $model->getFilterForm();
 		$this->activeFilters = $model->getActiveFilters();

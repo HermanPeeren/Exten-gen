@@ -51,6 +51,7 @@ use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrait;
+use Yepr\Component\Extengen\Administrator\Generators\PackageLocation;
 use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
 use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareTrait;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
@@ -257,11 +258,12 @@ class GenerateModel extends AdminModel implements
 	 */
 	public function archivePath(): string
 	{
-		$project = $this->loadProject();
-		$version = trim((string) ($project->manifest()->version ?? '')) ?: '0.0.0';
-
-		return $this->outputDirectory($project, $this->resolveGenerator()->id)
-			. '/' . strtolower($project->componentName()) . '-' . $version . '.zip';
+		return PackageLocation::archive(
+			$this->outputRoot(),
+			(int) $this->projectId,
+			$this->loadProject(),
+			$this->resolveGenerator()->id
+		);
 	}
 
 	/**
@@ -388,9 +390,17 @@ class GenerateModel extends AdminModel implements
 	 */
 	private function outputDirectory(Project $project, string $generatorId): string
 	{
-		$root = $this->outputRoot ?? JPATH_ROOT . '/administrator/components/com_extengen/generated';
+		return PackageLocation::directory($this->outputRoot(), (int) $this->projectId, $project, $generatorId);
+	}
 
-		return $root . '/' . $project->componentName() . '/' . $generatorId;
+	/**
+	 * Where output goes: the root set for this run, or the administrator's.
+	 *
+	 * @return  string
+	 */
+	private function outputRoot(): string
+	{
+		return $this->outputRoot ?? JPATH_ROOT . '/' . PackageLocation::ADMIN_ROOT;
 	}
 
 	/**
@@ -520,8 +530,7 @@ class GenerateModel extends AdminModel implements
 		// handed to Joomla. The version is in its name because a downloads
 		// folder full of identically named packages says nothing about which
 		// is which, and the one that matters is rarely the newest by date.
-		$version = trim((string) ($project->manifest()->version ?? '')) ?: '0.0.0';
-		$archive = $generated . '/' . strtolower($componentName) . '-' . $version . '.zip';
+		$archive = PackageLocation::archive($this->outputRoot(), (int) $this->projectId, $project, $generatorId);
 
 		$writer->write($files, $archive);
 

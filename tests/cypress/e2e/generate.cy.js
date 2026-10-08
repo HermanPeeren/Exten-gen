@@ -66,6 +66,29 @@ describe('generating a component', () => {
   });
 
   /**
+   * The package the test above made is in the projects list, and downloads.
+   *
+   * The list looks for each generator's package on disk, by the same rule the
+   * generate screen writes it with, and links to the same download task.
+   */
+  it('lists the generated package in the projects list, and it downloads', () => {
+    cy.visitExtengen('projects');
+
+    cy.get('#extengenProjects thead').should('contain.text', 'Packages');
+    cy.get('#adminForm a[data-href*="view=generate"]').first().closest('tr').within(() => {
+      cy.get('td.project-packages a[data-generator="joomla6"]')
+        .should('have.attr', 'title').and('match', /\.zip$/);
+      cy.get('td.project-packages a[data-generator="joomla6"]').invoke('attr', 'href').sitePath().then((href) => {
+        cy.request({ url: href, encoding: 'binary' }).then((response) => {
+          expect(response.status).to.eq(200);
+          expect(response.headers['content-type']).to.contain('application/zip');
+          expect(response.body.slice(0, 2)).to.eq('PK');
+        });
+      });
+    });
+  });
+
+  /**
    * And pressing the button points the modal at the project it belongs to.
    *
    * The test above reads `data-href` and visits it, which checks the URL and

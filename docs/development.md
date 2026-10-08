@@ -650,9 +650,17 @@ site it could not run on.
 A run writes two things next to each other:
 
 ```
-generated/<Name>/com_<name>-<version>.zip    the installable package
-generated/<Name>/Joomla6/com_<name>/...      the same files, unpacked
+generated/<id>-<Name>/<generator>/<name>-<version>.zip    the installable package
+generated/<id>-<Name>/<generator>/<name>/...              the same files, unpacked
 ```
+
+`<id>` is the project's, because two projects can model a component of the same
+name; `<generator>` is the generator's id - a target's for a built-in one
+(`joomla6`, `wordpress`, `drupal`), `imported.<key>` for an imported one.
+`Generators\PackageLocation` is the one place this is spelled out: the
+generate screen writes there, the download task and the projects list read
+from there. A frontend user's output has the same layout under a folder of
+their own (`generated/site/<hash>/`).
 
 The archive is the deliverable — it is the only form in which the output is one
 thing that can be handed to Joomla — and its name carries the version, because a

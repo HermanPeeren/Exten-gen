@@ -140,6 +140,29 @@ describe('the frontend', () => {
     cy.exec('php tools/set-option.php allow_install 0');
   });
 
+  /**
+   * Two projects of one component name have packages of their own.
+   *
+   * MyConference and the visitor's VisitorConference both model a component
+   * called Conference. Output went to a folder named for the component, so
+   * the projects list offered MyConference's package under both rows. It is a
+   * folder per project now, and the visitor's output is in a folder of their
+   * own besides.
+   */
+  it('does not list one project\'s package under another of the same component name', () => {
+    cy.loginToAdmin();
+
+    projectId('MyConference').then((id) => {
+      cy.visit(`/administrator/index.php?option=com_extengen&view=generate&tmpl=component&project_id=${id}&generator=joomla6`);
+      cy.get('#generate-result', { timeout: 60000 }).should('contain.text', 'files');
+    });
+
+    cy.visit('/administrator/index.php?option=com_extengen&view=projects&filter[metalanguage]=&list[limit]=0');
+    cy.contains('#extengenProjects tr', 'MyConference').find('td.project-packages a[data-generator="joomla6"]')
+      .should('exist');
+    cy.contains('#extengenProjects tr', MINE).find('td.project-packages a').should('not.exist');
+  });
+
   it('does not let the visitor reach somebody else\'s project', () => {
     cy.loginToSite();
 

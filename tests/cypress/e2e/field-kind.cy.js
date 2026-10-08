@@ -34,10 +34,14 @@
 
 const PROJECT = 'MyConference';
 
-// Where generation writes its tree, beside the zip. `Conference` is the
-// component name in the model; the directory below it is the target.
-const GENERATED =
-  'joomla/administrator/components/com_extengen/generated/Conference/joomla6/conference';
+// Where generation writes its tree, beside the zip: a folder per project,
+// `<project id>-<Component>`, since two projects can model a component of the
+// same name. `Conference` is the component name in the model; the directory
+// below it is the generator.
+const generated = (projectId) =>
+  `joomla/administrator/components/com_extengen/generated/${projectId}-Conference/joomla6/conference`;
+
+let GENERATED = '';
 
 /**
  * Every element matching `selector`, including the ones inside row templates.
@@ -145,16 +149,19 @@ describe("a field's kind, as the screens spell it", () => {
       .contains('tr', PROJECT)
       .find('a[data-href*="view=generate"]')
       .then(($link) => {
-        cy.visit(`${$link.attr('data-href')}&generator=joomla6`);
+        const href = $link.attr('data-href');
+
+        GENERATED = generated(Number(href.match(/[?&]project_id=(\d+)/)[1]));
+        cy.visit(`${href}&generator=joomla6`);
       });
 
     cy.get('body', { timeout: 60000 }).should('contain.text', 'files');
     cy.get('body').should('not.contain', 'Fatal error');
     cy.get('body').should('not.contain', 'Warning:');
 
-    cy.readFile(
+    cy.then(() => cy.readFile(
       `${GENERATED}/administrator/components/com_conference/sql/install.mysql.utf8.sql`
-    ).then((sql) => {
+    )).then((sql) => {
       // The three references.
       for (const column of ['speaker_id', 'talk_id', 'room_id']) {
         expect(sql, `${column} is a column`).to.contain(column);
@@ -168,7 +175,7 @@ describe("a field's kind, as the screens spell it", () => {
     // A reference is not only a column: it is also the dropdown that fills
     // itself from the referred table. Both came from the same read, and both
     // disappeared together.
-    cy.readFile(`${GENERATED}/administrator/components/com_conference/forms/talk.xml`).then(
+    cy.then(() => cy.readFile(`${GENERATED}/administrator/components/com_conference/forms/talk.xml`)).then(
       (xml) => {
         expect(xml, 'the reference renders as a query-backed field').to.contain('type="sql"');
       }
