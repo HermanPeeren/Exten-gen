@@ -28,12 +28,12 @@ use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
  * project is stored - `ModelLayerBoundaryTest` keeps it that way - and this is
  * the one place it is constructed. Shared, and built when first asked for.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 final class Repositories implements ServiceProviderInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function register(Container $container): void
     {

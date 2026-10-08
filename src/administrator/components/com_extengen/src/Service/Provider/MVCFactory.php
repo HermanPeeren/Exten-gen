@@ -36,21 +36,21 @@ use Yepr\Component\Extengen\Administrator\Service\MVCFactory as ExtengenMVCFacto
  * this component's, and it is given the container its own services are in.
  * There is no API client branch, because this component has no API.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 final class MVCFactory implements ServiceProviderInterface
 {
     /**
      * @param  string  $namespace  The component's namespace.
      *
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function __construct(private readonly string $namespace)
     {
     }
 
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function register(Container $container): void
     {

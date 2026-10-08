@@ -24,12 +24,12 @@ namespace Yepr\Component\Extengen\Administrator\Generators;
  * factory. Joomla builds those classes itself, with constructors it decides,
  * so a setter is where injection can happen.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 interface GeneratorCatalogueAwareInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setGeneratorCatalogue(GeneratorCatalogue $catalogue): void;
 }

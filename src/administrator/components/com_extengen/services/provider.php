@@ -35,7 +35,7 @@ use Joomla\CMS\Extension\Service\Provider\RouterFactory;
  * The Extengen service provider: the composition root.
  *
  * Every service this component has is registered here or by a provider named
- * here, and nothing else in the component constructs one. Since 1.4 that
+ * here, and nothing else in the component constructs one. Since 1.3.2 that
  * includes its own: the catalogues of generators and metalanguages and the
  * importer (`Catalogues`) and the project repository (`Repositories`), which
  * this component's MVC factory hands to models

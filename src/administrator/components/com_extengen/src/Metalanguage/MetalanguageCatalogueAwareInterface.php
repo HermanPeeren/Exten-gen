@@ -25,12 +25,12 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
  * the component itself, which is where a form field asks for it - Joomla makes
  * fields with `new`, so a field cannot be injected.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 interface MetalanguageCatalogueAwareInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setMetalanguageCatalogue(MetalanguageCatalogue $catalogue): void;
 }

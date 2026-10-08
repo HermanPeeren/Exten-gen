@@ -30,7 +30,7 @@ use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrai
  * The package is read where PHP put the upload and nothing is written until it
  * has been checked, so a refused import leaves nothing behind.
  *
- * The catalogue is handed over by the component's MVC factory since 1.4.
+ * The catalogue is handed over by the component's MVC factory since 1.3.2.
  *
  * @since  1.3.0
  */

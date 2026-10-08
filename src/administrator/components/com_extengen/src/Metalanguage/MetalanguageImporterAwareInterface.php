@@ -21,12 +21,12 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 /**
  * Something that is handed the metalanguage importer rather than making one.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 interface MetalanguageImporterAwareInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setMetalanguageImporter(MetalanguageImporter $importer): void;
 }

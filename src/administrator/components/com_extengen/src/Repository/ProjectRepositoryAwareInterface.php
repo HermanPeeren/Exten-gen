@@ -22,12 +22,12 @@ namespace Yepr\Component\Extengen\Administrator\Repository;
  * Handed over by the component's MVC factory, like the catalogues; see
  * `Service\MVCFactory`.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 interface ProjectRepositoryAwareInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setProjectRepository(ProjectRepository $repository): void;
 }

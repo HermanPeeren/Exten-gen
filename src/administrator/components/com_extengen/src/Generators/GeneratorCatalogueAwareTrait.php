@@ -19,18 +19,18 @@ namespace Yepr\Component\Extengen\Administrator\Generators;
 /**
  * The half of `GeneratorCatalogueAwareInterface` every implementer would write the same.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 trait GeneratorCatalogueAwareTrait
 {
     /**
      * @var    ?GeneratorCatalogue
-     * @since  1.4.0
+     * @since  1.3.2
      */
     private ?GeneratorCatalogue $generatorCatalogue = null;
 
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setGeneratorCatalogue(GeneratorCatalogue $catalogue): void
     {
@@ -42,7 +42,7 @@ trait GeneratorCatalogueAwareTrait
      *
      * @throws \UnexpectedValueException  When nothing did: the object was made outside the component's factory.
      *
-     * @since  1.4.0
+     * @since  1.3.2
      */
     protected function getGeneratorCatalogue(): GeneratorCatalogue
     {

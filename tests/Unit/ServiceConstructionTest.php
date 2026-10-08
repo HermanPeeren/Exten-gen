@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * This component's services are made in one place: its service provider.
  *
- * Until 1.4 each consumer made its own - `GeneratorCatalogue::forSite()` in a
+ * Until 1.3.2 each consumer made its own - `GeneratorCatalogue::forSite()` in a
  * controller, `Metalanguages::catalogue()` in four models and a form field,
  * `new ProjectRepository()` in two more - so the question "how is the
  * generator catalogue built" had seven answers that happened to agree. They
@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  * at a time, so this reads the source. The installer is the one exception,
  * named here, because it runs before the component's container exists.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 final class ServiceConstructionTest extends TestCase
 {

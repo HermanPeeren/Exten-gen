@@ -48,7 +48,7 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
  * Extengen, which built everything by autowiring, was never registered, and
  * would have given the models none of the services Joomla's factory gives.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 class MVCFactory extends JoomlaMVCFactory
 {
@@ -56,7 +56,7 @@ class MVCFactory extends JoomlaMVCFactory
      * @param  string              $namespace  The component's namespace.
      * @param  ContainerInterface  $services   The component's container, which holds the services.
      *
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function __construct(string $namespace, private readonly ContainerInterface $services)
     {
@@ -64,7 +64,7 @@ class MVCFactory extends JoomlaMVCFactory
     }
 
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function createController($name, $prefix, array $config, CMSApplicationInterface $app, Input $input)
     {
@@ -72,7 +72,7 @@ class MVCFactory extends JoomlaMVCFactory
     }
 
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function createModel($name, $prefix = '', array $config = [])
     {
@@ -88,7 +88,7 @@ class MVCFactory extends JoomlaMVCFactory
      *
      * @return  T
      *
-     * @since   1.4.0
+     * @since   1.3.2
      */
     private function handOver($object)
     {

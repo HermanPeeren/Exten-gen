@@ -71,7 +71,7 @@ use Yepr\Gen\Core\Target\Target;
  * Generate Model
  *
  * Both catalogues and the project repository are handed over by the
- * component's MVC factory since 1.4.
+ * component's MVC factory since 1.3.2.
  */
 class GenerateModel extends AdminModel implements
 	GeneratorCatalogueAwareInterface,

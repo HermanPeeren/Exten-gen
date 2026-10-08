@@ -38,12 +38,12 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
  * while Joomla is still installing the component, before this container
  * exists, so it constructs its own importer.
  *
- * @since  1.4.0
+ * @since  1.3.2
  */
 final class Catalogues implements ServiceProviderInterface
 {
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function register(Container $container): void
     {

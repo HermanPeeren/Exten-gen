@@ -28,7 +28,7 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 /**
  * Importing and removing metalanguages: step 3.4.
  *
- * The importer is handed over by the component's MVC factory since 1.4.
+ * The importer is handed over by the component's MVC factory since 1.3.2.
  *
  * @since  1.1.0
  */
@@ -36,12 +36,12 @@ class MetalanguagesController extends BaseController implements MetalanguageImpo
 {
     /**
      * @var    ?MetalanguageImporter
-     * @since  1.4.0
+     * @since  1.3.2
      */
     private ?MetalanguageImporter $importer = null;
 
     /**
-     * @since  1.4.0
+     * @since  1.3.2
      */
     public function setMetalanguageImporter(MetalanguageImporter $importer): void
     {
@@ -51,7 +51,7 @@ class MetalanguagesController extends BaseController implements MetalanguageImpo
     /**
      * The importer, which the component's MVC factory must have handed over.
      *
-     * @since  1.4.0
+     * @since  1.3.2
      */
     private function importer(): MetalanguageImporter
     {

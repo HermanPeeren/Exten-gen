@@ -53,7 +53,7 @@ use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
  * Item Model for a project.
  *
  * The metalanguage catalogue is handed over by the component's MVC factory
- * since 1.4, and the site's project model inherits it.
+ * since 1.3.2, and the site's project model inherits it.
  */
 class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInterface
 {
