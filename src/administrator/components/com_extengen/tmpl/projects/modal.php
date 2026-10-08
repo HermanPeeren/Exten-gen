@@ -37,7 +37,7 @@ $onclick   = $this->escape($function);
 			<table class="table table-sm">
 				<thead>
 					<caption id="captionTable" class="sr-only">
-						<?php echo Text::_('COM_EXTENGEN_PROJECTS_TABLE_CAPTION'); ?>, <?php echo Text::_('JGLOBAL_SORTED_BY'); ?>
+						<?php echo Text::_('COM_EXTENGEN_PROJECT_TABLE_CAPTION'); ?>, <?php echo Text::_('JGLOBAL_SORTED_BY'); ?>
 					</caption>
 					<tr>
 						<th scope="col" style="width:10%" class="d-none d-md-table-cell">

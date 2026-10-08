@@ -17,6 +17,7 @@ describe('the component renders', () => {
   const views = [
     ['projects', 'the list of projects'],
     ['generators', 'the generators page'],
+    ['metalanguages', 'the metalanguages page'],
     ['info', 'the info page'],
   ];
 
@@ -24,6 +25,18 @@ describe('the component renders', () => {
     it(`shows ${description}`, () => {
       cy.visitExtengen(view);
       cy.shouldHaveRendered();
+      cy.shouldShowNoRawConstants();
+    });
+  });
+
+  it('shows a project with every string translated', () => {
+    // The edit screen is the one with the language package's strings on it,
+    // and the only one the list above does not reach.
+    cy.visitExtengen('projects');
+    cy.get('#extengenProjects a[href*="task=project.edit"]').first().invoke('attr', 'href').then((href) => {
+      cy.visit(`/administrator/${href.split('/administrator/').pop()}`);
+      cy.shouldHaveRendered();
+      cy.shouldShowNoRawConstants();
     });
   });
 
@@ -68,6 +81,7 @@ describe('the component renders', () => {
         cy.get('body').should('not.contain', 'View not found');
         cy.get('body').should('not.contain', 'An error has occurred');
         cy.shouldHaveRendered();
+        cy.shouldShowNoRawConstants();
       });
     });
   });

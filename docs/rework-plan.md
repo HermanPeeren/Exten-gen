@@ -2281,6 +2281,135 @@ an accident of the implementation into something a language can say out loud.
 
 ---
 
+## Stage 5 — the dots on the i
+
+Drawn up 2026-10-08, after Stage 4 had closed and Exten-gen stood at 1.2.0. Each item is
+something somebody using the three components runs into in the first ten minutes. None of
+them is large on its own, but together they are what separates "it works" from "it can be
+shown". The JWC demo on 16 October is the deadline for most of them.
+
+**5.1 Every language string in an ini file.** Some screens show raw `COM_EXTENGEN_*`
+constants. A constant with no string fails silently: Joomla prints the key and logs nothing.
+*Produces* a `LanguageStringsTest` in each of the three repositories. It collects every
+constant the component's PHP, XML and templates name, and requires each one to be in the
+component's `.ini` or `.sys.ini`, or to be one of Joomla's own (`J*`, `COM_CONTENT_*`
+and so on, read from the installed core language files, not from a list). Then add the
+missing strings.
+*Done when* the test is green in all three and a constant deleted from an ini turns it red.
+
+**Done.** Seven holes, of two kinds:
+
+| Where | What |
+|---|---|
+| Exten-gen and Gen-gen, the administrator menu | `*_SUBMENU_MANAGER_METALANGUAGES` was in the `.ini` and not in the `.sys.ini`. The menu reads only the system file, so the entry was correct on the component's own pages and raw on every other page. That is the one anybody would have seen. |
+| Exten-gen, configuration | three keys spelled `PROJECT_` where the ini has `PROJECTS_` or the reverse. The form now points at the existing keys, so no duplicates were added. |
+| Exten-gen, project picker modal | the same near-miss, `PROJECTS_TABLE_CAPTION` against `PROJECT_TABLE_CAPTION`. |
+| Exten-gen, batch dialog | `COM_EXTENGEN_BATCH_TIP` had never been written. |
+
+Meta-gen had none, and the ER1 package defines all 72 of the constants its forms use.
+
+The test has four parts. The scan finds what it should (a vacuity guard). Every constant
+with the component's prefix is defined. Every constant in the manifest is in the `.sys.ini`.
+Every other constant is one Joomla defines, read from the installed core. Constants are taken
+only from quoted strings and XML text, so `JPATH_ROOT` is not mistaken for a key, and PHP
+comments are dropped, so the tutorial `COM_FOOS_*` in the form generator's commented example
+is not counted as a use.
+
+The browser half, `shouldShowNoRawConstants`, reads the rendered text of every view, every
+menu link and a project's edit screen. It is the only check that can see a constant built at
+run time. In Meta-gen's and Gen-gen's CI the unit tests now run after Joomla is fetched,
+because the core-string test skips without it. That is how Exten-gen's CI was already ordered.
+
+**5.2 Entities, Pages and Extensions on three tabs.** Since 3.5 made ER1 a package, a
+project opens through the branch for imported languages, which renders the whole root form
+in one tab. Extengen had three tabs, and they were lost because a generated form has no way
+to say that some fields belong together. That has to come from the meta-model, so:
+
+- **Meta-gen:** LionCore M3's `Feature` gains an optional `fieldset`, a name. `FormXml` puts
+  each feature with a fieldset into a `<fieldset name="...">` of that name, with a label
+  constant in the package's language file. Features without a fieldset stay in the unnamed
+  fieldset they are in now, so a language that names none generates byte for byte what it
+  did before.
+- **ER1 1.2:** `datamodel`, `pages` and `extensions` on the project concept get the
+  fieldsets `entities`, `pages` and `extensions`. Re-exported with
+  `tools/export-language.php` into `Exten-gen/packages`, and `bindProjects` moves 1.1
+  projects forward, as it did for 1.0 to 1.1.
+- **Exten-gen:** the edit template renders one tab per named fieldset of the language's
+  form, in the order the form declares them. Anything without a fieldset goes on one tab
+  named after the language, as now. The ERD button goes on the Entities tab again, but the
+  template finds that tab by the reference table rather than by its name.
+
+*Done when* an ER1 project opens on three tabs and the round-trip spec still passes. A
+language with no fieldsets still opens on one tab.
+
+**5.3 The metalanguage in the projects list.** A column showing the language and version
+each project is written in. It uses the binding columns the table already has, so it costs
+no query beyond a join to the metalanguages table for the label. It also gets a filter on
+that column, because a list with a hundred projects in two languages needs one.
+
+**5.4 Generators: a list, and an import.** Under *Generators*, which has said "TODO" since
+0.8: every generator this site can run, with its target, the metalanguage it is for, and
+whether it is built in. The import works the way the metalanguage import does.
+
+- **Built in:** the three targets in `Targets`. Listed out of the registry, not stored.
+- **Imported:** a Gen-gen package, in a new table `#__extengen_generators`. Gen-gen's zip
+  holds a rule file and three classes and does not say which language it is for, so it
+  gains a `generator.json` manifest: format, key, name, version, target, metalanguage key
+  and version, groups and rule file.
+- **No PHP from a package runs.** The classes in a Gen-gen package are wiring, and 2.3 shows
+  that the only thing they add is the path to a rule file. Exten-gen reads the rule file,
+  validates it against the target's vocabulary (a rule naming a selector, derivation or
+  template the target does not have is refused at import), and runs the *target's own*
+  generators with the rule file swapped in. This matters doubly for 5.7: an upload that
+  executes PHP is remote code execution on a site anyone can sign up to.
+- *What that rules out, said now:* an imported generator cannot add a group that the target
+  has no class for. Its rules under an unknown prefix would never run, so the import
+  reports them instead of accepting them silently.
+- The format is written in Gen-gen and read in Exten-gen. To keep the two from drifting,
+  Gen-gen's suite reads its own package with Exten-gen's reader, the way its acceptance
+  check already uses Exten-gen.
+
+**5.5 Choose a generator when generating, then download.** The Generate button opens a
+chooser instead of generating straight away. It lists the generators whose metalanguage is
+in the project's ancestry (built-in ones are for ER1). After generating, the log ends with
+a **download** link: a controller task that checks the token and access, then streams the
+zip. Right now the log shows a server path, which is of no use to anyone not sitting at the
+server. The `&target=` parameter that 4.4 added keeps working, so existing specs and
+bookmarks do not break.
+
+**5.6 Install the generated extension directly (optional, default off).** A component
+option, `allow_install`, off by default. Its description warns that a generated extension is
+code built from whatever is in the model, slots included, so on a site where people other
+than the administrator can edit models, turning this on lets them install code. When it is
+on, and only in the administrator, for a Joomla target, for a user who has `core.manage` on
+`com_installer`, the generation log offers *Install on this site*. That uses Joomla's own
+`Installer` on the generated zip. The checks happen in the controller, not only in the
+template.
+
+**5.7 A frontend, for SaaS.** There is none: the manifest says so in a comment. The minimal
+version that can be shown:
+
+- *My projects*: a list of the current user's projects (`created_by`).
+- Edit a project with the same forms, tabs and reference dropdowns as the backend. The site
+  model extends the admin one, so there is only one merge path.
+- Generate with the 5.5 chooser, then download.
+- **Never install** from the site, whatever the option says. That rule is in the controller,
+  and a test checks it.
+- ACL: `core.create` to make a project, `core.edit.own` to change one. Somebody else's
+  project returns a 404, not a 403, so that ids cannot be probed.
+- Output per project rather than per component name. Two users who each name their project
+  *Conference* must not overwrite each other's zip, which `generated/<Component>/` would let
+  them do today.
+
+*Done when* a non-admin user can sign up on the frontend, model a component, generate it
+and download it, and cannot reach another user's project or the install task.
+
+**5.8 Release.** All gates in all three repositories. Exten-gen 1.3.0, Meta-gen 0.3.0,
+Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
+Meta-gen's none. Herman pushes and tags.
+
+---
+
 ## Decisions outstanding
 
 None. The one that stood here is recorded below.
