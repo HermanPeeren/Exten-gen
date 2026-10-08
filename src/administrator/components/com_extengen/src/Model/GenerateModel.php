@@ -58,7 +58,8 @@ use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
-use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareTrait;
 use Yepr\Gen\Core\Model\ValidationException;
 use Yepr\Gen\Core\Output\FileCollection;
 use Yepr\Gen\Core\Output\ZipWriter;
@@ -69,12 +70,17 @@ use Yepr\Gen\Core\Target\Target;
 /**
  * Generate Model
  *
- * Both catalogues are handed over by the component's MVC factory since 1.4.
+ * Both catalogues and the project repository are handed over by the
+ * component's MVC factory since 1.4.
  */
-class GenerateModel extends AdminModel implements GeneratorCatalogueAwareInterface, MetalanguageCatalogueAwareInterface
+class GenerateModel extends AdminModel implements
+	GeneratorCatalogueAwareInterface,
+	MetalanguageCatalogueAwareInterface,
+	ProjectRepositoryAwareInterface
 {
 	use GeneratorCatalogueAwareTrait;
 	use MetalanguageCatalogueAwareTrait;
+	use ProjectRepositoryAwareTrait;
 
 	/**
 	 * A log of all files that were created with the various generators
@@ -445,8 +451,7 @@ class GenerateModel extends AdminModel implements GeneratorCatalogueAwareInterfa
 	 */
 	private function projectLanguage(): MetalanguageEntry
 	{
-		$database = $this->getDatabase();
-		$binding  = (new ProjectRepository($database))->binding((int) $this->projectId);
+		$binding = $this->getProjectRepository()->binding((int) $this->projectId);
 
 		if ($binding === null) {
 			throw new \RuntimeException(
@@ -607,7 +612,7 @@ class GenerateModel extends AdminModel implements GeneratorCatalogueAwareInterfa
 	 */
 	private function loadProject(): Project
 	{
-		$project = (new ProjectRepository($this->getDatabase()))->find((int) $this->projectId);
+		$project = $this->getProjectRepository()->find((int) $this->projectId);
 
 		if ($project === null) {
 			throw new \RuntimeException(sprintf('Cannot read project %d.', $this->projectId));

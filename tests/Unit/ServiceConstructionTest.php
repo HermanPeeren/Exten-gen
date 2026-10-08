@@ -10,11 +10,12 @@ use PHPUnit\Framework\TestCase;
  * This component's services are made in one place: its service provider.
  *
  * Until 1.4 each consumer made its own - `GeneratorCatalogue::forSite()` in a
- * controller, `Metalanguages::catalogue()` in four models and a form field -
- * so the question "how is the generator catalogue built" had seven answers
- * that happened to agree. They are registered in `Service\Provider\Catalogues`
- * now, and the component's MVC factory hands them to whatever declares an
- * aware interface for them.
+ * controller, `Metalanguages::catalogue()` in four models and a form field,
+ * `new ProjectRepository()` in two more - so the question "how is the
+ * generator catalogue built" had seven answers that happened to agree. They
+ * are registered by `Service\Provider\Catalogues` and `Repositories` now,
+ * and the component's MVC factory hands them to whatever declares an aware
+ * interface for them.
  *
  * A boundary nothing enforces is a boundary that erodes one convenient `new`
  * at a time, so this reads the source. The installer is the one exception,
@@ -24,23 +25,26 @@ use PHPUnit\Framework\TestCase;
  */
 final class ServiceConstructionTest extends TestCase
 {
+    private const CATALOGUES   = 'administrator/components/com_extengen/src/Service/Provider/Catalogues.php';
+    private const REPOSITORIES = 'administrator/components/com_extengen/src/Service/Provider/Repositories.php';
+
     /**
-     * How each service is made, as it would appear in source.
+     * How each service is made, as it would appear in source, and the provider that makes it.
      */
     private const CONSTRUCTIONS = [
-        'new GeneratorCatalogue(',
-        'new MetalanguageCatalogue(',
-        'new MetalanguageImporter(',
-        'Targets::registry(',
+        'new GeneratorCatalogue('    => self::CATALOGUES,
+        'new MetalanguageCatalogue(' => self::CATALOGUES,
+        'new MetalanguageImporter('  => self::CATALOGUES,
+        'Targets::registry('         => self::CATALOGUES,
+        'new ProjectRepository('     => self::REPOSITORIES,
     ];
 
     /**
-     * Where a construction may stand, relative to src/.
+     * Where a construction may stand besides its provider, relative to src/.
      */
-    private const ALLOWED = [
-        'administrator/components/com_extengen/src/Service/Provider/Catalogues.php',
+    private const ALSO_ALLOWED = [
         // Before the container exists: see the comment beside it.
-        'script.php',
+        'script.php' => ['new MetalanguageImporter('],
     ];
 
     /**
@@ -68,27 +72,29 @@ final class ServiceConstructionTest extends TestCase
         $found = [];
 
         foreach ($this->sources() as $path => $source) {
-            if (\in_array($path, self::ALLOWED, true)) {
-                continue;
-            }
-
-            foreach (self::CONSTRUCTIONS as $construction) {
-                if (str_contains($source, $construction)) {
-                    $found[] = $path . ': ' . $construction;
+            foreach (self::CONSTRUCTIONS as $construction => $provider) {
+                if (
+                    $path === $provider
+                    || \in_array($construction, self::ALSO_ALLOWED[$path] ?? [], true)
+                    || !str_contains($source, $construction)
+                ) {
+                    continue;
                 }
+
+                $found[] = $path . ': ' . $construction;
             }
         }
 
-        $this->assertSame([], $found, 'register it in Service\\Provider\\Catalogues and declare an aware interface instead');
+        $this->assertSame([], $found, 'register it in a provider under Service\\Provider and declare an aware interface instead');
     }
 
     public function testTheProviderConstructsEachOfThem(): void
     {
         // The other half: an empty provider would pass the test above.
-        $provider = $this->sources()[self::ALLOWED[0]] ?? '';
+        $sources = $this->sources();
 
-        foreach (self::CONSTRUCTIONS as $construction) {
-            $this->assertStringContainsString($construction, $provider);
+        foreach (self::CONSTRUCTIONS as $construction => $provider) {
+            $this->assertStringContainsString($construction, $sources[$provider] ?? '', $provider);
         }
     }
 
@@ -101,5 +107,6 @@ final class ServiceConstructionTest extends TestCase
         $this->assertStringContainsString('use Yepr\\Component\\Extengen\\Administrator\\Service\\Provider\\MVCFactory;', $provider);
         $this->assertStringNotContainsString('use Joomla\\CMS\\Extension\\Service\\Provider\\MVCFactory;', $provider);
         $this->assertStringContainsString('new Catalogues()', $provider);
+        $this->assertStringContainsString('new Repositories()', $provider);
     }
 }

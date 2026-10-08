@@ -129,6 +129,28 @@ describe('a saved project opens with its model', () => {
     cy.get('joomla-tab-element#entities a[href="#ERDModal"]').should('exist');
   });
 
+  /**
+   * The ERD draws the stored model.
+   *
+   * The test above sees the button; this opens what it opens. The ERD's model
+   * reads the project through the repository the component's MVC factory
+   * hands it, so this is also where a broken hand-over would show.
+   */
+  it('draws the entity relationship diagram of the stored model', () => {
+    openTheProject();
+
+    cy.get('#ERDModal').invoke('attr', 'data-url').then((url) => {
+      const fromModal = url || '';
+
+      expect(fromModal, 'the modal says what it loads').to.contain('view=ERD');
+      cy.visit(`/administrator/${fromModal.split('/administrator/').pop()}`);
+    });
+
+    cy.get('body').should('contain.text', `Entity Relationship Diagram for ${PROJECT}`);
+    cy.get('img[src*="plantuml.com/plantuml/png/"]').should('exist');
+    cy.get('body').should('not.contain', 'Fatal error');
+  });
+
   it('renders the half that is not repeatable either', () => {
     openTheProject();
 

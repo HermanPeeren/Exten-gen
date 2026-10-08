@@ -25,6 +25,7 @@ use Joomla\CMS\HTML\Registry;
 use Yepr\Component\Extengen\Administrator\Extension\ExtengenComponent;
 use Yepr\Component\Extengen\Administrator\Service\Provider\Catalogues;
 use Yepr\Component\Extengen\Administrator\Service\Provider\MVCFactory;
+use Yepr\Component\Extengen\Administrator\Service\Provider\Repositories;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
 //use Yepr\Component\Extengen\Administrator\Helper\AssociationsHelper;
 use Joomla\DI\Container;
@@ -36,7 +37,8 @@ use Joomla\CMS\Extension\Service\Provider\RouterFactory;
  * Every service this component has is registered here or by a provider named
  * here, and nothing else in the component constructs one. Since 1.4 that
  * includes its own: the catalogues of generators and metalanguages and the
- * importer (`Catalogues`), which this component's MVC factory hands to models
+ * importer (`Catalogues`) and the project repository (`Repositories`), which
+ * this component's MVC factory hands to models
  * and controllers the way Joomla's hands over the database (`MVCFactory`,
  * this component's, in place of Joomla's).
  */
@@ -55,6 +57,7 @@ return new class implements ServiceProviderInterface
 
 		$container->registerServiceProvider(new CategoryFactory('\\Yepr\\Component\\Extengen'));
 		$container->registerServiceProvider(new Catalogues());
+		$container->registerServiceProvider(new Repositories());
 		$container->registerServiceProvider(new MVCFactory('\\Yepr\\Component\\Extengen'));
 		$container->registerServiceProvider(new ComponentDispatcherFactory('\\Yepr\\Component\\Extengen'));
         $container->registerServiceProvider(new RouterFactory('\\Yepr\\Component\\Extengen'));

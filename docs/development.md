@@ -102,15 +102,16 @@ which is an ordinary query and not a second copy of how a model is loaded.
 ## Services
 
 `services/provider.php` is the composition root. The component's own services
-are registered there, by `Service\Provider\Catalogues`, and constructed nowhere
-else:
+are registered there, by the providers under `Service\Provider`, and
+constructed nowhere else:
 
-| Service | What needs it |
-|---|---|
-| `GeneratorCatalogue` | the Generators page, the Generate screen, the import |
-| `MetalanguageCatalogue` | projects, the Generate screen, the Metalanguages page, the language field |
-| `MetalanguageImporter` | the metalanguage import |
-| `TargetRegistry` | the generator catalogue |
+| Service | Provider | What needs it |
+|---|---|---|
+| `GeneratorCatalogue` | `Catalogues` | the Generators page, the Generate screen, the import |
+| `MetalanguageCatalogue` | `Catalogues` | projects, the Generate screen, the Metalanguages page, the language field |
+| `MetalanguageImporter` | `Catalogues` | the metalanguage import |
+| `TargetRegistry` | `Catalogues` | the generator catalogue |
+| `ProjectRepository` | `Repositories` | the Generate screen, the ERD |
 
 Each is shared and built the first time something asks for it.
 

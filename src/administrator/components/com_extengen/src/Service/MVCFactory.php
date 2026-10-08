@@ -20,6 +20,8 @@ use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
 use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
 use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageImporterAwareInterface;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 
@@ -34,8 +36,9 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
  * constructors Joomla decides, and then hands over the services it knows about
  * through `*AwareInterface` setters - the database, the form factory, the
  * dispatcher. This does the same for the services this component registers in
- * `services/provider.php`: the generator catalogue, the metalanguage catalogue
- * and the importer. Nothing else in the component constructs them.
+ * `services/provider.php`: the generator catalogue, the metalanguage catalogue,
+ * the importer and the project repository. Nothing else in the component
+ * constructs them.
  *
  * The services are taken from the container when an object asks for one, not
  * when the factory is made, so a request that never touches a generator never
@@ -99,6 +102,10 @@ class MVCFactory extends JoomlaMVCFactory
 
         if ($object instanceof MetalanguageImporterAwareInterface) {
             $object->setMetalanguageImporter($this->services->get(MetalanguageImporter::class));
+        }
+
+        if ($object instanceof ProjectRepositoryAwareInterface) {
+            $object->setProjectRepository($this->services->get(ProjectRepository::class));
         }
 
         return $object;

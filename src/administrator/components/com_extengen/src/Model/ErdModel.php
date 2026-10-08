@@ -30,7 +30,8 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\MVC\Model\WorkflowBehaviorTrait;
 use Joomla\CMS\MVC\Model\WorkflowModelInterface;
-use Yepr\Component\Extengen\Administrator\Repository\ProjectRepository;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareTrait;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\String\PunycodeHelper;
 use Joomla\CMS\Table\TableInterface;
@@ -60,8 +61,10 @@ use	Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
  * No spec opens this view, so nothing had said so. `ViewModelNamesTest` keeps
  * the pair in step.
  */
-class ErdModel extends AdminModel
+class ErdModel extends AdminModel implements ProjectRepositoryAwareInterface
 {
+	use ProjectRepositoryAwareTrait;
+
 	/**
 	 * The (internal) id of the project for which we generate files
 	 *
@@ -90,7 +93,7 @@ class ErdModel extends AdminModel
 		// The id is set on this model by the controller, not taken from the
 		// request: the model is told which record it is working on.
 		$id = (int) $this->projectId;
-$model = (new ProjectRepository($this->getDatabase()))->find($id)?->raw();
+$model = $this->getProjectRepository()->find($id)?->raw();
 if ($model === null) {
 // The declared return type is not nullable, so without this a
 			// missing or unreadable record arrives as a TypeError with
