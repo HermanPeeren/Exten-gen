@@ -13,7 +13,8 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Model;
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareTrait;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -35,8 +36,10 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
  *
  * @since  1.1.0
  */
-class MetalanguagesModel extends BaseDatabaseModel
+class MetalanguagesModel extends BaseDatabaseModel implements MetalanguageCatalogueAwareInterface
 {
+    use MetalanguageCatalogueAwareTrait;
+
     /**
      * Every language, the built-in first.
      *
@@ -46,7 +49,7 @@ class MetalanguagesModel extends BaseDatabaseModel
      */
     public function getItems(): array
     {
-        return Metalanguages::catalogue($this->getDatabase())->all();
+        return $this->getMetalanguageCatalogue()->all();
     }
 
     /**

@@ -16,7 +16,6 @@ use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use Yepr\Component\Extengen\Administrator\Generator\Imported\GeneratorPackage;
 use Yepr\Component\Extengen\Administrator\Generator\Target\RuleDrivenTarget;
-use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
 use Yepr\Gen\Core\Target\TargetInterface;
 use Yepr\Gen\Core\Target\TargetRegistry;
 
@@ -54,22 +53,6 @@ final class GeneratorCatalogue
         private readonly TargetRegistry $targets,
         private readonly string $ruleCacheDir
     ) {
-    }
-
-    /**
-     * The catalogue for this site.
-     *
-     * @since  1.3.0
-     */
-    public static function forSite(DatabaseInterface $database): self
-    {
-        $component = JPATH_ROOT . '/administrator/components/com_extengen';
-
-        return new self(
-            $database,
-            Targets::registry($component . '/generator_templates', $component . '/compilation_cache'),
-            JPATH_ROOT . '/administrator/cache/com_extengen/generators'
-        );
     }
 
     /**

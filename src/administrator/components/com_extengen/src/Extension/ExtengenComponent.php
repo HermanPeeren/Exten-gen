@@ -21,6 +21,8 @@ use Joomla\CMS\Categories\CategoryServiceTrait;
 use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareTrait;
 use Yepr\Component\Extengen\Administrator\Service\HTML\AdministratorService;
 use Psr\Container\ContainerInterface;
 use Joomla\CMS\Helper\ContentHelper;
@@ -30,8 +32,17 @@ use Joomla\CMS\Component\Router\RouterServiceTrait;
 /**
  * Component class for com_extengen.
  */
-class ExtengenComponent extends MVCComponent implements BootableExtensionInterface, CategoryServiceInterface, AssociationServiceInterface, RouterServiceInterface
+class ExtengenComponent extends MVCComponent implements
+	BootableExtensionInterface,
+	CategoryServiceInterface,
+	AssociationServiceInterface,
+	RouterServiceInterface,
+	MetalanguageCatalogueAwareInterface
 {
+	// For the metalanguage form field, which Joomla makes with `new` and which
+	// asks the booted component; everything Joomla's MVC factory makes is
+	// handed the catalogue instead. See services/provider.php.
+	use MetalanguageCatalogueAwareTrait;
 	use CategoryServiceTrait;
 	use AssociationServiceTrait;
 	use HTMLRegistryAwareTrait;

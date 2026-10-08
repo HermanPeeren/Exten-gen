@@ -13,7 +13,8 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Model;
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrait;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -25,8 +26,10 @@ use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
  *
  * @since  1.3.0
  */
-class GeneratorsModel extends BaseDatabaseModel
+class GeneratorsModel extends BaseDatabaseModel implements GeneratorCatalogueAwareInterface
 {
+    use GeneratorCatalogueAwareTrait;
+
     /**
      * Every generator, built in first.
      *
@@ -36,6 +39,6 @@ class GeneratorsModel extends BaseDatabaseModel
      */
     public function getItems(): array
     {
-        return GeneratorCatalogue::forSite($this->getDatabase())->all();
+        return $this->getGeneratorCatalogue()->all();
     }
 }

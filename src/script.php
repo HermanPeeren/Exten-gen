@@ -17,6 +17,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 
 /**
  * Install script for Exten-gen.
@@ -176,11 +177,16 @@ class Com_ExtengenInstallerScript
             );
         }
 
+        // Constructed here rather than taken from the component's container,
+        // which is where everything else gets it: this runs while Joomla is
+        // still installing the component, before its service provider can be
+        // booted. The one exception to services/provider.php, and it has to be.
         $database = Factory::getContainer()->get(DatabaseInterface::class);
+        $importer = new MetalanguageImporter($database, Metalanguages::TABLE, JPATH_ROOT);
 
         foreach ($packages as $package) {
             try {
-                $entry = Metalanguages::importer($database, JPATH_ROOT)->import($package);
+                $entry = $importer->import($package);
             } catch (Throwable $e) {
                 $this->say(
                     'The ' . basename($package) . ' metalanguage could not be installed: ' . $e->getMessage(),

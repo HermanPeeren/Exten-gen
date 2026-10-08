@@ -13,12 +13,11 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Controller;
 
 use Joomla\CMS\Access\Exception\NotAllowed;
-use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
-use Joomla\Database\DatabaseInterface;
-use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrait;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -31,10 +30,14 @@ use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
  * The package is read where PHP put the upload and nothing is written until it
  * has been checked, so a refused import leaves nothing behind.
  *
+ * The catalogue is handed over by the component's MVC factory since 1.4.
+ *
  * @since  1.3.0
  */
-class GeneratorsController extends BaseController
+class GeneratorsController extends BaseController implements GeneratorCatalogueAwareInterface
 {
+    use GeneratorCatalogueAwareTrait;
+
     /**
      * Import an uploaded generator package.
      *
@@ -57,7 +60,7 @@ class GeneratorsController extends BaseController
         }
 
         try {
-            $entry = $this->catalogue()->import((string) $file['tmp_name']);
+            $entry = $this->getGeneratorCatalogue()->import((string) $file['tmp_name']);
         } catch (\RuntimeException $e) {
             $app->enqueueMessage($e->getMessage(), 'error');
 
@@ -77,7 +80,7 @@ class GeneratorsController extends BaseController
         $this->checkToken('get');
         $this->assertAllowed();
 
-        $this->catalogue()->remove($this->app->getInput()->getInt('id', 0));
+        $this->getGeneratorCatalogue()->remove($this->app->getInput()->getInt('id', 0));
 
         $this->setRedirect(
             Route::_('index.php?option=com_extengen&view=generators', false),
@@ -95,10 +98,5 @@ class GeneratorsController extends BaseController
         if (!$this->app->getIdentity()->authorise('core.admin', 'com_extengen')) {
             throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
         }
-    }
-
-    private function catalogue(): GeneratorCatalogue
-    {
-        return GeneratorCatalogue::forSite(Factory::getContainer()->get(DatabaseInterface::class));
     }
 }

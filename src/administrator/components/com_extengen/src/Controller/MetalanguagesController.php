@@ -17,7 +17,9 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
 use Joomla\Database\DatabaseInterface;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageImporterAwareInterface;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -26,10 +28,38 @@ use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 /**
  * Importing and removing metalanguages: step 3.4.
  *
+ * The importer is handed over by the component's MVC factory since 1.4.
+ *
  * @since  1.1.0
  */
-class MetalanguagesController extends BaseController
+class MetalanguagesController extends BaseController implements MetalanguageImporterAwareInterface
 {
+    /**
+     * @var    ?MetalanguageImporter
+     * @since  1.4.0
+     */
+    private ?MetalanguageImporter $importer = null;
+
+    /**
+     * @since  1.4.0
+     */
+    public function setMetalanguageImporter(MetalanguageImporter $importer): void
+    {
+        $this->importer = $importer;
+    }
+
+    /**
+     * The importer, which the component's MVC factory must have handed over.
+     *
+     * @since  1.4.0
+     */
+    private function importer(): MetalanguageImporter
+    {
+        return $this->importer ?? throw new \UnexpectedValueException(
+            static::class . ' was not given the metalanguage importer. Ask the component\'s MVC factory for it.'
+        );
+    }
+
     /**
      * Install an uploaded metalanguage package.
      *
@@ -57,10 +87,8 @@ class MetalanguagesController extends BaseController
         // first: an import that is refused should leave nothing behind, and
         // the only thing that writes to the site is the importer, after it has
         // decided the package is sound.
-        $importer = Metalanguages::importer($this->getDatabaseDriver(), JPATH_ROOT);
-
         try {
-            $entry = $importer->import((string) $file['tmp_name']);
+            $entry = $this->importer()->import((string) $file['tmp_name']);
         } catch (\RuntimeException $e) {
             $app->enqueueMessage($e->getMessage(), 'error');
 

@@ -40,6 +40,8 @@ use Joomla\CMS\Workflow\Workflow;
 use Joomla\Component\Categories\Administrator\Helper\CategoriesHelper;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Database\ParameterType;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareTrait;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
@@ -49,9 +51,14 @@ use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 
 /**
  * Item Model for a project.
+ *
+ * The metalanguage catalogue is handed over by the component's MVC factory
+ * since 1.4, and the site's project model inherits it.
  */
-class ProjectModel extends AdminModel
+class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInterface
 {
+	use MetalanguageCatalogueAwareTrait;
+
 	/**
 	 * The type alias for this content type.
 	 *
@@ -236,8 +243,7 @@ class ProjectModel extends AdminModel
 	{
 		$item = $this->getItem();
 
-		return Metalanguages::forProject(
-			$this->getDatabase(),
+		return $this->getMetalanguageCatalogue()->forRecord(
 			(string) ($item->metalanguage_key ?? ''),
 			(string) ($item->metalanguage_version ?? '')
 		);

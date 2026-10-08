@@ -14,8 +14,8 @@ namespace Yepr\Component\Extengen\Administrator\Field;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Field\ListField;
-use Joomla\Database\DatabaseInterface;
-use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Component\Extengen\Administrator\Extension\ExtengenComponent;
+use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -95,10 +95,22 @@ class MetalanguageField extends ListField
     }
 
     /**
+     * The catalogue, from the booted component.
+     *
+     * Joomla makes a form field with `new`, so nothing can hand it a service;
+     * asking the component is how a field reaches one. The component is given
+     * the catalogue in `services/provider.php`, like everything else is.
+     *
      * @since  1.1.0
      */
-    private function catalogue(): \Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue
+    private function catalogue(): MetalanguageCatalogue
     {
-        return Metalanguages::catalogue(Factory::getContainer()->get(DatabaseInterface::class));
+        $component = Factory::getApplication()->bootComponent('com_extengen');
+
+        if (!$component instanceof ExtengenComponent) {
+            throw new \UnexpectedValueException('com_extengen did not boot as Exten-gen\'s own component.');
+        }
+
+        return $component->getMetalanguageCatalogue();
     }
 }

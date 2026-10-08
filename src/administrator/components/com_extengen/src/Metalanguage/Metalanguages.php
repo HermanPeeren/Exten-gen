@@ -12,11 +12,8 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Metalanguage;
 
-use Joomla\Database\DatabaseInterface;
 use Yepr\Component\Extengen\Administrator\Reference\Er1;
-use Yepr\Gen\Joomla\Metalanguage\MetalanguageCatalogue;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
-use Yepr\Gen\Joomla\Metalanguage\MetalanguageImporter;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -73,45 +70,6 @@ final class Metalanguages
      * @since  1.4.0
      */
     public const SHIPPED = 'ER1';
-
-    /**
-     * Every language a project may be written in.
-     *
-     * No built-in is passed. A site that has somehow lost the ER1 package has
-     * an empty list, and the screens say so - which is true, and better than
-     * offering a language whose forms are not there.
-     *
-     * @since  1.2.0
-     */
-    public static function catalogue(DatabaseInterface $database): MetalanguageCatalogue
-    {
-        return new MetalanguageCatalogue($database, self::TABLE);
-    }
-
-    /**
-     * The language a project says it is written in, or null.
-     *
-     * Null is a real answer now, where it used to fall back to the built-in:
-     * a project bound to a language this site does not have cannot be opened
-     * with anything, and saying so beats opening it with somebody else's forms
-     * and letting a save reshape the model to fit them.
-     *
-     * @since  1.2.0
-     */
-    public static function forProject(DatabaseInterface $database, string $key, string $version): ?MetalanguageEntry
-    {
-        return self::catalogue($database)->forRecord($key, $version);
-    }
-
-    /**
-     * What installs an imported language and records it.
-     *
-     * @since  1.2.0
-     */
-    public static function importer(DatabaseInterface $database, string $siteRoot): MetalanguageImporter
-    {
-        return new MetalanguageImporter($database, self::TABLE, $siteRoot);
-    }
 
     /**
      * What a language says can be pointed at, as `ReferenceIndex` reads it.

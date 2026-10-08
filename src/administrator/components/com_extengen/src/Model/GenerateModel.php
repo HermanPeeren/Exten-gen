@@ -49,7 +49,10 @@ use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageContext;
 use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
-use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogueAwareTrait;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareInterface;
+use Yepr\Component\Extengen\Administrator\Metalanguage\MetalanguageCatalogueAwareTrait;
 use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
@@ -65,9 +68,14 @@ use Yepr\Gen\Core\Target\Target;
 
 /**
  * Generate Model
+ *
+ * Both catalogues are handed over by the component's MVC factory since 1.4.
  */
-class GenerateModel extends AdminModel
+class GenerateModel extends AdminModel implements GeneratorCatalogueAwareInterface, MetalanguageCatalogueAwareInterface
 {
+	use GeneratorCatalogueAwareTrait;
+	use MetalanguageCatalogueAwareTrait;
+
 	/**
 	 * A log of all files that were created with the various generators
 	 *
@@ -195,7 +203,7 @@ class GenerateModel extends AdminModel
 	public function generators(): array
 	{
 		try {
-			return $this->catalogue()->forLanguage($this->ancestry());
+			return $this->getGeneratorCatalogue()->forLanguage($this->ancestry());
 		} catch (\RuntimeException) {
 			return [];
 		}
@@ -220,7 +228,7 @@ class GenerateModel extends AdminModel
 
 		$languages = [];
 
-		foreach ($this->catalogue()->all() as $generator) {
+		foreach ($this->getGeneratorCatalogue()->all() as $generator) {
 			if ($generator->published) {
 				$languages[$generator->metalanguageKey] = true;
 			}
@@ -296,7 +304,7 @@ class GenerateModel extends AdminModel
 		// Out of the catalogue since 5.4, which hands back the target with an
 		// imported generator's rules in it when the generator is imported.
 		// Before that it was the registry, and before 4.4 a class by name.
-		$target = $this->catalogue()->target($generator);
+		$target = $this->getGeneratorCatalogue()->target($generator);
 
 		$generators = $target->generators();
 
@@ -336,7 +344,7 @@ class GenerateModel extends AdminModel
 	 */
 	public function resolveGenerator(): GeneratorEntry
 	{
-		$catalogue = $this->catalogue();
+		$catalogue = $this->getGeneratorCatalogue();
 
 		if ($this->generatorId !== '') {
 			$entry = $catalogue->find($this->generatorId);
@@ -355,23 +363,13 @@ class GenerateModel extends AdminModel
 	}
 
 	/**
-	 * The catalogue of generators on this site.
-	 *
-	 * @return  GeneratorCatalogue
-	 */
-	private function catalogue(): GeneratorCatalogue
-	{
-		return GeneratorCatalogue::forSite($this->getDatabase());
-	}
-
-	/**
 	 * The project's language and every language it derives from.
 	 *
 	 * @return  MetalanguageEntry[]
 	 */
 	private function ancestry(): array
 	{
-		return Metalanguages::catalogue($this->getDatabase())->ancestry()->withSelf($this->projectLanguage());
+		return $this->getMetalanguageCatalogue()->ancestry()->withSelf($this->projectLanguage());
 	}
 
 	/**
@@ -456,7 +454,7 @@ class GenerateModel extends AdminModel
 			);
 		}
 
-		$entry = Metalanguages::forProject($database, $binding['key'], $binding['version']);
+		$entry = $this->getMetalanguageCatalogue()->forRecord($binding['key'], $binding['version']);
 
 		if ($entry === null) {
 			// Bound to a language this site has not got. Its forms are gone, so

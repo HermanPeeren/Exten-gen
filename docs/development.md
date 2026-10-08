@@ -99,6 +99,42 @@ storage tables: the modal project picker, the associations helper and the
 administrator HTML service all query `#__extengen_projects` for a name or an id,
 which is an ordinary query and not a second copy of how a model is loaded.
 
+## Services
+
+`services/provider.php` is the composition root. The component's own services
+are registered there, by `Service\Provider\Catalogues`, and constructed nowhere
+else:
+
+| Service | What needs it |
+|---|---|
+| `GeneratorCatalogue` | the Generators page, the Generate screen, the import |
+| `MetalanguageCatalogue` | projects, the Generate screen, the Metalanguages page, the language field |
+| `MetalanguageImporter` | the metalanguage import |
+| `TargetRegistry` | the generator catalogue |
+
+Each is shared and built the first time something asks for it.
+
+**How a class gets one.** Joomla builds controllers and models itself, with the
+constructors Joomla decides, so injection happens the way core does it for the
+database and the form factory: the class implements an `*AwareInterface`,
+usually with the matching trait, and the component's MVC factory
+(`Service\MVCFactory`, a subclass of Joomla's, registered by
+`Service\Provider\MVCFactory` in place of Joomla's provider) hands the service
+over after building it. A new consumer declares the interface; it does not
+reach into a container.
+
+Two places cannot be injected, and both are named:
+
+- **A form field.** Joomla makes fields with `new`. `MetalanguageField` asks the
+  booted component, which is given the catalogue in the provider.
+- **The install script.** `script.php` imports ER1 while Joomla is still
+  installing the component, before its container exists, so it constructs its
+  own importer.
+
+`ServiceConstructionTest` reads the source and fails on a construction anywhere
+else, so a convenient `new GeneratorCatalogue(...)` in a model is a red test
+rather than a quiet second answer to "how is this built".
+
 ## Two naming rules Joomla imposes, both invisible on Windows
 
 Neither is about style. Both decide whether a class loads at all, and both
