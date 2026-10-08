@@ -103,6 +103,21 @@ describe('a generated component', () => {
     cy.get(`#${VIEW}List`).should('exist');
   });
 
+  /**
+   * The page's custom code reaches the page: its layout slot and its stylesheet.
+   *
+   * BalloonPlanning's Flights page carries both in the model. The layout slot
+   * puts a line above the list; the stylesheet slot makes it bold - which is
+   * only true if the generated CSS file was installed, registered and loaded.
+   */
+  it('shows the page\'s custom layout code, styled by its custom stylesheet', () => {
+    cy.visit(`/index.php/${MENU_ALIAS}`);
+
+    cy.get('.balloonplanning-intro').should('exist')
+      .and('have.css', 'font-weight', '700');
+    cy.get(`link[href*="media/${COMPONENT}/css/${VIEW}.css"]`).should('exist');
+  });
+
   it('shows translated column headings rather than language keys', () => {
     cy.visit(`/index.php/${MENU_ALIAS}`);
 

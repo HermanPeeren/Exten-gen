@@ -20,6 +20,13 @@ use \Joomla\CMS\Language\Text;
 use \Joomla\CMS\Session\Session;
 use Joomla\Utilities\ArrayHelper;
 
+// This page's stylesheet, from the page's custom code in the model. Loaded
+// before the layout slot, so that a custom layout which returns early has it.
+$this->getDocument()->getWebAssetManager()->registerAndUseStyle(
+	'com_conference.session',
+	'com_conference/session.css'
+);
+
 // <extengen id="site.details.layout">
 // </extengen>
 

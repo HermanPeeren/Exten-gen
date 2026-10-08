@@ -43,9 +43,12 @@
 
 	<!-- Media files -->
 	<media folder="media/com_{{ componentName|lower }}" destination="com_{{ componentName|lower }}">
+{% if siteViews|length > 0 %}
+		<!-- One stylesheet per site page, written from the page's custom code. -->
+		<folder>css</folder>
+{% endif %}
 
 		<!--<folder>attachments</folder>
-		<folder>css</folder>
 		<folder>fonts</folder>
 		<folder>images</folder>
 		<folder>js</folder>

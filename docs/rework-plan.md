@@ -2625,6 +2625,39 @@ workflow adds the checksums. Exten-gen goes first, because Gen-gen's CI reads Ex
 `main` for both the acceptance check and `GeneratorPackageTest`. At the time of release:
 Exten-gen 403 unit tests and 57 browser tests; Meta-gen 265 and 30; Gen-gen 59 and 17.
 
+### Custom code on pages, again: ER1 1.3
+
+1.10 gave an entity and every kind of page a `customcode` group. When 3.5 rebuilt
+ER1 as a modelled language from the hand-written forms, the page's group did not
+make it into the model. The generator went on reading `customcode` on a page,
+the tests went on proving the eight page slots - the list and details models'
+queries and methods, administrator and site, and the two site layouts - and no
+screen offered any of them. Nothing failed, because the generation tests build
+their models in code, and `SlotContractTest` only checked that what the forms
+offer exists, never that what exists is offered. `DeclaredKeysTest` should have
+caught the generator reading a name ER1 did not declare, and did not, because no
+golden model had page custom code for it to strip.
+
+- **ER1 1.3** (Meta-gen): `CustomcodePage` beside `CustomcodeEntity`, `customcode`
+  on Page. Nothing removed, so every 1.2 model is a valid 1.3 model and the
+  install moves projects forward.
+- **The dropdown** cannot know a page's type, which is chosen in the same form, so
+  it offers every page slot, each labelled "List page:" or "Details page:", and
+  `ProjectValidator` refuses code in a slot the object does not have.
+- **Two stylesheet slots**, `site.index.styles` and `site.details.styles`: a CSS
+  file per site page under `media/com_<name>/css/`, loaded by its layout, the
+  folder in the manifest when there are site pages. Their region markers are
+  `<!-- <extengen id="..."> --> {}`. The first version left out the `{}`, and the
+  browser test caught the page's own rule being dropped with the marker - CSS
+  ignores `<!--` and `-->`, not what is between them.
+- **Pinned:** BalloonPlanning's Flights page carries custom code - a layout line,
+  its style, a list-model method - so the golden files hold the generator's use
+  of page slots byte for byte, and `generated-front-end.cy.js` checks the line is
+  on the page and bold. `SlotContractTest` now requires every slot to be offered
+  by a form in the shipped language; against ER1 1.2 it names all ten page slots.
+- **Gen-gen**'s model of the Joomla 6 generator has the two stylesheet rules, and
+  its acceptance check reproduces all 277 approved files.
+
 ---
 
 ## Decisions outstanding

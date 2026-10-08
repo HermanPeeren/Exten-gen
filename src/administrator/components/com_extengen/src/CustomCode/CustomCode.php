@@ -63,6 +63,12 @@ final class CustomCode
         $regions = [];
 
         foreach ($this->catalogue->for($owner, $pageType) as $id => $slot) {
+            if (($slot['marker'] ?? '') === 'css') {
+                $regions[$id] = $this->cssRegion($id, $bodies[$id] ?? '');
+
+                continue;
+            }
+
             $regions[$id] = $this->indent(
                 $this->merger->region($id, $bodies[$id] ?? ''),
                 str_repeat("\t", $slot['indent'])
@@ -88,6 +94,32 @@ final class CustomCode
      *
      * @since  1.0.0
      */
+    /**
+     * A region in a stylesheet.
+     *
+     * The merger writes its markers as `//` comments, and `//` is not a comment
+     * in CSS: a browser reads it as the start of a selector and drops the first
+     * rule after it. A marker line may also begin with `<!--`, which the
+     * merger's pattern accepts - but CSS ignores only the `<!--` and `-->`
+     * tokens, not the `<extengen id="...">` between them, so that would start a
+     * selector too. The first version of this did exactly that, and the
+     * browser test caught it: the page's own rule was dropped.
+     *
+     * So each marker line ends in an empty block. The marker becomes a whole
+     * rule with a selector no browser understands, and CSS drops an invalid
+     * rule by itself, up to its closing brace, leaving the next rule alone.
+     *
+     * @since  1.3.5
+     */
+    private function cssRegion(string $id, string $body): string
+    {
+        $body = rtrim($body, "\r\n");
+
+        return '<!-- <' . SlotCatalogue::TAG . ' id="' . $id . '"> --> {}' . "\n"
+            . ($body === '' ? '' : $body . "\n")
+            . '<!-- </' . SlotCatalogue::TAG . '> --> {}';
+    }
+
     private function indent(string $region, string $indent): string
     {
         $lines = explode("\n", $region);

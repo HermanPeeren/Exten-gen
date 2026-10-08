@@ -87,7 +87,7 @@ final class SlotCatalogue
      * because a marker that does not line up with the code around it reads as
      * debris rather than as an invitation.
      *
-     * @var array<string, array{indent: int, owner: string, pageType?: string, label: string, description: string}>
+     * @var array<string, array{indent: int, owner: string, pageType?: string, marker?: string, label: string, description: string}>
      *
      * @since  1.0.0
      */
@@ -171,6 +171,28 @@ final class SlotCatalogue
                 . ' render the whole page and call return;. The generated details layout is an empty'
                 . ' table, so for now this is the page.',
         ],
+        // Stylesheets, after 1.3.4. A file of their own under the
+        // component's media folder, loaded by the page's layout. Marked as CSS,
+        // because the regions in a PHP file are `//` comments and `//` is not
+        // a comment in CSS - a browser would swallow the first rule after it.
+        'site.index.styles' => [
+            'indent'      => 0,
+            'owner'       => 'Page',
+            'pageType'    => 'indexpage',
+            'marker'      => 'css',
+            'label'       => 'The front-end list page\'s stylesheet',
+            'description' => 'CSS, in a file of its own under the component\'s media folder that this'
+                . ' page\'s layout loads. Selectors such as #<page>List reach the generated table.',
+        ],
+        'site.details.styles' => [
+            'indent'      => 0,
+            'owner'       => 'Page',
+            'pageType'    => 'detailspage',
+            'marker'      => 'css',
+            'label'       => 'The front-end details page\'s stylesheet',
+            'description' => 'CSS, in a file of its own under the component\'s media folder that this'
+                . ' page\'s layout loads.',
+        ],
     ];
 
     /**
@@ -191,7 +213,7 @@ final class SlotCatalogue
      * @param  string   $owner     `Entity` or `Page`.
      * @param  ?string  $pageType  Narrows Page slots; null offers all of them.
      *
-     * @return array<string, array{indent: int, owner: string, pageType?: string, label: string, description: string}>
+     * @return array<string, array{indent: int, owner: string, pageType?: string, marker?: string, label: string, description: string}>
      *
      * @since  1.0.0
      */
@@ -213,7 +235,7 @@ final class SlotCatalogue
     }
 
     /**
-     * @return array{indent: int, owner: string, pageType?: string, label: string, description: string}
+     * @return array{indent: int, owner: string, pageType?: string, marker?: string, label: string, description: string}
      *
      * @since  1.0.0
      */

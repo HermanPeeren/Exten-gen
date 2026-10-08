@@ -404,8 +404,17 @@ dropdowns contained `['c-entity']` where they should have contained
 src/CustomCode/SlotCatalogue.php   the closed list of places, and what is in scope at each
 src/CustomCode/CustomCode.php      one object's code, as regions a template emits
 src/Field/SlotField.php            the dropdown, whose options are the catalogue
-forms/customcode*.xml              a repeating group on an entity and on each kind of page
+ER1's CustomcodeEntity, CustomcodePage   a repeating group on an entity and on a page
 ```
+
+**Where a person fills them in.** On an entity, and since ER1 1.3 on a page. A
+page's form offers every page slot, each labelled with the kind of page it is
+for, because the page's type is chosen in the same form and is not known when
+the dropdown is drawn; `ProjectValidator` refuses code in a slot the object does
+not have. From 3.5 to ER1 1.3 the page's custom code was missing from the
+modelled language, so eight slots were generated and tested and could not be
+filled in from any screen - `SlotContractTest` now also requires every slot in
+the catalogue to be offered by a form in the shipped language.
 
 A generator that covers everything does not exist. The two usual answers are
 both bad: telling people to edit the output means the next run destroys their
@@ -428,8 +437,8 @@ made in the output despite all of the above is not eaten. A region the new
 output no longer has is reported by path and id, because its content is then
 only in the file on disk.
 
-**Ten slots, five back end and five front.** The back-end five extend the table
-and the two admin models. The front-end five are their own ids, prefixed
+**Twelve slots, five back end and seven front.** The back-end five extend the
+table and the two admin models. The front-end seven are their own ids, prefixed
 `site.`, rather than the back-end ones being reused - the site templates
 generate a second list model and a second details model with the same method
 names, so a shared slot would put one body in two files without saying so, and a
@@ -442,6 +451,16 @@ leaves the generated layout unexecuted. That is how a front end gets a custom
 template without the model needing a way to say "replace this", and it is why
 those two sit above the generated markup rather than below it. Their bodies are
 PHP like every other slot's; a body that wants markup echoes it.
+
+**The two stylesheet slots are CSS.** Each site page gets
+`media/com_<name>/css/<page>.css`, which its layout loads before the layout slot,
+so a custom layout that returns early still has it. Their region markers are not
+the `//` lines the PHP files use - `//` is no comment in CSS, and a browser drops
+the first rule after it - but `<!-- <extengen id="..."> --> {}`: the merger
+accepts a marker line beginning `<!--`, and the empty block makes the marker a
+whole rule with a selector no browser understands, which CSS drops by itself
+without touching the next one. Without the `{}` it took the page's first rule
+with it; `generated-front-end.cy.js` checks the rule is applied.
 
 **One place writes a marker.** Templates emit `{{ slots['table.check']|raw }}`
 and never see a body. A template that wrote its own markers could drift from the

@@ -159,6 +159,35 @@ final class SlotContractTest extends TestCase
     }
 
     /**
+     * And the other way round: every slot in the catalogue can be filled in.
+     *
+     * The test above asks whether what the forms offer exists. Nothing asked
+     * whether what exists is offered - and when 3.5 rebuilt ER1 as a modelled
+     * language, the page's custom code did not make it into the model. Eight of
+     * the ten slots were generated, tested and unreachable from any screen
+     * until ER1 1.3, and every test here passed, because the generation tests
+     * build their models in code.
+     */
+    public function testEverySlotIsOfferedByAShippedForm(): void
+    {
+        $offered = [];
+
+        foreach (ShippedLanguage::forms() as $xml) {
+            foreach ($xml->xpath('//field[@type="Slot"]') ?: [] as $field) {
+                $pageType = (string) ($field['pagetype'] ?? '');
+
+                foreach ((new SlotCatalogue())->for((string) $field['owner'], $pageType === '' ? null : $pageType) as $id => $slot) {
+                    $offered[$id] = true;
+                }
+            }
+        }
+
+        $unreachable = array_values(array_diff((new SlotCatalogue())->ids(), array_keys($offered)));
+
+        $this->assertSame([], $unreachable, 'slots no form in the shipped language lets anybody fill in');
+    }
+
+    /**
      * Everything the golden models generate, once.
      *
      * @return array<string, string>

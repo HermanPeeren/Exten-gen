@@ -449,7 +449,21 @@
                     }
                 }
             },
-            "page_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a"
+            "page_id": "1c13d7cb-b0b3-41aa-b446-b6dbcd2f381a",
+            "customcode": {
+                "customcode0": {
+                    "slot": "site.index.layout",
+                    "code": "echo '<p class=\"balloonplanning-intro\">' . Text::_('JGLOBAL_FIELDSET_CONTENT') . '</p>';"
+                },
+                "customcode1": {
+                    "slot": "site.index.styles",
+                    "code": ".balloonplanning-intro {\n\tfont-weight: bold;\n}"
+                },
+                "customcode2": {
+                    "slot": "listmodel.methods",
+                    "code": "\tpublic function countFlights(): int\n\t{\n\t\treturn \\count($this->getItems() ?: []);\n\t}"
+                }
+            }
         },
         "pages1": {
             "page_name": "Flight",
@@ -478,7 +492,13 @@
                     }
                 }
             },
-            "page_id": "87290974-9b4f-460e-8dee-f8121b856809"
+            "page_id": "87290974-9b4f-460e-8dee-f8121b856809",
+            "customcode": {
+                "customcode0": {
+                    "slot": "site.details.styles",
+                    "code": ".item_fields table {\n\twidth: auto;\n}"
+                }
+            }
         },
         "pages2": {
             "page_name": "Tickets",

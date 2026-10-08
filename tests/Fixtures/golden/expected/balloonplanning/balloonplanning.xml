@@ -43,9 +43,10 @@
 
 	<!-- Media files -->
 	<media folder="media/com_balloonplanning" destination="com_balloonplanning">
+		<!-- One stylesheet per site page, written from the page's custom code. -->
+		<folder>css</folder>
 
 		<!--<folder>attachments</folder>
-		<folder>css</folder>
 		<folder>fonts</folder>
 		<folder>images</folder>
 		<folder>js</folder>

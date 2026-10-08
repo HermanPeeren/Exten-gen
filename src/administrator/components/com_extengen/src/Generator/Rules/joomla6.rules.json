@@ -43,6 +43,9 @@
             },
             "creation_date": {
                 "path": "extensions.component.manifest.creation_date"
+            },
+            "siteViews": {
+                "derive": "siteRouterViews"
             }
         }
     },
@@ -839,6 +842,33 @@
         }
     },
     {
+        "id": "site.mvc.index.styles",
+        "for": "frontendPages",
+        "template": "component/media/com_componentname/css/page.css.twig",
+        "target": "media/com_{componentName|lower}/css/{pageName|lower}.css",
+        "when": [
+            {
+                "operator": "equals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
+        "bind": {
+            "componentName": {
+                "derive": "componentName"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "slots": {
+                "derive": "pageSlots"
+            },
+            "slot": {
+                "literal": "site.index.styles"
+            }
+        }
+    },
+    {
         "id": "site.mvc.index.menuitem",
         "for": "frontendPages",
         "template": "component/components/com_componentname/tmpl/index/default.xml.twig",
@@ -895,6 +925,33 @@
             },
             "slots": {
                 "derive": "pageSlots"
+            }
+        }
+    },
+    {
+        "id": "site.mvc.details.styles",
+        "for": "frontendPages",
+        "template": "component/media/com_componentname/css/page.css.twig",
+        "target": "media/com_{componentName|lower}/css/{pageName|lower}.css",
+        "when": [
+            {
+                "operator": "notEquals",
+                "path": "page_type",
+                "value": "indexpage"
+            }
+        ],
+        "bind": {
+            "componentName": {
+                "derive": "componentName"
+            },
+            "pageName": {
+                "derive": "pageName"
+            },
+            "slots": {
+                "derive": "pageSlots"
+            },
+            "slot": {
+                "literal": "site.details.styles"
             }
         }
     },

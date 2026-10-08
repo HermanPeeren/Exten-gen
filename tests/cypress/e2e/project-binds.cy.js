@@ -151,6 +151,39 @@ describe('a saved project opens with its model', () => {
     cy.get('body').should('not.contain', 'Fatal error');
   });
 
+  /**
+   * A page's custom code is editable: ER1 1.3.
+   *
+   * It was generated and tested from 1.10 on and offered by no form since 3.5,
+   * because the page's custom code did not make it into the modelled ER1. The
+   * BalloonPlanning model carries some on its Flights page; this is that code,
+   * on the screen, in a dropdown that says which kind of page each slot is for.
+   */
+  it('shows a page\'s custom code, with each slot saying which kind of page it is for', () => {
+    cy.exec('php tools/seed-project.php balloonplanning');
+    cy.exec('php tools/project-id.php BalloonPlanning').its('stdout').then((id) => {
+      cy.loginToAdmin();
+      cy.visit(`/administrator/index.php?option=com_extengen&task=project.edit&id=${id}`);
+    });
+
+    cy.get('#project-form select[name^="jform[pages]"][name$="[slot]"]', { timeout: 20000 })
+      .filter((i, select) => select.value === 'site.index.layout')
+      .should('have.length', 1)
+      .find('option')
+      .then(($options) => {
+        const texts = [...$options].map((o) => o.textContent.trim());
+
+        expect(texts.some((t) => t.startsWith('List page: ')), 'list-page slots are labelled').to.equal(true);
+        expect(texts.some((t) => t.startsWith('Details page: ')), 'details-page slots are labelled').to.equal(true);
+      });
+
+    cy.get('#project-form textarea[name^="jform[pages]"][name$="[code]"]')
+      .should('have.length.greaterThan', 0)
+      .first()
+      .invoke('val')
+      .should('contain', 'balloonplanning-intro');
+  });
+
   it('renders the half that is not repeatable either', () => {
     openTheProject();
 

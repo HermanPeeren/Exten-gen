@@ -17,6 +17,7 @@ namespace Yepr\Component\Extengen\Administrator\Field;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Form\Field\ListField;
+use Joomla\CMS\Language\Text;
 use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
 
 /**
@@ -48,6 +49,17 @@ class SlotField extends ListField
     protected $type = 'Slot';
 
     /**
+     * What each page type is called in front of its slots.
+     *
+     * @var    array<string, string>
+     * @since  1.3.5
+     */
+    private const PAGE_TYPE_LABELS = [
+        'indexpage'   => 'COM_EXTENGEN_SLOT_FOR_INDEXPAGE',
+        'detailspage' => 'COM_EXTENGEN_SLOT_FOR_DETAILSPAGE',
+    ];
+
+    /**
      * The slots this kind of object may fill.
      *
      * @return array<int, object>
@@ -68,9 +80,19 @@ class SlotField extends ListField
         $options  = [];
 
         foreach ((new SlotCatalogue())->for($owner, $pageType === '' ? null : $pageType) as $id => $slot) {
+            // A page's form does not know its own page type when it is drawn -
+            // the type is chosen in the same form - so it offers every page
+            // slot, each saying which kind of page it is for. The validator
+            // refuses one that does not fit the page it is stored on.
+            $text = $slot['label'];
+
+            if ($pageType === '' && isset($slot['pageType'])) {
+                $text = Text::_(self::PAGE_TYPE_LABELS[$slot['pageType']] ?? $slot['pageType']) . ': ' . $text;
+            }
+
             $option = (object) [
                 'value'      => $id,
-                'text'       => $slot['label'],
+                'text'       => $text,
                 'disable'    => false,
                 'class'      => '',
                 'selected'   => false,

@@ -18,14 +18,21 @@ use \Joomla\CMS\Layout\LayoutHelper;
 use \Joomla\CMS\Language\Text;
 use Joomla\CMS\Session\Session;
 
+// This page's stylesheet, from the page's custom code in the model. Loaded
+// before the layout slot, so that a custom layout which returns early has it.
+$this->getDocument()->getWebAssetManager()->registerAndUseStyle(
+	'com_conference.program',
+	'com_conference/program.css'
+);
+
 // <extengen id="site.index.layout">
 // </extengen>
 
 HTMLHelper::_('bootstrap.tooltip');
 HTMLHelper::_('behavior.multiselect');
 
-// No stylesheet and no script: this component generates neither, and a
-// front-end layout used to ask the asset manager for `com_x.admin` - an
+// No other stylesheet and no script. A front-end layout used to ask the
+// asset manager for `com_x.admin` - an
 // administrator asset, on the site, that no generated component declares.
 // Joomla throws for an asset it does not know, so every generated front
 // end was a 500 on its first page.

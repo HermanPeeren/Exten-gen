@@ -86,6 +86,10 @@ class FlightsModel extends ListModel
 	}
 
 	// <extengen id="listmodel.methods">
+	public function countFlights(): int
+	{
+		return \count($this->getItems() ?: []);
+	}
 	// </extengen>
 
 }

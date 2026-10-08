@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generator\Model;
 
+use Yepr\Component\Extengen\Administrator\CustomCode\SlotCatalogue;
 use Yepr\Gen\Core\Model\ModelInterface;
 use Yepr\Gen\Core\Model\ValidationException;
 use Yepr\Gen\Core\Model\ValidatorInterface;
@@ -223,6 +224,51 @@ final class ProjectValidator implements ValidatorInterface
                     $slot
                 );
             }
+
+            $errors = array_merge($errors, $this->misplacedSlots($what, $node, array_unique($slots)));
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Custom code stored against a slot this object does not have.
+     *
+     * A page's form offers every page slot, because the page's type is chosen
+     * in the same form and is not known when the dropdown is drawn. A list
+     * page's code in a details-page slot - or an entity's slot on a page - is
+     * a body the generator would never emit, without a word, so it is refused
+     * here instead. A slot the catalogue does not know at all is reported by
+     * the generator, which is where an old model meets a newer catalogue.
+     *
+     * @param   string    $what   How the object is named in a message.
+     * @param   object    $node   The entity or page.
+     * @param   string[]  $slots  The slots its custom code names.
+     *
+     * @return  string[]
+     *
+     * @since   1.3.5
+     */
+    private function misplacedSlots(string $what, object $node, array $slots): array
+    {
+        $catalogue = new SlotCatalogue();
+        $isPage    = property_exists($node, 'page_type');
+        $pageType  = (string) ($node->page_type ?? '') === 'indexpage' ? 'indexpage' : 'detailspage';
+        $owner     = $isPage ? 'Page' : 'Entity';
+        $allowed   = $catalogue->for($owner, $isPage ? $pageType : null);
+        $errors    = [];
+
+        foreach ($slots as $slot) {
+            if ($slot === '' || !$catalogue->has($slot) || isset($allowed[$slot])) {
+                continue;
+            }
+
+            $errors[] = \sprintf(
+                '%s has custom code for the slot "%s", which is not a slot of %s',
+                $what,
+                $slot,
+                $isPage ? ($pageType === 'indexpage' ? 'a list page' : 'a details page') : 'an entity'
+            );
         }
 
         return $errors;

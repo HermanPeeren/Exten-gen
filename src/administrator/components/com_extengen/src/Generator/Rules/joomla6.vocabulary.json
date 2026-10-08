@@ -65,7 +65,8 @@
         "component/components/com_componentname/tmpl/details/default.php.twig",
         "component/components/com_componentname/tmpl/details/default.xml.twig",
         "component/components/com_componentname/tmpl/index/default.php.twig",
-        "component/components/com_componentname/tmpl/index/default.xml.twig"
+        "component/components/com_componentname/tmpl/index/default.xml.twig",
+        "component/media/com_componentname/css/page.css.twig"
     ],
     "operators": [
         "has",
