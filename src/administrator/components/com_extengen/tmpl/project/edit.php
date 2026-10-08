@@ -53,98 +53,57 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
     <?php echo $this->getForm()->renderField('name'); ?>
     <?php echo $this->getForm()->renderField('metalanguage'); ?>
 
+	<?php /*
+		One tab per fieldset the project's language declares, in its order:
+		step 5.2. ER1 declares entities, pages and extensions, which are the
+		three tabs Extengen had - but they come from the language now, not
+		from field names written in here, so a language with other groups gets
+		other tabs. Fields in no group are on one tab named after the language.
+
+		No tabs at all when the language is not on this site: getForm() has
+		said so already, and there is nothing to render the model with.
+	*/ ?>
+	<?php if ($this->tabs !== null) : ?>
+	<?php $erdTab = $this->tabs->tabOf('datamodel'); ?>
 	<div>
-		<?php echo HTMLHelper::_('uitab.startTabSet', 'myTab', array('active' => 'details')); ?>
+		<?php echo HTMLHelper::_('uitab.startTabSet', 'myTab', array('active' => $this->tabs->first(), 'recall' => true)); ?>
 
-		<?php if ($this->metalanguage === null) : ?>
-
-			<?php /*
-				The language this project is written in is not on this site, so
-				there is nothing to render its model with. getForm() has said so
-				already; this is the tab not being there.
-			*/ ?>
-
-		<?php elseif (!$this->metalanguage->isBuiltIn()) : ?>
+		<?php foreach ($this->tabs->tabs as $id => $tab) : ?>
+			<?php echo HTMLHelper::_('uitab.addTab', 'myTab', $id, Text::_($tab['label'])); ?>
 
 			<?php /*
-				A project written in an imported language renders whatever that
-				language's root form holds, because nothing here knows what it
-				holds. The three tabs below name `datamodel`, `pages` and
-				`extensions` - ER1's own fields - and a template that renders a
-				model by naming its fields can only ever edit one language.
-
-				3.5 turns ER1 into a package too, at which point the branch
-				goes and this is the only path.
+				The ERD draws `datamodel`, which is ER1's word for the entities,
+				so the button goes wherever that field is.
 			*/ ?>
-			<?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'entities', $this->metalanguage->label()); ?>
+			<?php if ($id === $erdTab && (int) $this->item->id > 0) : ?>
+				<div class="mb-3">
+					<a class="btn btn-info" data-bs-toggle="modal" href="#ERDModal">
+						<?php echo Text::_('COM_EXTENGEN_BUTTON_ERD'); ?>
+					</a>
+				</div>
+			<?php endif; ?>
+
 			<div class="row">
 				<div class="col-md-12">
-					<?php foreach ($this->getForm()->getGroup('') as $field) : ?>
-						<?php if (!\in_array($field->fieldname, $this->chromeFields, true)) : ?>
-							<?php echo $field->renderField(); ?>
+					<?php foreach ($tab['fields'] as $name) : ?>
+						<?php if (!\in_array($name, $this->chromeFields, true)) : ?>
+							<?php echo $this->getForm()->renderField($name); ?>
 						<?php endif; ?>
 					<?php endforeach; ?>
 				</div>
 			</div>
 			<?php echo HTMLHelper::_('uitab.endTab'); ?>
-
-		<?php else : ?>
-
-		<?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'entities', Text::_('COM_EXTENGEN_HEADING_ENTITIES')); ?>
-
-        <?php if (($this->item->id)>0): ?>
-        <div class="row">
-            <div class="col-md-12 btns">
-                <a class="btn btn-info"  data-bs-toggle="modal"  href="#ERDModal">
-				<?php echo Text::_('COM_EXTENGEN_BUTTON_ERD'); ?>
-                </a>
-                <p>&nbsp;</p>
-            </div>
-        </div>
-        <?php endif; ?>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="row">
-					<div class="col-md-12">
-						<?php echo $this->getForm()->renderField('datamodel'); ?>
-					</div>
-				</div>
-			</div>
-		</div>
-		<?php echo HTMLHelper::_('uitab.endTab'); ?>
-
-
-        <?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'pages', Text::_('COM_EXTENGEN_HEADING_PAGES')); ?>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col-md-12">
-                        <?php echo $this->getForm()->renderField('pages'); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php echo HTMLHelper::_('uitab.endTab'); ?>
-
-
-        <?php echo HTMLHelper::_('uitab.addTab', 'myTab', 'pages', Text::_('COM_EXTENGEN_HEADING_EXTENSIONS')); ?>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col-md-12">
-                        <?php echo $this->getForm()->renderField('extensions'); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php echo HTMLHelper::_('uitab.endTab'); ?>
-
-
-		<?php endif; ?>
+		<?php endforeach; ?>
 
 		<?php echo HTMLHelper::_('uitab.endTabSet'); ?>
 	</div>
+
+	<?php foreach ($this->tabs->hidden as $name) : ?>
+		<?php if (!\in_array($name, $this->chromeFields, true)) : ?>
+			<?php echo $this->getForm()->getInput($name); ?>
+		<?php endif; ?>
+	<?php endforeach; ?>
+	<?php endif; ?>
 
 	<input type="hidden" name="task" value="">
 	<?php echo HTMLHelper::_('form.token'); ?>

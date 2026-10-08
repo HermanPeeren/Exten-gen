@@ -16,6 +16,7 @@ namespace Yepr\Component\Extengen\Administrator\View\Project;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
+use Yepr\Component\Extengen\Administrator\Metalanguage\FormTabs;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Associations;
@@ -72,6 +73,13 @@ class HtmlView extends BaseHtmlView
 	 */
 	public $chromeFields = [];
 
+	/**
+	 * The tabs the model is edited on, from the language's own root form: step 5.2.
+	 *
+	 * @var ?FormTabs
+	 */
+	public $tabs;
+
 	public function display($tpl = null)
 	{
 		/** @var \Yepr\Component\Extengen\Administrator\Model\ProjectModel $model */
@@ -81,11 +89,21 @@ class HtmlView extends BaseHtmlView
 		$this->item = $model->getItem();
 
 		// Which language this project is written in, so the layout can render
-		// an imported one's fields without knowing what they are called. The
-		// three tabs it has otherwise name ER1's own fields, and a template
-		// that renders a model by naming its fields can only ever edit one
-		// language.
+		// its fields without knowing what they are called. A template that
+		// renders a model by naming its fields can only ever edit one language.
 		$this->metalanguage = $model->metalanguage();
+
+		// One tab per fieldset the language declares. Read from the file
+		// getForm() merged, because after the merge nothing in the form says
+		// which fieldsets were the language's and which the chrome's.
+		if ($this->metalanguage !== null) {
+			$root = JPATH_ROOT . '/' . $this->metalanguage->rootFormPath();
+
+			$this->tabs = FormTabs::fromXml(
+				is_file($root) ? (string) file_get_contents($root) : '',
+				$this->metalanguage->label()
+			);
+		}
 
 		// Named in one place, so this path and the one getForm() loads cannot
 		// drift apart.

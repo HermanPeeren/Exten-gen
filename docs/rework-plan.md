@@ -2342,6 +2342,32 @@ to say that some fields belong together. That has to come from the meta-model, s
 *Done when* an ER1 project opens on three tabs and the round-trip spec still passes. A
 language with no fieldsets still opens on one tab.
 
+**Done.** In Meta-gen, `Feature` reads an optional `fieldset`, normalised to
+`[a-z0-9_]` because it becomes both a fieldset name and a tab id. `FormXml` puts features
+that share one into a `<fieldset name="..." label="YEPR_<LANG>_<CLASSIFIER>_FIELDSET_<NAME>_LABEL">`
+after the form's own unnamed fieldset, which keeps the hidden fields. `FieldsetTest` checks
+that LionCore M3, which names no fieldsets, still produces one unnamed fieldset per form. The
+feature form offers the new field, and a spec checks that it is actually on the screen,
+because 4.5 found a field that was on the form and not drawn.
+
+ER1 1.2 is ER1 1.1 with three fieldsets, re-exported with `tools/export-language.php`.
+`ER1-1.1.zip` is gone from `packages/`, as 1.0 went at 4.2, and the install script's
+`bindProjects` moves 1.1 projects forward. Nothing was removed from the language, so every
+1.1 model is a valid 1.2 model.
+
+In Exten-gen, `FormTabs` reads the language's root form, not Joomla's merged `Form`, because
+after the merge nothing records which fieldsets were the language's. There is one tab per
+named fieldset, plus one named after the language for any visible fields in no fieldset.
+Hidden fields are rendered outside the tabs. The ERD button goes on whichever tab holds
+`datamodel`, since that is the field the ERD draws (the plan said "by the reference table",
+but the field name is simpler and just as honest). The template's other branch, three tabs
+written by field name for a built-in ER1, has been dead since 3.5 removed built-in entries,
+and it is gone.
+
+*Done:* Meta-gen 265 unit tests and 30 browser tests; Exten-gen 380 unit tests,
+`project-binds.cy.js` asserting the three tabs, the field in each and the ERD button, and the
+whole browser suite green against ER1 1.2.
+
 **5.3 The metalanguage in the projects list.** A column showing the language and version
 each project is written in. It uses the binding columns the table already has, so it costs
 no query beyond a join to the metalanguages table for the label. It also gets a filter on

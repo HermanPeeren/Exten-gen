@@ -103,6 +103,32 @@ describe('a saved project opens with its model', () => {
     });
   });
 
+  /**
+   * Entities, Pages and Extensions, each on its own tab: step 5.2.
+   *
+   * The tabs come from the fieldsets ER1's root form declares, so this is the
+   * place a language package and the template meet. `FormTabsTest` reads the
+   * package; only this sees that each tab holds its own field and the ERD
+   * button is on the first.
+   */
+  it('opens on the tabs its language declares', () => {
+    openTheProject();
+
+    ['entities', 'pages', 'extensions'].forEach((tab) => {
+      cy.get(`joomla-tab#myTab joomla-tab-element#${tab}`).should('exist');
+    });
+
+    cy.get('joomla-tab#myTab joomla-tab-element').should('have.length', 3);
+    cy.get('joomla-tab#myTab [role="tab"]').then(($tabs) => {
+      expect([...$tabs].map((t) => t.textContent.trim())).to.deep.equal(['Entities', 'Pages', 'Extensions']);
+    });
+
+    cy.get('joomla-tab-element#entities [name^="jform[datamodel]"]').should('exist');
+    cy.get('joomla-tab-element#pages [name^="jform[pages]"]').should('exist');
+    cy.get('joomla-tab-element#extensions [name^="jform[extensions]"]').should('exist');
+    cy.get('joomla-tab-element#entities a[href="#ERDModal"]').should('exist');
+  });
+
   it('renders the half that is not repeatable either', () => {
     openTheProject();
 
