@@ -28,3 +28,5 @@
 /tests/cypress/fixtures/metalanguage.zip
 /tests/cypress/fixtures/derived.zip
 /tests/cypress/fixtures/broken-derived.zip
+/tests/cypress/fixtures/generator.zip
+/tests/cypress/fixtures/broken-generator.zip

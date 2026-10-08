@@ -32,7 +32,7 @@ describe('a generated component', () => {
     // Generate through the component, as a person would.
     cy.visitExtengen('projects');
     cy.get('#adminForm a[data-href*="view=generate"]').first().then(($link) => {
-      cy.visit($link.attr('data-href'));
+      cy.visit(`${$link.attr('data-href')}&generator=joomla6`);
     });
 
     cy.get('body', { timeout: 60000 }).should('contain.text', '.zip');

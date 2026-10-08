@@ -38,6 +38,42 @@
 		</field>
 
 	</fieldset>
+	<!--
+		Generation: step 5.6.
+
+		Installing a generated extension straight onto this site is off by
+		default and stays off unless an administrator turns it on, because a
+		generated extension is code built from whatever is in the model -
+		custom-code slots included. On a site where anybody but the
+		administrator can edit a model, turning this on lets them install code.
+		It is never offered on the site's frontend, whatever this says.
+	-->
+	<fieldset
+		name="generation"
+		label="COM_EXTENGEN_CONFIG_GENERATION_LABEL"
+		>
+		<field
+			name="allow_install_warning"
+			type="note"
+			class="alert alert-danger"
+			label="COM_EXTENGEN_CONFIG_ALLOW_INSTALL_WARNING_LABEL"
+			description="COM_EXTENGEN_CONFIG_ALLOW_INSTALL_WARNING_DESC"
+		/>
+
+		<field
+			name="allow_install"
+			type="radio"
+			layout="joomla.form.field.radio.switcher"
+			label="COM_EXTENGEN_CONFIG_ALLOW_INSTALL_LABEL"
+			description="COM_EXTENGEN_CONFIG_ALLOW_INSTALL_DESC"
+			default="0"
+			filter="integer"
+			>
+			<option value="0">JNO</option>
+			<option value="1">JYES</option>
+		</field>
+	</fieldset>
+
 	<fieldset
 		name="permissions"
 		label="JCONFIG_PERMISSIONS_LABEL"

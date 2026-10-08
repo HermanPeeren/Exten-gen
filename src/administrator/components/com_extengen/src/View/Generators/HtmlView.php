@@ -2,104 +2,55 @@
 
 /**
  * @package     Extengen
-
  * @subpackage  Extengen component
- * @version     0.8.0
  *
- * @copyright   Copyright (C) Yepr, Herman Peeren, 2023. All rights reserved.
+ * @copyright   Copyright (C) Yepr, Herman Peeren. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
+declare(strict_types=1);
+
 namespace Yepr\Component\Extengen\Administrator\View\Generators;
 
-defined('_JEXEC') or die;
-
-use Joomla\CMS\Helper\ContentHelper;
-use Joomla\CMS\HTML\Helpers\Sidebar;
-use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
-use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
-use Yepr\Component\Extengen\Administrator\Helper\ExtengenHelper;
-use Joomla\CMS\Pagination\Pagination;
-use Joomla\CMS\MVC\View\GenericDataException;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
 
+// phpcs:disable PSR1.Files.SideEffects
+\defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
- * View class to manage generators.
+ * The generators this site can run, and the import: step 5.4.
+ *
+ * This page said "TODO" from 0.8 until 1.3. The built-in generators are one
+ * per target; the imported ones come from Gen-gen. The page is shaped like the
+ * metalanguages page, because importing a package is the same gesture.
+ *
+ * @since  1.3.0
  */
 class HtmlView extends BaseHtmlView
 {
-	/**
-	 * The HTML for the sidebar, which the layout prints when there is any.
-	 *
-	 * @var  string
-	 */
-	protected $sidebar;
+    /**
+     * @var GeneratorEntry[]
+     */
+    public array $items = [];
 
-	/**
-	 * Method to display the view.
-	 *
-	 * @param   string  $tpl  A template file to load. [optional]
-	 *
-	 * @return  void
-     * @throws Genericdataexception
-	 */
-	public function display($tpl = null): void
-	{
+    /**
+     * @param   string  $tpl  A template file to load. [optional]
+     *
+     * @since   1.3.0
+     */
+    public function display($tpl = null): void
+    {
+        /** @var \Yepr\Component\Extengen\Administrator\Model\GeneratorsModel $model */
+        $model = $this->getModel();
 
-		ExtengenHelper::addSubmenu('generators');
-		$this->addToolbar();
-		$this->sidebar = Sidebar::render();
+        $this->items = $model->getItems();
 
-		echo "<h2>Generators will be listed here</h2>";
-		echo '<p>TODO! Generators can be copied and adjusted. New generators can be defined and... generated.</p>';
-		echo '<p>Planned for version 0.9</p>';
-		echo '<p>&nbsp</p>';
-		echo '<p>At the moment, version 0.8, only one generator: <b>Joomla6</b>.</p>';
-		echo '<p>This template is not yet easily adjustable.</p>';
-		echo '<p>&nbsp</p>';
-		echo '<p>To migrate from the current static generator to dynamic generators, the following steps will be taken:
-				<ul>
-				<li>add the necessary tables: generators, templates (with a generator_id and mapping-info)</li>
-				<li>N.B.: a generator is linked to a specific project type. If you change the project type, the mapping might have to be adjusted. Current project type = ER1 (= based on eJSL).</li>
-				<li>copy the current TWIG template files to the db templates table</li>
-				<li>edit the templates for a project</li>
-				<li>add mapping per template. Ideally the variable names are taken from the template and the possible values by showing the possibilities in the AST (some kind of AST viewer)</li>
-				<li>create something general for the files that are directly generated from the AST, not with a template. As a first step, these PHP code files could be left as they are now and being incorporated in the project. But I would like to have some forms here...</li>
-				<li>add choices in project for all available generators for this project type</li>
-				<li>test if it works and switch to the new system</li>
-				</ul></p>';
+        ToolbarHelper::title(Text::_('COM_EXTENGEN_MANAGER_GENERATORS'), 'cogs');
 
-		//parent::display($tpl);
-	}
-
-
-
-	/**
-	 * Add the page title and toolbar.
-	 *
-	 * @return  void
-	 */
-	protected function addToolbar()
-	{
-		//$canDo = ContentHelper::getActions('com_extengen', 'category', $this->state->get('filter.category_id'));
-
-		// Get the toolbar object instance
-		$toolbar = $this->getDocument()->getToolbar();
-
-		ToolbarHelper::title(Text::_('COM_EXTENGEN_MANAGER_GENERATORS'), 'gnerators');
-
-		// Nothing else. This page lists nothing yet - it says so in its own
-		// body - and the list toolbar it used to build was not harmless: every
-		// button carried listCheck(true), which makes Joomla's JavaScript
-		// require a form called adminForm, and there is no form on a page that
-		// shows a paragraph of text. The console said so on every visit.
-		// The buttons come back when there is a list for them to act on.
-		ToolbarHelper::divider();
-		ToolbarHelper::help('', false, 'https://yepr.nl');
-
-		HTMLHelper::_('sidebar.setAction', 'index.php?option=com_extengen');
-	}
+        parent::display($tpl);
+    }
 }

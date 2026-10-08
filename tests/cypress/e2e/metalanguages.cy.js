@@ -344,7 +344,7 @@ describe('metalanguages', () => {
       cy.visit('/administrator/index.php?option=com_extengen&view=projects&list[limit]=0');
 
       cy.get(`#adminForm a[data-href$="project_id=${id}"]`).then(($link) => {
-        cy.visit($link.attr('data-href'), { failOnStatusCode: false });
+        cy.visit(`${$link.attr('data-href')}&generator=joomla6`, { failOnStatusCode: false });
       });
     });
 

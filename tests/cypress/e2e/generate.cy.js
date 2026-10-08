@@ -34,12 +34,35 @@ describe('generating a component', () => {
       cy.visit(href);
     });
 
+    // Step 5.5: the button opens a chooser rather than generating. The
+    // built-in generators are all written for ER1, so all three are offered,
+    // and Joomla 6 is the one already chosen.
+    cy.get('#generate-choose-form input[name="generator"]').then(($radios) => {
+      expect([...$radios].map((r) => r.value)).to.include.members(['joomla6', 'wordpress', 'drupal']);
+    });
+    cy.get('#generate-choose-form input[value="joomla6"]').should('be.checked');
+    cy.get('#generate-run').click();
+
     cy.get('body', { timeout: 60000 }).should('contain.text', 'files');
     cy.get('body').should('not.contain', 'Fatal error');
     cy.get('body').should('not.contain', 'Warning:');
+    cy.location('search').should('contain', 'generator=joomla6');
 
     // The log names the package it built.
     cy.get('body').should('contain.text', '.zip');
+
+    // And there is a link to download it, which hands over a zip.
+    cy.get('#generate-download').invoke('attr', 'href').sitePath().then((download) => {
+      cy.request({ url: download, encoding: 'binary' }).then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.headers['content-type']).to.contain('application/zip');
+        expect(response.headers['content-disposition']).to.match(/attachment; filename=".+\.zip"/);
+        expect(response.body.slice(0, 2), 'a zip starts with PK').to.eq('PK');
+      });
+    });
+
+    // Installing is off unless the options say otherwise: step 5.6.
+    cy.get('#generate-install').should('not.exist');
   });
 
   /**

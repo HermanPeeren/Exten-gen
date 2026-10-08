@@ -49,6 +49,8 @@ use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageContext;
 use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Targets;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Gen\Core\Output\ProtectedRegionMerger;
 use Yepr\Gen\Core\Reference\ReferenceIndex;
@@ -88,6 +90,40 @@ class GenerateModel extends AdminModel
 	protected string $targetId = Targets::DEFAULT;
 
 	/**
+	 * Which generator to run, by its catalogue id: step 5.5.
+	 *
+	 * Empty means "the built-in generator of the target", which is what every
+	 * request made before 5.5 means.
+	 *
+	 * @var   string
+	 */
+	protected string $generatorId = '';
+
+	/**
+	 * The generator the last run used.
+	 *
+	 * @var   ?GeneratorEntry
+	 */
+	public ?GeneratorEntry $generator = null;
+
+	/**
+	 * The package the last run wrote, for a download link to point at.
+	 *
+	 * @var   string
+	 */
+	public string $archive = '';
+
+	/**
+	 * Where generated output goes. Null is the component's own `generated/`.
+	 *
+	 * The site sets one per user, so that two people who both call their
+	 * project Conference do not overwrite each other's package: step 5.7.
+	 *
+	 * @var   ?string
+	 */
+	protected ?string $outputRoot = null;
+
+	/**
 	 * The type of output we generate files for, for instance "Joomla6".
 	 * There must be a subdirectory with this name with the concrete generators.
 	 * When templates are used, they must be in a subdirectory under /generator_templates with that same name. todo: templates in db
@@ -124,6 +160,97 @@ class GenerateModel extends AdminModel
 	}
 
 	/**
+	 * Set which generator to run: step 5.5.
+	 *
+	 * @param   string  $generatorId  A catalogue id: a target's id, or `imported.<key>`.
+	 *
+	 * @return  void
+	 */
+	public function setGeneratorId(string $generatorId): void
+	{
+		$this->generatorId = $generatorId;
+	}
+
+	/**
+	 * Put generated output somewhere other than the component's own folder.
+	 *
+	 * @param   string  $root  An absolute directory.
+	 *
+	 * @return  void
+	 */
+	public function setOutputRoot(string $root): void
+	{
+		$this->outputRoot = rtrim($root, '/\\');
+	}
+
+	/**
+	 * The generators this project may be generated with: the chooser's list.
+	 *
+	 * Those whose metalanguage is the project's own or one it derives from.
+	 * Empty when the project's language is not on this site, which the screen
+	 * reports rather than offering generators for a model nothing can read.
+	 *
+	 * @return  GeneratorEntry[]
+	 */
+	public function generators(): array
+	{
+		try {
+			return $this->catalogue()->forLanguage($this->ancestry());
+		} catch (\RuntimeException) {
+			return [];
+		}
+	}
+
+	/**
+	 * Why no generator on this site applies to this project.
+	 *
+	 * The chooser says this instead of offering an empty list. It is the same
+	 * refusal `generate()` makes, one click earlier: the project's language is
+	 * not bound, not installed, or not one any generator is written for.
+	 *
+	 * @return  string
+	 */
+	public function refusal(): string
+	{
+		try {
+			$entry = $this->projectLanguage();
+		} catch (\RuntimeException $e) {
+			return $e->getMessage();
+		}
+
+		$languages = [];
+
+		foreach ($this->catalogue()->all() as $generator) {
+			if ($generator->published) {
+				$languages[$generator->metalanguageKey] = true;
+			}
+		}
+
+		return Text::sprintf(
+			'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
+			$entry->label(),
+			implode(', ', array_keys($languages))
+		);
+	}
+
+	/**
+	 * Where the package for this project and generator is, or would be.
+	 *
+	 * The download task asks this rather than being told a path, so that a
+	 * path in a request can never point at anything else on the server.
+	 *
+	 * @return  string
+	 */
+	public function archivePath(): string
+	{
+		$project = $this->loadProject();
+		$version = trim((string) ($project->manifest()->version ?? '')) ?: '0.0.0';
+
+		return $this->outputDirectory($project, $this->resolveGenerator()->id)
+			. '/' . strtolower($project->componentName()) . '-' . $version . '.zip';
+	}
+
+	/**
 	 * Generate the files for this project.
 	 *
 	 * Everything now goes through the shared pipeline: it validates the project,
@@ -135,18 +262,21 @@ class GenerateModel extends AdminModel
 	 */
 	public function generate()
 	{
-		$project = $this->loadProject();
+		$project   = $this->loadProject();
+		$generator = $this->resolveGenerator();
+
+		$this->generator = $generator;
 
 		// Which language this project is written in, before anything reads the
 		// model. A selector that follows a reference needs that language's
 		// reference table to follow it with, and these rules are only about one
 		// language - so this both refuses the run and supplies the table.
 		LanguageContext::use(ReferenceIndex::fromTable(
-			Metalanguages::referenceTable($this->language())
+			Metalanguages::referenceTable($this->language($generator))
 		));
 
 		try {
-			$this->runGenerators($project);
+			$this->runGenerators($project, $generator);
 		} finally {
 			// One run must not decide what the next one follows. The screens
 			// are separate requests, but the acceptance checks are not.
@@ -161,20 +291,12 @@ class GenerateModel extends AdminModel
 	 *
 	 * @return  void
 	 */
-	private function runGenerators(Project $project): void
+	private function runGenerators(Project $project, GeneratorEntry $generator): void
 	{
-		// Out of the registry rather than constructed by name. 4.4 added a
-		// second target and this is the line that had to change for it - one
-		// line, in the model, and nothing in the pipeline, which is what 0.4
-		// was for.
-		$targets = Targets::registry(
-			JPATH_ROOT . '/administrator/components/com_extengen/generator_templates',
-			JPATH_ROOT . '/administrator/components/com_extengen/compilation_cache'
-		);
-
-		$target = $targets->has($this->targetId)
-			? $targets->get($this->targetId)
-			: $targets->get(Targets::DEFAULT);
+		// Out of the catalogue since 5.4, which hands back the target with an
+		// imported generator's rules in it when the generator is imported.
+		// Before that it was the registry, and before 4.4 a class by name.
+		$target = $this->catalogue()->target($generator);
 
 		$generators = $target->generators();
 
@@ -193,16 +315,78 @@ class GenerateModel extends AdminModel
 			throw $e;
 		}
 
-		foreach ($generators as $generator) {
+		foreach ($generators as $codeGenerator) {
 			// Keeping a log is this project's habit rather than something
 			// the shared GeneratorInterface promises, so it is asked for
 			// where it exists instead of widening that interface for it.
-			if ($generator instanceof Generator) {
-				$this->log = array_merge($this->log, $generator->log());
+			if ($codeGenerator instanceof Generator) {
+				$this->log = array_merge($this->log, $codeGenerator->log());
 			}
 		}
 
-		$this->write($files, $project, $target->id());
+		$this->write($files, $project, $generator->id);
+	}
+
+	/**
+	 * The generator to run: the one asked for, or the target's own.
+	 *
+	 * @return  GeneratorEntry
+	 *
+	 * @throws  \RuntimeException  When the generator asked for is not on this site.
+	 */
+	public function resolveGenerator(): GeneratorEntry
+	{
+		$catalogue = $this->catalogue();
+
+		if ($this->generatorId !== '') {
+			$entry = $catalogue->find($this->generatorId);
+
+			if ($entry === null || !$entry->published) {
+				throw new \RuntimeException(Text::sprintf('COM_EXTENGEN_GENERATE_NO_SUCH_GENERATOR', $this->generatorId));
+			}
+
+			return $entry;
+		}
+
+		// A target typed by hand that the registry does not have is the
+		// default, as it has been since 4.4.
+		return $catalogue->find($this->targetId) ?? $catalogue->find(Targets::DEFAULT)
+			?? throw new \RuntimeException('No built-in generator for ' . Targets::DEFAULT . '.');
+	}
+
+	/**
+	 * The catalogue of generators on this site.
+	 *
+	 * @return  GeneratorCatalogue
+	 */
+	private function catalogue(): GeneratorCatalogue
+	{
+		return GeneratorCatalogue::forSite($this->getDatabase());
+	}
+
+	/**
+	 * The project's language and every language it derives from.
+	 *
+	 * @return  MetalanguageEntry[]
+	 */
+	private function ancestry(): array
+	{
+		return Metalanguages::catalogue($this->getDatabase())->ancestry()->withSelf($this->projectLanguage());
+	}
+
+	/**
+	 * The directory a project's output for one generator goes in.
+	 *
+	 * @param   Project  $project      The model.
+	 * @param   string   $generatorId  The generator, whose id names the folder.
+	 *
+	 * @return  string
+	 */
+	private function outputDirectory(Project $project, string $generatorId): string
+	{
+		$root = $this->outputRoot ?? JPATH_ROOT . '/administrator/components/com_extengen/generated';
+
+		return $root . '/' . $project->componentName() . '/' . $generatorId;
 	}
 
 	/**
@@ -232,7 +416,36 @@ class GenerateModel extends AdminModel
 	 *
 	 * @throws  \RuntimeException  When the project is written in something else.
 	 */
-	private function language(): MetalanguageEntry
+	private function language(GeneratorEntry $generator): MetalanguageEntry
+	{
+		$entry = $this->projectLanguage();
+
+		// The language this generator is about, or one the project's language
+		// derives from: steps 4.5 and 5.4. A derived language adds and may not
+		// remove or rename - `AncestryCheck` refuses the import otherwise - so
+		// every path a rule for the parent walks is still there, and the nodes
+		// the child added are simply never read.
+		if ($generator->appliesTo($this->ancestry())) {
+			return $entry;
+		}
+
+		throw new \RuntimeException(
+			Text::sprintf(
+				'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
+				$entry->label(),
+				$generator->metalanguageKey
+			)
+		);
+	}
+
+	/**
+	 * The metalanguage this project is written in, or refuse.
+	 *
+	 * @return  MetalanguageEntry
+	 *
+	 * @throws  \RuntimeException  When it is not bound, or not on this site.
+	 */
+	private function projectLanguage(): MetalanguageEntry
 	{
 		$database = $this->getDatabase();
 		$binding  = (new ProjectRepository($database))->binding((int) $this->projectId);
@@ -259,28 +472,7 @@ class GenerateModel extends AdminModel
 			);
 		}
 
-		// The language these rules are about, or one it derives from: step 4.5.
-		//
-		// Until now this compared the key and stopped there, which meant a
-		// language built on ER1 was refused for being built on ER1. A derived
-		// language adds and may not remove or rename - `AncestryCheck` refuses
-		// the import otherwise - so every path a rule for the parent walks is
-		// still there, and the nodes the child added are simply never read.
-		$ancestry = Metalanguages::catalogue($database)->ancestry();
-
-		foreach ($ancestry->withSelf($entry) as $candidate) {
-			if ($candidate->key === RuleDrivenGenerator::LANGUAGE) {
-				return $entry;
-			}
-		}
-
-		throw new \RuntimeException(
-			Text::sprintf(
-				'COM_EXTENGEN_GENERATE_WRONG_METALANGUAGE',
-				$entry->label(),
-				RuleDrivenGenerator::LANGUAGE
-			)
-		);
+		return $entry;
 	}
 
 	/**
@@ -288,14 +480,14 @@ class GenerateModel extends AdminModel
 	 *
 	 * @param   FileCollection  $files          What was generated.
 	 * @param   Project         $project        The model it generated from.
+	 * @param   string          $generatorId    The generator that made it, which names the folder.
 	 *
 	 * @return  void
 	 */
-	private function write(FileCollection $files, Project $project, string $targetId): void
+	private function write(FileCollection $files, Project $project, string $generatorId): void
 	{
 		$componentName = $project->componentName();
-		$generated     = JPATH_ROOT . '/administrator/components/com_extengen/generated/'
-			. $componentName . '/' . $targetId;
+		$generated     = $this->outputDirectory($project, $generatorId);
 
 		// Under the target's own directory since 4.4, both of them. Two
 		// targets writing a zip into one folder is a folder where
@@ -329,6 +521,8 @@ class GenerateModel extends AdminModel
 		$archive = $generated . '/' . strtolower($componentName) . '-' . $version . '.zip';
 
 		$writer->write($files, $archive);
+
+		$this->archive = $archive;
 
 		// And the tree beside it, because that is how generated output has
 		// always been read here - opened, compared, looked through. It costs

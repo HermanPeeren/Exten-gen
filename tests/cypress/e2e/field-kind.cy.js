@@ -145,7 +145,7 @@ describe("a field's kind, as the screens spell it", () => {
       .contains('tr', PROJECT)
       .find('a[data-href*="view=generate"]')
       .then(($link) => {
-        cy.visit($link.attr('data-href'));
+        cy.visit(`${$link.attr('data-href')}&generator=joomla6`);
       });
 
     cy.get('body', { timeout: 60000 }).should('contain.text', 'files');

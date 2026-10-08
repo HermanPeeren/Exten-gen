@@ -21,9 +21,10 @@ use Yepr\Component\Extengen\Administrator\Generator\Joomla6\LanguageFiles;
 use Yepr\Component\Extengen\Administrator\Generator\Joomla6\SiteMVC;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\ProjectValidator;
+use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Gen\Core\GeneratorInterface;
 use Yepr\Gen\Core\Model\ValidatorInterface;
-use Yepr\Gen\Core\Target\TargetInterface;
+use Yepr\Gen\Core\Rule\Vocabulary;
 use Yepr\Gen\Core\Template\TwigRenderer;
 
 /**
@@ -43,7 +44,7 @@ use Yepr\Gen\Core\Template\TwigRenderer;
  *
  * @since  0.9.0
  */
-final class Joomla6Target implements TargetInterface
+final class Joomla6Target implements RuleDrivenTarget
 {
     /**
      * @param  string   $templateRoot    Directory holding generator_templates/Joomla6.
@@ -53,8 +54,58 @@ final class Joomla6Target implements TargetInterface
      */
     public function __construct(
         private readonly string $templateRoot,
-        private readonly ?string $cacheDirectory = null
+        private readonly ?string $cacheDirectory = null,
+        private readonly ?string $ruleFile = null
     ) {
+    }
+
+    /**
+     * The same target, running an imported generator's rules: step 5.4.
+     *
+     * Every rule-driven generator takes its slice of the rules from this file
+     * instead of the committed one. The emitters - forms, language files, sql -
+     * are code and are the same for every generator of this target.
+     *
+     * @param  string  $ruleFile  A rule file already checked against this target's vocabulary.
+     *
+     * @since  1.3.0
+     */
+    public function withRules(string $ruleFile): self
+    {
+        return new self($this->templateRoot, $this->cacheDirectory, $ruleFile);
+    }
+
+    /**
+     * What a rule for this target may name: the vocabulary beside the rule file.
+     *
+     * @since  1.3.0
+     */
+    public function vocabulary(): Vocabulary
+    {
+        return Vocabulary::fromFile(\dirname(RuleDrivenGenerator::defaultRuleFile()) . '/joomla6.vocabulary.json');
+    }
+
+    /**
+     * The rule prefixes this target's generators claim, in the order they run.
+     *
+     * An imported rule whose id begins with none of them would never run, so
+     * the import refuses it rather than storing a rule that does nothing.
+     *
+     * @return string[]
+     *
+     * @since  1.3.0
+     */
+    public function rulePrefixes(): array
+    {
+        $prefixes = [];
+
+        foreach ($this->generators() as $generator) {
+            if ($generator instanceof RuleDrivenGenerator) {
+                $prefixes[] = $generator->rulePrefix();
+            }
+        }
+
+        return $prefixes;
     }
 
     /**
@@ -140,9 +191,18 @@ final class Joomla6Target implements TargetInterface
 
         $renderer->addExtension($languageStringUtil);
 
+        $ruleFile = $this->ruleFile;
+
         return array_map(
-            static fn (string $class): GeneratorInterface
-                => new $class($renderer, $languageStringUtil),
+            static function (string $class) use ($renderer, $languageStringUtil, $ruleFile): GeneratorInterface {
+                $generator = new $class($renderer, $languageStringUtil);
+
+                if ($ruleFile !== null && $generator instanceof RuleDrivenGenerator) {
+                    $generator->useRuleFile($ruleFile);
+                }
+
+                return $generator;
+            },
             self::GENERATORS
         );
     }

@@ -81,3 +81,12 @@ Cypress.Commands.add('shouldShowNoRawConstants', () => {
     expect(raw, 'constants shown untranslated').to.deep.equal([]);
   });
 });
+
+/**
+ * A link the page built, as a path Cypress can visit or request.
+ *
+ * Joomla's routed links already carry the site's own path
+ * (`/Exten-gen/joomla/administrator/...`), and Cypress puts `baseUrl` in front
+ * of whatever it is given, so the link is cut back to `/administrator/...`.
+ */
+Cypress.Commands.add('sitePath', { prevSubject: true }, (href) => `/administrator/${href.split('/administrator/').pop()}`);
