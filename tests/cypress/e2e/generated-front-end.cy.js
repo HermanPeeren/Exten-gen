@@ -21,6 +21,15 @@
  *
  * None of that is visible to the golden files: the bytes were stable the whole
  * time, and stably wrong.
+ *
+ * **It installs through the web server, with Exten-gen's own Install button.**
+ * It used Joomla's CLI, and that made this spec fail now and then in CI with a
+ * bare 500 on the first visit: the CLI is another process, Joomla rewrites its
+ * namespace map on install and clears the opcode cache for it - in the process
+ * that wrote it, which was not the server. For a moment the server ran the old
+ * map, without the new component in it. Installed in the server, the cache is
+ * cleared where it is used, as on a real site, and the Install button gets the
+ * end-to-end test it did not have.
  */
 
 const COMPONENT = 'com_balloonplanning';
@@ -28,21 +37,31 @@ const VIEW = 'flights';
 const MENU_ALIAS = 'flights';
 
 describe('a generated component', () => {
+  after(() => {
+    cy.exec('php tools/set-option.php allow_install 0');
+  });
+
   before(() => {
-    // Generate through the component, as a person would.
-    cy.visitExtengen('projects');
-    cy.get('#adminForm a[data-href*="view=generate"]').first().then(($link) => {
+    cy.exec('php tools/set-option.php allow_install 1');
+
+    // Generate through the component, as a person would - the BalloonPlanning
+    // project by name, because that is the component the rest of this checks.
+    cy.visitExtengen('projects&filter[metalanguage]=&list[limit]=0');
+    cy.contains('#extengenProjects tr', 'BalloonPlanning').find('a[data-href*="view=generate"]').then(($link) => {
       cy.visit(`${$link.attr('data-href')}&generator=joomla6`);
     });
 
-    cy.get('body', { timeout: 60000 }).should('contain.text', '.zip');
+    cy.get('#generate-result', { timeout: 60000 }).should('contain.text', '.zip');
 
-    // Install what it produced, and give one of its views a menu item. Both
-    // through Joomla's CLI, which needs no login.
-    cy.exec('php tools/install-generated.php BalloonPlanning', { timeout: 120000 })
-      .its('exitCode')
-      .should('eq', 0);
+    // And install what it produced, on this site, with the button the result
+    // offers once the option allows it. Its confirmation is answered yes.
+    cy.on('window:confirm', () => true);
+    cy.get('#generate-install').click();
 
+    cy.get('#system-message-container', { timeout: 120000 }).should('contain.text', 'was installed on this site');
+    cy.exec('php tools/set-option.php allow_install 0');
+
+    // A menu item for one of its views, which only writes to the database.
     cy.exec(`php tools/seed-menu-item.php ${COMPONENT} ${VIEW} Flights`, { timeout: 60000 })
       .its('exitCode')
       .should('eq', 0);

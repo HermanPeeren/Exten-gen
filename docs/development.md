@@ -311,18 +311,28 @@ drops it when the version changes.
 all - no release, no failure, no mail. A tag is only a release procedure once
 something is listening for it.
 
-**Driving a whole generated component.** The last spec leaves Exten-gen: it
-generates a component, installs it, and visits its front end.
+**Driving a whole generated component.** `generated-front-end.cy.js` leaves
+Exten-gen: it generates a component, installs it, and visits its front end
+through a menu item, as a visitor would.
+
+**A spec installs in the web server, never through the CLI.** It uses Exten-gen's
+own *Install on this site* button, with `allow_install` switched on for the
+spec. Joomla clears the opcode cache for the files an install writes - the
+namespace map among them - in the process that writes them, so an install
+through the CLI left the server running the old map for up to two seconds and
+the first visit to the new component was a bare 500. That was intermittent in CI
+and never happened here, where Apache serves the site. `BrowserSpecInstallsTest`
+keeps it this way. For a manual run the CLI is fine, since a person is never
+that fast:
 
 ```
 php tools/install-generated.php BalloonPlanning
 php tools/seed-menu-item.php com_balloonplanning flights Flights
 ```
 
-A generated component has no Router service, so `index.php?option=...` lands on
-the default menu item and `/component/<name>/` is a 404. A menu item is the
-supported way in, which is what the generated `tmpl/<view>/default.xml` exists
-for.
+A generated component routes its own links since 1.3.3 (`src/Service/Router.php`),
+and a menu item is still the way in: `tmpl/<view>/default.xml` is what lets one
+point at a view.
 
 **What each gate can and cannot see.** Everything above `npm run cypress` reads
 source or runs generation with two constants standing in for Joomla. None of it

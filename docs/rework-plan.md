@@ -2179,6 +2179,29 @@ compared as strings. Not `is_file`, which on Windows answers the question the te
 39; Gen-gen 53 and 13, with the acceptance check still reproducing Exten-gen's approved output
 file for file.
 
+**The intermittent 500, after 1.3.4.** `generated-front-end.cy.js` failed now and then in CI
+with a bare 500 on the first visit to the component it had just installed, and passed on a
+re-run. Two runs gave no message, because Joomla logs an uncaught exception under the category
+`error`, which only `log_everything` gives a logger, and CI's server log sees only the status.
+The timing was the evidence: both 500s fell within a second of the install, and every request
+after that was fine, on any worker.
+
+The spec installed through Joomla's CLI. Joomla rewrites its namespace map on install and clears
+the opcode cache for it with `opcache_invalidate()` (`File::write()`, from
+`libraries/namespacemap.php`) - in the process that wrote it. The CLI is another process, so the
+built-in server kept the old map until its own timestamp check, two seconds by default. Apache
+on this machine never showed it.
+
+A first fix set `opcache.revalidate_freq=0` on CI's server. That hid the window rather than
+removing it, and made CI's PHP unlike a real site's, so it is gone again. Instead:
+
+- the spec installs with Exten-gen's own *Install on this site* button, in the server, as a real
+  site does, which is also the first end-to-end test of that button (5.6 had checked only that
+  it is offered and refused);
+- `BrowserSpecInstallsTest` fails on a spec that installs through the CLI;
+- CI switches `log_everything` on, prints Joomla's errors on failure and uploads its logs, in all
+  three repositories, so a 500 says what it was next time.
+
 *The design as it was written, for the record:*
 
 The case is not versioning. ER1 2.0 is one answer to "ER1 plus slots", and the wrong shape for
