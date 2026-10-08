@@ -70,6 +70,16 @@ if ($saveOrder && !empty($this->items)) {
 		                        'COM_EXTENGEN_TABLE_PROJECT_TABLEHEAD_METALANGUAGE_VERSION', $listDirn, $listOrder);
                                 ?>
                             </th>
+                            <th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
+		                        <?php echo HTMLHelper::_('searchtools.sort',
+		                        'COM_EXTENGEN_TABLE_PROJECT_TABLEHEAD_CREATED', $listDirn, $listOrder);
+                                ?>
+                            </th>
+                            <th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
+		                        <?php echo HTMLHelper::_('searchtools.sort',
+		                        'COM_EXTENGEN_TABLE_PROJECT_TABLEHEAD_CREATED_BY', $listDirn, $listOrder);
+                                ?>
+                            </th>
                         </tr>
                         </thead>
                         <tbody>
@@ -96,6 +106,12 @@ if ($saveOrder && !empty($this->items)) {
                                 </td>
                                  <td class="text-center d-none d-md-table-cell">
 	                                <?php echo $item->metalanguage_version; ?>
+                                </td>
+                                 <td class="text-center d-none d-md-table-cell">
+	                                <?php echo $item->created; ?>
+                                </td>
+                                 <td class="text-center d-none d-md-table-cell">
+	                                <?php echo $item->created_by; ?>
                                 </td>
  
                             </tr>

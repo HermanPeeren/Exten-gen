@@ -7,6 +7,8 @@
  *   php tools/seed-project.php conference          # a different fixture
  *   php tools/seed-project.php conference ../site  # a different site
  *   php tools/seed-project.php conference --saved  # in the spelling the screens write
+ *   php tools/seed-project.php conference --saved --owner=extengen-visitor --name=VisitorConference
+ *                                                  # a frontend user's own project: step 5.7
  *
  * That last flag matters more than it reads. The fixtures were all written
  * before 3.5, when ER1 became a generated language and its forms started
@@ -30,9 +32,16 @@ declare(strict_types=1);
 
 $root = \dirname(__DIR__);
 
-// `--saved` may stand anywhere; everything else is positional.
-$args  = array_values(array_filter(\array_slice($argv, 1), static fn (string $a): bool => $a !== '--saved'));
-$saved = \in_array('--saved', $argv, true);
+// Options may stand anywhere; everything else is positional.
+$args    = array_values(array_filter(\array_slice($argv, 1), static fn (string $a): bool => !str_starts_with($a, '--')));
+$saved   = \in_array('--saved', $argv, true);
+$options = [];
+
+foreach (\array_slice($argv, 1) as $argument) {
+    if (preg_match('/^--(owner|name)=(.+)$/', $argument, $match)) {
+        $options[$match[1]] = $match[2];
+    }
+}
 
 $fixture = $args[0] ?? 'balloonplanning';
 $site    = $args[1] ?? $root . '/joomla';
@@ -83,7 +92,7 @@ if ($saved) {
 }
 
 $model = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
-$name  = (string) ($model->name ?? $fixture);
+$name  = (string) ($options['name'] ?? $model->name ?? $fixture);
 $table = $config->dbprefix . 'extengen_projects';
 
 // Which language the project says it is written in. Nothing else can decide
@@ -105,6 +114,23 @@ $binding = $db->query(
     . " WHERE lang_key = 'ER1' ORDER BY version DESC LIMIT 1"
 )->fetch_assoc() ?: ['lang_key' => '', 'version' => ''];
 
+// Whose project it is: step 5.7. Nobody's unless asked, which is what every
+// project made before the frontend existed is.
+$owner = 0;
+
+if (isset($options['owner'])) {
+    $lookup = $db->prepare("SELECT id FROM `{$config->dbprefix}users` WHERE username = ?");
+    $lookup->bind_param('s', $options['owner']);
+    $lookup->execute();
+    $owner = (int) ($lookup->get_result()->fetch_assoc()['id'] ?? 0);
+    $lookup->close();
+
+    if ($owner === 0) {
+        fwrite(STDERR, "No user {$options['owner']} on this site. Run tools/seed-site-user.php first.\n");
+        exit(1);
+    }
+}
+
 $existing = $db->prepare("SELECT id FROM `{$table}` WHERE name = ?");
 $existing->bind_param('s', $name);
 $existing->execute();
@@ -113,9 +139,9 @@ $existing->close();
 
 if ($id !== null) {
     $update = $db->prepare(
-        "UPDATE `{$table}` SET form_data = ?, metalanguage_key = ?, metalanguage_version = ? WHERE id = ?"
+        "UPDATE `{$table}` SET form_data = ?, metalanguage_key = ?, metalanguage_version = ?, created_by = ? WHERE id = ?"
     );
-    $update->bind_param('sssi', $json, $binding['lang_key'], $binding['version'], $id);
+    $update->bind_param('sssii', $json, $binding['lang_key'], $binding['version'], $owner, $id);
     $update->execute();
     $update->close();
 
@@ -127,13 +153,13 @@ if ($id !== null) {
 $insert = $db->prepare(
     "INSERT INTO `{$table}`"
     . ' (name, alias, form_data, metalanguage_key, metalanguage_version,'
-    . ' published, access, language, ordering, state)'
-    . ' VALUES (?, ?, ?, ?, ?, 1, 1, ' . "'*'" . ', 0, 1)'
+    . ' published, access, language, ordering, state, created_by)'
+    . ' VALUES (?, ?, ?, ?, ?, 1, 1, ' . "'*'" . ', 0, 1, ?)'
 );
 
 $alias = strtolower(preg_replace('/[^A-Za-z0-9]+/', '-', $name) ?? $fixture);
 
-$insert->bind_param('sssss', $name, $alias, $json, $binding['lang_key'], $binding['version']);
+$insert->bind_param('sssssi', $name, $alias, $json, $binding['lang_key'], $binding['version'], $owner);
 $insert->execute();
 
 printf("seeded %s (id %d)\n", $name, $db->insert_id);

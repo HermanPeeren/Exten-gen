@@ -64,7 +64,8 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
 		said so already, and there is nothing to render the model with.
 	*/ ?>
 	<?php if ($this->tabs !== null) : ?>
-	<?php $erdTab = $this->tabs->tabOf('datamodel'); ?>
+	<?php /* The ERD is an administrator view, so the frontend has no button for it. */ ?>
+	<?php $erdTab = $app->isClient('administrator') ? $this->tabs->tabOf('datamodel') : null; ?>
 	<div>
 		<?php echo HTMLHelper::_('uitab.startTabSet', 'myTab', array('active' => $this->tabs->first(), 'recall' => true)); ?>
 
@@ -110,7 +111,7 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
 </form>
 
 <?php
-if (($this->item->id)>0)
+if ($app->isClient('administrator') && ($this->item->id) > 0)
 {
 	echo HTMLHelper::_(
 		'bootstrap.renderModal',

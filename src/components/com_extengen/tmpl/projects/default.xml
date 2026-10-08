@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The menu item type for the frontend's list of the visitor's own projects: step 5.7. -->
+<metadata>
+	<layout title="COM_EXTENGEN_SITE_MENU_MY_PROJECTS">
+		<message>COM_EXTENGEN_SITE_MENU_MY_PROJECTS_DESC</message>
+	</layout>
+</metadata>

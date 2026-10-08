@@ -43,7 +43,7 @@ require $root . '/configuration.php';
 /**
  * The names the browser specs give the projects they create.
  *
- * Kept in step with `tests/cypress/e2e/metalanguages.cy.js` by hand, which is
+ * Kept in step with `metalanguages.cy.js` and `site.cy.js` by hand, which is
  * safe in the direction that matters: a name added there and not here means a
  * row is left behind, which is what this was before. A name here that nothing
  * creates deletes nothing.
@@ -51,6 +51,8 @@ require $root . '/configuration.php';
 const SPEC_PROJECT_NAMES = [
     'WrittenInTestlang',
     'WrittenInDerivedER',
+    // site.cy.js: the visitor's project, made on the frontend.
+    'VisitorProject',
 ];
 
 $config = new JConfig();

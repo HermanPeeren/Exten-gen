@@ -21,3 +21,11 @@ CREATE TABLE IF NOT EXISTS `#__extengen_generators` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_generator` (`gen_key`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Who made a project, and when: step 5.7. The frontend shows people their own
+-- projects and nobody else's, and that needs an owner. Projects made before
+-- 1.3.0 belong to nobody (0), so they show in the administrator only.
+ALTER TABLE `#__extengen_projects`
+    ADD COLUMN `created` datetime DEFAULT NULL,
+    ADD COLUMN `created_by` int(10) UNSIGNED NOT NULL DEFAULT '0',
+    ADD KEY `idx_createdby` (`created_by`);

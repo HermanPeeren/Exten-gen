@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS `#__extengen_project` (
 `form_data` text,
 `metalanguage_key` varchar(255),
 `metalanguage_version` varchar(255),
+`created` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+`created_by` int NOT NULL DEFAULT 0,
 PRIMARY KEY (`id`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 

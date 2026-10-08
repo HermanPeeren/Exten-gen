@@ -11,6 +11,7 @@ parameters:
 
     paths:
         - src/administrator/components/com_extengen/src
+        - src/components/com_extengen/src
         - tests
         - build
 

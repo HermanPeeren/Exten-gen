@@ -2501,6 +2501,53 @@ version that can be shown:
 *Done when* a non-admin user can sign up on the frontend, model a component, generate it
 and download it, and cannot reach another user's project or the install task.
 
+**Done.** `com_extengen` has a site half: a *My projects* menu item type, a project form and
+the generate screen. Every site class extends its administrator counterpart and overrides only
+what differs, and the site layouts include the administrator's rather than copying them. So
+there is still one form merge, one save, one chooser and one result screen.
+
+- **Access.** A site `Dispatcher` sends guests to the login form with a return URL. It also
+  loads the administrator's language file, which holds all the strings. `Ownership` answers
+  "may this user open this project" (their own with `core.edit.own`, any with `core.edit`)
+  for the form, the generate view and the download, and answers "not found" otherwise.
+- **The project form** drops the fields that belong to the Joomla item rather than the model:
+  published, category, access, ordering, language, alias and the display options. They are
+  removed, not hidden, so `Form::filter()` discards them even when a post names them. There
+  is no ERD button, because the ERD is an administrator view.
+- **Ownership** needed something to own: `#__extengen_projects` gains `created` and
+  `created_by` (1.3.0), set by `ProjectTable::store()` on insert. Projects made before belong
+  to nobody and show in the administrator only. The self-model gained the two columns too,
+  because `SelfHostingTest` compares it with the install SQL.
+- **Output per user**, under `generated/site/<hmac(secret, user id)>/`, because everything under
+  the site root can be fetched by URL. The site's result screen drops the log lines that name
+  server paths. `generate.install` already refused on the site, and the site view never offers
+  it.
+
+*Three things only the browser showed.* With SEF and strict routing, Joomla's defaults, a
+component with no router has no address for "edit project 82", so every link went to the
+home page. `Service\Router` is a `RouterView` with menu, standard and no-menu rules. Then a
+new project still came back as the list, because a view keyed by id has no address without
+one, so the form is a `form` view, as in Joomla's own frontend editing, with the id in the
+query. And `ProjectModel::recordId()` returned null for a request with no `id` at all, which
+the administrator never sends; it defaults to 0 now.
+
+*And one trap in a tool.* The first test visitor could not log in. On Windows,
+`escapeshellarg()` replaces `!` with a space, and the generated password ended in one. Passwords
+from `tools/seed-site-user.php` are letters and digits now.
+
+`site.cy.js`, seven tests, as the visitor `tools/seed-site-user.php` makes (Registered only,
+fresh password in a git-ignored fixture): a guest is sent to log in; the list holds the
+visitor's project and not the administrator's; the project opens on its three tabs without
+the Joomla fields; a new project can be started; it generates with the chooser, downloads as
+a zip, and shows no server paths; install is a 404 even with the option on; and somebody
+else's project is a 404 for both the form and generation. phpcs and PHPStan now cover
+`src/components` as well, which they had not been told about.
+
+*Found, not fixed:* the Joomla 6 target writes a `DateTime` property as `datetime NOT NULL
+DEFAULT '0000-00-00 00:00:00'`, which MySQL 8 refuses in strict mode. It showed up in the
+self-model's golden output when `created` was added. That is a generator defect with its own
+golden-file consequences, so it is a step of its own.
+
 **5.8 Release.** All gates in all three repositories. Exten-gen 1.3.0, Meta-gen 0.3.0,
 Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
 Meta-gen's none. Herman pushes and tags.

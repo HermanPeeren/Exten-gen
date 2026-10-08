@@ -51,6 +51,8 @@ $tmpl = $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=component' : '';
                                                 <?php echo $this->getForm()->renderField('form_data'); ?>
                                                 <?php echo $this->getForm()->renderField('metalanguage_key'); ?>
                                                 <?php echo $this->getForm()->renderField('metalanguage_version'); ?>
+                                                <?php echo $this->getForm()->renderField('created'); ?>
+                                                <?php echo $this->getForm()->renderField('created_by'); ?>
                         
                         <?php //echo $this->form->getInput('id'); ?>
                     </div>

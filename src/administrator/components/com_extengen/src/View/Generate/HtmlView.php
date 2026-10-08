@@ -103,6 +103,8 @@ class HtmlView extends BaseHtmlView
 		$model->setGeneratorId($generatorId);
 		$model->setTargetId($targetId);
 
+		$this->prepareModel($model);
+
 		if ($generatorId === '' && $targetId === '') {
 			$this->generators = $model->generators();
 
@@ -125,7 +127,7 @@ class HtmlView extends BaseHtmlView
 			$this->error = $e->getMessage();
 		}
 
-		$this->log       = $model->log;
+		$this->log       = $this->logForDisplay($model->log);
 		$this->generator = $model->generator;
 
 		if ($this->error === '' && $model->archive !== '' && is_file($model->archive)) {
@@ -144,6 +146,29 @@ class HtmlView extends BaseHtmlView
 	}
 
 	/**
+	 * A last word on the model before it runs. The site view uses it: step 5.7.
+	 *
+	 * @param   \Yepr\Component\Extengen\Administrator\Model\GenerateModel  $model  Told which project and generator already.
+	 *
+	 * @return  void
+	 */
+	protected function prepareModel($model): void
+	{
+	}
+
+	/**
+	 * The log as this screen shows it: all of it, in the administrator.
+	 *
+	 * @param   string[]  $log  What the run wrote.
+	 *
+	 * @return  string[]
+	 */
+	protected function logForDisplay(array $log): array
+	{
+		return $log;
+	}
+
+	/**
 	 * Whether the result may offer to install the package on this site: step 5.6.
 	 *
 	 * Three conditions, all checked again by the controller task: the option is
@@ -152,7 +177,7 @@ class HtmlView extends BaseHtmlView
 	 *
 	 * @return  bool
 	 */
-	private function mayInstall(): bool
+	protected function mayInstall(): bool
 	{
 		return (int) ComponentHelper::getParams('com_extengen')->get('allow_install', 0) === 1
 			&& $this->generator !== null

@@ -373,7 +373,7 @@ class ProjectModel extends AdminModel
 	{
 		$id = (int) $this->getState($this->getName() . '.id');
 
-		return $id > 0 ? $id : Factory::getApplication()->getInput()->getInt('id');
+		return $id > 0 ? $id : Factory::getApplication()->getInput()->getInt('id', 0);
 	}
 
 	/**

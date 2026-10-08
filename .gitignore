@@ -30,3 +30,4 @@
 /tests/cypress/fixtures/broken-derived.zip
 /tests/cypress/fixtures/generator.zip
 /tests/cypress/fixtures/broken-generator.zip
+/tests/cypress/fixtures/site-user.json

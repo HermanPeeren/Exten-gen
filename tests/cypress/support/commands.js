@@ -90,3 +90,25 @@ Cypress.Commands.add('shouldShowNoRawConstants', () => {
  * of whatever it is given, so the link is cut back to `/administrator/...`.
  */
 Cypress.Commands.add('sitePath', { prevSubject: true }, (href) => `/administrator/${href.split('/administrator/').pop()}`);
+
+/**
+ * Log in to the frontend as the test visitor: step 5.7.
+ *
+ * Not the administrator. The visitor is made, and given a fresh password, by
+ * `tools/seed-site-user.php`, which writes it to a git-ignored fixture -
+ * `cypress.env.json` holds the administrator's login and is not ours to write.
+ */
+Cypress.Commands.add('loginToSite', () => {
+  cy.readFile('tests/cypress/fixtures/site-user.json').then(({ username, password }) => {
+    cy.session(
+      ['joomla-site', username, password],
+      () => {
+        cy.visit('/index.php/component/users/login');
+        cy.get('#com-users-login__form #username').type(username);
+        cy.get('#com-users-login__form #password').type(password, { log: false });
+        cy.get('#com-users-login__form button[type="submit"]').click();
+        cy.get('#com-users-login__form').should('not.exist');
+      },
+    );
+  });
+});

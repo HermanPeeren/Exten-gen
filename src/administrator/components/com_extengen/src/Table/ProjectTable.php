@@ -15,6 +15,7 @@ namespace Yepr\Component\Extengen\Administrator\Table;
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseDriver;
@@ -53,6 +54,16 @@ class ProjectTable extends Table
 	 */
 	public function store($updateNulls = false)
 	{
+		// Who made it and when, once: step 5.7. The frontend lists a person's
+		// own projects by this, and decides by it who may open one, so it is
+		// set here for every new row rather than by whichever form saved it.
+		// On an update the row was loaded before the post was bound, and no
+		// form declares these fields, so a post cannot change them.
+		if (empty($this->id)) {
+			$this->created    = Factory::getDate()->toSql();
+			$this->created_by = (int) Factory::getApplication()->getIdentity()?->id;
+		}
+
 		// Transform the params field
 		if (is_array($this->params)) {
 			$registry = new Registry($this->params);

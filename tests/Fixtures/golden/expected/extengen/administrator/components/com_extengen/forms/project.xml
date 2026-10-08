@@ -3,6 +3,8 @@
   <fieldset addruleprefix="Yepr\Component\Extengen\Administrator\Rule" addfieldprefix="Yepr\Component\Extengen\Administrator\Field">
     <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_NAME_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_NAME_DESC" validate="Letter"/>
     <field name="form_data" type="textarea" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_FORM_DATA_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_FORM_DATA_DESC"/>
+    <field name="created" type="calendar" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_CREATED_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_CREATED_DESC"/>
+    <field name="created_by" type="number" format="%Y-%m-%d %H:%M" label="COM_EXTENGEN_PROJECT_FIELD_CREATED_BY_LABEL" description="COM_EXTENGEN_PROJECT_FIELD_CREATED_BY_DESC"/>
     <field name="id" type="hidden"/>
   </fieldset>
   <fieldset name="binding" label="COM_EXTENGEN_PROJECT_FIELDSET_BINDING_LABEL">

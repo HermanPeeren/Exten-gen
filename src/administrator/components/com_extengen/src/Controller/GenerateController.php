@@ -142,7 +142,7 @@ class GenerateController extends BaseController
      *
      * @since  1.3.0
      */
-    private function assertMayGenerate(): void
+    protected function assertMayGenerate(): void
     {
         if (!$this->app->getIdentity()->authorise('core.manage', 'com_extengen')) {
             throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
@@ -154,7 +154,7 @@ class GenerateController extends BaseController
      *
      * @since  1.3.0
      */
-    private function generateModel(): GenerateModel
+    protected function generateModel(): GenerateModel
     {
         /** @var GenerateModel $model */
         $model = $this->getModel('Generate', 'Administrator', ['ignore_request' => true]);

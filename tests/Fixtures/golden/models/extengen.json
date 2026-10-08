@@ -53,6 +53,30 @@
                     },
                     "field_id": "14e96d0f-a450-511a-a956-81916db8497c",
                     "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                },
+                "field4": {
+                    "field_name": "created",
+                    "field_type": "property",
+                    "property": {
+                        "type": "DateTime"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c1e3a7a0-5f6b-4d2e-9a10-3c6b9e0d4a01",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
+                },
+                "field5": {
+                    "field_name": "created_by",
+                    "field_type": "property",
+                    "property": {
+                        "type": "Integer"
+                    },
+                    "reference": {
+                        "reference_id": ""
+                    },
+                    "field_id": "c1e3a7a0-5f6b-4d2e-9a10-3c6b9e0d4a02",
+                    "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"
                 }
             },
             "entity_id": "b57a5b14-6957-5478-9958-d9ddaafcf8f3"

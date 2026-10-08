@@ -12,6 +12,7 @@
 	</description>
 
 	<file>src/administrator/components/com_extengen/src</file>
+	<file>src/components/com_extengen/src</file>
 	<file>tests</file>
 	<file>build</file>
 

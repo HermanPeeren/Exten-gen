@@ -65,6 +65,8 @@ class ProjectsModel extends ListModel
 			$db->quoteName('project.form_data'),
 			$db->quoteName('project.metalanguage_key'),
 			$db->quoteName('project.metalanguage_version'),
+			$db->quoteName('project.created'),
+			$db->quoteName('project.created_by'),
 			$db->quoteName('project.id')
 		]);
 		$query->from($db->quoteName('#__extengen_project', 'project'));
