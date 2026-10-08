@@ -47,6 +47,7 @@ class ProjectsModel extends ListModel
 				'language', 'a.language', 'language_title',
 				'publish_up', 'a.publish_up',
 				'publish_down', 'a.publish_down',
+				'metalanguage', 'metalanguage_name',
 			);
 
 			$assoc = Associations::isEnabled();
@@ -85,7 +86,8 @@ class ProjectsModel extends ListModel
 						', a.ordering' .
 						', a.state' .
 						', a.published' .
-						', a.publish_up, a.publish_down'
+						', a.publish_up, a.publish_down' .
+						', a.metalanguage_key, a.metalanguage_version'
 					)
 				)
 			)
@@ -132,6 +134,16 @@ class ProjectsModel extends ListModel
 		}
 
 		// Join over the users for the checked out user.
+		// The language each project is written in, by name: step 5.3. A left
+		// join, because a project whose language this site has lost is still a
+		// row in the list - it shows its stored key instead.
+		$query->select($db->quoteName('m.name', 'metalanguage_name'))
+			->join(
+				'LEFT',
+				$db->quoteName('#__extengen_metalanguages', 'm') . ' ON ' . $db->quoteName('m.lang_key') . ' = ' . $db->quoteName('a.metalanguage_key')
+				. ' AND ' . $db->quoteName('m.version') . ' = ' . $db->quoteName('a.metalanguage_version')
+			);
+
 		$query->select($db->quoteName('uc.name', 'editor'))
 			->join(
 				'LEFT',
@@ -176,6 +188,22 @@ class ProjectsModel extends ListModel
 		}
 
 		// Filter on the language.
+		// `key|version`, the value MetalanguageField posts. A key alone is
+		// accepted too, meaning every version of that language.
+		$metalanguage = (string) $this->getState('filter.metalanguage');
+
+		if ($metalanguage !== '') {
+			[$key, $version] = array_pad(explode('|', $metalanguage, 2), 2, '');
+
+			$query->where($db->quoteName('a.metalanguage_key') . ' = :mlkey')
+				->bind(':mlkey', $key);
+
+			if ($version !== '') {
+				$query->where($db->quoteName('a.metalanguage_version') . ' = :mlversion')
+					->bind(':mlversion', $version);
+			}
+		}
+
 		if ($language = $this->getState('filter.language')) {
 			$query->where($db->quoteName('a.language') . ' = ' . $db->quote($language));
 		}
@@ -183,6 +211,10 @@ class ProjectsModel extends ListModel
 		// Add the list ordering clause.
 		$orderCol = $this->state->get('list.ordering', 'a.name');
 		$orderDirn = $this->state->get('list.direction', 'asc');
+
+		if ($orderCol === 'metalanguage_name') {
+			$orderCol = $db->quoteName('m.name') . ' ' . $orderDirn . ', ' . $db->quoteName('a.metalanguage_version');
+		}
 
 		if ($orderCol == 'a.ordering' || $orderCol == 'category_title') {
 			$orderCol = $db->quoteName('c.title') . ' ' . $orderDirn . ', ' . $db->quoteName('a.ordering');

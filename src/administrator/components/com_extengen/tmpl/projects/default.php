@@ -69,6 +69,9 @@ if ($saveOrder && !empty($this->items))
 								<th scope="col" style="width:1%" class="text-center d-none d-md-table-cell">
 									<?php echo HTMLHelper::_('searchtools.sort', 'COM_EXTENGEN_TABLE_TABLEHEAD_NAME', 'a.name', $listDirn, $listOrder); ?>
 								</th>
+								<th scope="col" style="width:15%" class="d-none d-md-table-cell">
+									<?php echo HTMLHelper::_('searchtools.sort', 'COM_EXTENGEN_TABLE_TABLEHEAD_METALANGUAGE', 'metalanguage_name', $listDirn, $listOrder); ?>
+								</th>
 								<th scope="col" style="width:10%" class="d-none d-md-table-cell">
 									<?php echo Text::_('COM_EXTENGEN_TABLE_TABLEHEAD_GENERATION'); ?>
 
@@ -122,6 +125,22 @@ if ($saveOrder && !empty($this->items))
 									</div>
 
 								</th>
+								<?php /*
+									The language the project is written in: step 5.3. By its
+									name when this site has it, and by the stored key when it
+									has not - which is a project nothing can open, and the list
+									is where somebody would notice that.
+								*/ ?>
+								<td class="d-none d-md-table-cell project-metalanguage" data-binding="<?php echo $this->escape($item->metalanguage_key . '|' . $item->metalanguage_version); ?>">
+									<?php if ($item->metalanguage_name !== null) : ?>
+										<?php echo $this->escape($item->metalanguage_name); ?>
+									<?php else : ?>
+										<span class="text-danger" title="<?php echo $this->escape(Text::_('COM_EXTENGEN_PROJECT_METALANGUAGE_NOT_ON_SITE')); ?>">
+											<?php echo $this->escape($item->metalanguage_key ?: '?'); ?>
+										</span>
+									<?php endif; ?>
+									<span class="badge bg-secondary"><?php echo $this->escape($item->metalanguage_version); ?></span>
+								</td>
                                 <td class="text-center btns d-none d-md-table-cell">
                                     <a class="btn btn-info dynbutton"  data-bs-toggle="modal"  href="#generationModal" data-href="<?php echo Uri::root(); ?>administrator/index.php?option=com_extengen&view=generate&tmpl=component&project_id=<?php echo $item->id; ?>">
 										<?php echo Text::_('COM_EXTENGEN_BUTTON_GENERATE'); ?>

@@ -29,6 +29,29 @@ describe('the component renders', () => {
     });
   });
 
+  it('shows the metalanguage each project is written in, and filters on it', () => {
+    // Step 5.3. The column names the language, with the version beside it.
+    cy.visitExtengen('projects&filter[metalanguage]=');
+    cy.get('#extengenProjects thead').should('contain.text', 'Metalanguage');
+    cy.get('#extengenProjects td.project-metalanguage').first()
+      .invoke('text').should('match', /\S+\s+\d+\.\d+/);
+
+    // Filtering on the first row's language keeps only rows in that language.
+    // Through the address bar, which is what the filter form submits, so the
+    // assertion does not race a reload.
+    cy.get('#extengenProjects td.project-metalanguage').first().invoke('attr', 'data-binding').then((binding) => {
+      cy.visitExtengen(`projects&filter[metalanguage]=${encodeURIComponent(binding)}`);
+      cy.get('#filter_metalanguage').should('have.value', binding);
+      cy.get('#extengenProjects td.project-metalanguage').should('have.length.greaterThan', 0).each(($cell) => {
+        expect($cell.attr('data-binding')).to.equal(binding);
+      });
+    });
+
+    // Leave the list unfiltered for the specs after this one.
+    cy.visitExtengen('projects&filter[metalanguage]=');
+    cy.get('#filter_metalanguage').should('have.value', '');
+  });
+
   it('shows a project with every string translated', () => {
     // The edit screen is the one with the language package's strings on it,
     // and the only one the list above does not reach.

@@ -2373,6 +2373,18 @@ each project is written in. It uses the binding columns the table already has, s
 no query beyond a join to the metalanguages table for the label. It also gets a filter on
 that column, because a list with a hundred projects in two languages needs one.
 
+**Done.** The column shows the language's name with its version as a badge. It is sortable,
+and it is filtered with the same `metalanguage` field the project form uses, so the filter
+offers exactly the languages this site has. A project bound to a language the site no longer
+has shows its stored key in red, with a tooltip saying it cannot be opened. That is the one
+place somebody would notice such a project before trying to open it.
+
+The spec's first attempt chose "the first ER1 in the dropdown", which was ER1 1.0, a version
+no project is on any more, so the list came back empty. Now each cell carries its binding as a
+`data-binding` attribute. The spec filters on the first row's binding through the address bar
+(which is what the filter form submits, so nothing races a reload) and resets the filter the
+same way.
+
 **5.4 Generators: a list, and an import.** Under *Generators*, which has said "TODO" since
 0.8: every generator this site can run, with its target, the metalanguage it is for, and
 whether it is built in. The import works the way the metalanguage import does.

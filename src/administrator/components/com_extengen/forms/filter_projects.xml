@@ -40,6 +40,17 @@
 			<option value="">JOPTION_SELECT_ACCESS</option>
 		</field>
 
+		<!-- The language a project is written in: step 5.3. -->
+		<field
+			name="metalanguage"
+			type="metalanguage"
+			label="COM_EXTENGEN_PROJECT_FILTER_METALANGUAGE_LABEL"
+			addfieldprefix="Yepr\Component\Extengen\Administrator\Field"
+			onchange="this.form.submit();"
+			>
+			<option value="">COM_EXTENGEN_PROJECT_FILTER_METALANGUAGE_SELECT</option>
+		</field>
+
 		<field
 			name="language"
 			type="contentlanguage"
@@ -70,6 +81,8 @@
 			<option value="a.name DESC">JGLOBAL_TITLE_DESC</option>
 			<option value="category_title ASC">JCATEGORY_ASC</option>
 			<option value="category_title DESC">JCATEGORY_DESC</option>
+			<option value="metalanguage_name ASC">COM_EXTENGEN_PROJECT_SORT_METALANGUAGE_ASC</option>
+			<option value="metalanguage_name DESC">COM_EXTENGEN_PROJECT_SORT_METALANGUAGE_DESC</option>
 			<option value="access_level ASC">JGRID_HEADING_ACCESS_ASC</option>
 			<option value="access_level DESC">JGRID_HEADING_ACCESS_DESC</option>
 			<option
