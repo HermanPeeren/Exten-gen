@@ -2552,6 +2552,12 @@ golden-file consequences, so it is a step of its own.
 Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
 Meta-gen's none. Herman pushes and tags.
 
+**Prepared.** Exten-gen 1.3.0 carries one update file, `1.3.0.sql`: the generators table, and
+`created` and `created_by` on projects. Meta-gen and Gen-gen changed no schema. The release
+workflow adds the checksums. Exten-gen goes first, because Gen-gen's CI reads Exten-gen's
+`main` for both the acceptance check and `GeneratorPackageTest`. At the time of release:
+Exten-gen 403 unit tests and 57 browser tests; Meta-gen 265 and 30; Gen-gen 59 and 17.
+
 ---
 
 ## Decisions outstanding
