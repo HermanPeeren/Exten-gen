@@ -48,6 +48,13 @@ $write = static function (string $zipPath, string $name, array $rules) use ($pat
         unlink($zipPath);
     }
 
+    // Every fixture in it is git-ignored, so on a fresh clone - which is what
+    // CI has - the folder does not exist. ZipArchive opens a path in a missing
+    // folder without complaint and fails only at close(), silently.
+    if (!is_dir(\dirname($zipPath))) {
+        mkdir(\dirname($zipPath), 0755, true);
+    }
+
     $zip = new ZipArchive();
 
     if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
@@ -57,7 +64,11 @@ $write = static function (string $zipPath, string $name, array $rules) use ($pat
 
     $zip->addFromString('generator.json', json_encode($manifest, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES) . "\n");
     $zip->addFromString($path, RuleSet::fromArray($rules)->toJson() . "\n");
-    $zip->close();
+
+    if (!$zip->close() || !is_file($zipPath)) {
+        fwrite(STDERR, "Cannot write {$zipPath}\n");
+        exit(1);
+    }
 
     echo basename($zipPath) . ': ' . \count($rules) . " rules\n";
 };

@@ -121,12 +121,21 @@ describe('metalanguages', () => {
     cy.visit('/administrator/index.php?option=com_extengen&view=project&layout=edit&id=0');
 
     cy.get('#jform_metalanguage', { timeout: 20000 }).should('exist');
-    cy.get('#jform_metalanguage option').then(($options) => {
-      const texts = [...$options].map((o) => o.textContent.trim());
 
-      expect(texts, 'the shipped language is offered').to.include('ER1 1.1');
-      expect(texts, 'and the imported one').to.include('Testlang 1.0');
-    });
+    // The shipped version, read off the package rather than written here: the
+    // spec said 'ER1 1.1' for a release after ER1 had moved to 1.2, and passed
+    // only on a site that still had the old row.
+    cy.exec(`node -e "process.stdout.write(require('fs').readdirSync('packages').find((f) => f.startsWith('ER1-')))"`)
+      .its('stdout').then((file) => {
+        const shipped = `ER1 ${file.replace(/^ER1-|\.zip$/g, '')}`;
+
+        cy.get('#jform_metalanguage option').then(($options) => {
+          const texts = [...$options].map((o) => o.textContent.trim());
+
+          expect(texts, 'the shipped language is offered').to.include(shipped);
+          expect(texts, 'and the imported one').to.include('Testlang 1.0');
+        });
+      });
   });
 
   /**
