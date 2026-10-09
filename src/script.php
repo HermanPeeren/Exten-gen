@@ -49,7 +49,7 @@ class Com_ExtengenInstallerScript
      * uses to tell the generate modal which row was pressed. It was this
      * component's own until Meta-gen turned out to need the same twelve lines.
      */
-    private const LIBRARY_MINIMUM = '0.15.0';
+    private const LIBRARY_MINIMUM = '0.16.0';
 
     /**
      * The oldest Joomla this runs on.
