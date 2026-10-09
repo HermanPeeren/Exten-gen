@@ -134,6 +134,25 @@ describe('importing a project from LionWeb', () => {
       .and('contain', 'not imported on this site');
   });
 
+  // -- and back out ---------------------------------------------------------
+
+  /**
+   * The export needs a project chosen, unlike the import, which makes one.
+   *
+   * What the download contains is checked where it can be: written back out
+   * and compared against the chunk it was imported from, node by node. What
+   * cannot be checked there is that the button is on screen and that it will
+   * not fire without a project - which `listCheck` does by disabling it, so
+   * nothing is ever asked to export nothing.
+   */
+  it('offers the export, and will not fire without a project', () => {
+    cy.get('#toolbar').contains('Export LionWeb model').should('be.disabled');
+
+    cy.get('#extengenProjects tbody input[type="checkbox"]').first().check();
+
+    cy.get('#toolbar').contains('Export LionWeb model').should('be.enabled');
+  });
+
   it('says so when the chunk holds no model', () => {
     cy.writeFile(`joomla/${chunkPath}`, {
       serializationFormatVersion: '2024.1',

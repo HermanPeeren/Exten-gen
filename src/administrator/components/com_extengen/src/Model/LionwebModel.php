@@ -14,7 +14,10 @@ namespace Yepr\Component\Extengen\Administrator\Model;
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
+use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareTrait;
 use Yepr\Gen\Core\Lionweb\Chunk;
+use Yepr\Gen\Core\Lionweb\InstanceChunk;
 use Yepr\Gen\Core\Lionweb\InstanceModel;
 use Yepr\Gen\Core\Package\PackageManifest;
 
@@ -45,8 +48,10 @@ use Yepr\Gen\Core\Package\PackageManifest;
  *
  * @since  1.4.0
  */
-class LionwebModel extends BaseDatabaseModel
+class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareInterface
 {
+    use ProjectRepositoryAwareTrait;
+
     /**
      * A file JcbInOut leaves on the same site, offered as the obvious one to
      * read. The two components meet on disk rather than over a wire.
@@ -205,6 +210,74 @@ class LionwebModel extends BaseDatabaseModel
         }
 
         return (int) $table->id;
+    }
+
+    /**
+     * A project, written back out as a LionWeb chunk.
+     *
+     * The way back. What came in from JCB can be edited here and go out again,
+     * which is the difference between importing a blueprint and being able to
+     * work on one.
+     *
+     * @return array{json: string, nodes: int, name: string, diagnostics: array<int, array<string, string>>}
+     *
+     * @throws \RuntimeException  When there is no such project, or no language to write it in.
+     *
+     * @since  1.4.0
+     */
+    public function export(int $id): array
+    {
+        // Through the repository, which is the one place a stored model is
+        // loaded. There were thirteen once, and `ModelLayerBoundaryTest`
+        // exists to stop there being fourteen - it caught this one.
+        $repository = $this->getProjectRepository();
+        $project    = $repository->find($id);
+        $binding    = $repository->binding($id);
+
+        if ($project === null || $binding === null) {
+            throw new \RuntimeException('There is no project with id ' . $id . '.');
+        }
+
+        $stored = json_decode(
+            (string) json_encode($project->raw()),
+            true,
+            512,
+            \JSON_THROW_ON_ERROR
+        );
+
+        if (!\is_array($stored) || $stored === []) {
+            throw new \RuntimeException(
+                'This project holds no model yet, so there is nothing to write out.'
+            );
+        }
+
+        // The chrome's, not the language's. Every project carries a `name` at
+        // the top because the edit screen wraps every language in a form that
+        // asks for one, and `convert()` puts it there on the way in - so it
+        // comes off again here rather than being reported by the writer as a
+        // feature the root concept does not have. A root concept that has its
+        // own `name` has a collision with the chrome already, on the way in.
+        unset($stored['name']);
+
+        $manifest = $this->manifestFor($binding['key'], $binding['version']);
+
+        $writer = InstanceChunk::of($manifest);
+        $chunk  = $writer->write($stored);
+
+        $json = json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        if ($json === false) {
+            throw new \RuntimeException(
+                'The chunk could not be encoded: ' . json_last_error_msg()
+            );
+        }
+
+        return [
+            'json'        => $json,
+            'nodes'       => \count($chunk['nodes'] ?? []),
+            'name'        => $project->name(),
+            'diagnostics' => $writer->diagnostics(),
+        ];
     }
 
     /**

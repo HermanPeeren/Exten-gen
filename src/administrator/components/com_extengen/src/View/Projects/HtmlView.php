@@ -167,6 +167,12 @@ class HtmlView extends BaseHtmlView
 				->listCheck(false);
 		}
 
+		// The way back, which needs a project chosen - unlike the import, which
+		// makes one.
+		$toolbar->standardButton('export', 'COM_EXTENGEN_LIONWEB_EXPORT', 'projects.exportLionweb')
+			->icon('icon-upload')
+			->listCheck(true);
+
 		if ($canDo->get('core.edit.state')) {
 			$dropdown = $toolbar->dropdownButton('status-group')
 				->text('JTOOLBAR_CHANGE_STATUS')

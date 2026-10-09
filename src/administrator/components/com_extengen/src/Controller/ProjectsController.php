@@ -124,4 +124,75 @@ class ProjectsController extends AdminController
 			$this->setRedirect(Route::_($back, false), $e->getMessage(), 'error');
 		}
 	}
+
+	/**
+	 * Write the selected project out as a LionWeb chunk.
+	 *
+	 * Sent to the browser rather than left on the site. A file written under
+	 * the site would be one more thing to find, to clean up and to get the
+	 * permissions right for, and the thing somebody is about to do with a
+	 * chunk is give it to another tool.
+	 *
+	 * @return  void
+	 *
+	 * @since   1.4.0
+	 */
+	public function exportLionweb()
+	{
+		$this->checkToken();
+
+		$back = 'index.php?option=com_extengen&view=projects';
+		$ids  = (array) $this->input->get('cid', [], 'array');
+		$id   = (int) ($ids[0] ?? 0);
+
+		if ($id === 0) {
+			$this->setRedirect(Route::_($back, false), Text::_('JGLOBAL_NO_ITEM_SELECTED'), 'warning');
+
+			return;
+		}
+
+		/** @var \Yepr\Component\Extengen\Administrator\Model\LionwebModel $model */
+		$model = $this->getModel('Lionweb', '', ['ignore_request' => true]);
+
+		try {
+			$written = $model->export($id);
+		} catch (\Throwable $e) {
+			$this->setRedirect(Route::_($back, false), $e->getMessage(), 'error');
+
+			return;
+		}
+
+		// A model that went out with something missing is still one somebody is
+		// about to hand to another tool, so it is said rather than swallowed -
+		// but it cannot be said over a download, so anything to report sends
+		// them back to the list instead of handing over a file they would have
+		// to be told about afterwards.
+		if ($written['diagnostics'] !== []) {
+			foreach ($written['diagnostics'] as $diagnostic) {
+				$this->app->enqueueMessage(
+					$diagnostic['message'],
+					$diagnostic['severity'] === 'error' ? 'error' : 'warning'
+				);
+			}
+
+			$this->setRedirect(Route::_($back, false));
+
+			return;
+		}
+
+		$name = preg_replace('/[^A-Za-z0-9_-]+/', '-', $written['name']) ?: 'project';
+
+		$this->app->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+		$this->app->setHeader(
+			'Content-Disposition',
+			'attachment; filename="' . $name . '.instance.lionweb.json"',
+			true
+		);
+		$this->app->setHeader('Content-Length', (string) \strlen($written['json']), true);
+		$this->app->sendHeaders();
+
+		echo $written['json'];
+
+		$this->app->close();
+	}
 }
