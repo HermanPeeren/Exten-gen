@@ -10,11 +10,10 @@
 		<element>com_extengen</element>
 		<type>component</type>
 		<client>administrator</client>
-		<version>1.3.5</version>
+		<version>1.4.0</version>
 		<downloads>
-			<downloadurl type="full" format="zip">https://github.com/HermanPeeren/Exten-gen/releases/download/v1.3.5/com_extengen-1.3.5.zip</downloadurl>
+			<downloadurl type="full" format="zip">https://github.com/HermanPeeren/Exten-gen/releases/download/v1.4.0/com_extengen-1.4.0.zip</downloadurl>
 		</downloads>
-		<sha512>170a7ee5021bab68605b762f876f8f5b7fdecea89f11f37ffb491f54622eb9ddb9ded7226f5db7e1e9426de39b8f5c64f5739f3d72863ee924cd1ce8be3c70e1</sha512>
 		<maintainer>Herman Peeren</maintainer>
 		<maintainerurl>https://yepr.nl</maintainerurl>
 		<targetplatform name="joomla" version="6\..*"/>
