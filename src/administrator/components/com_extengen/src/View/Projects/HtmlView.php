@@ -159,6 +159,12 @@ class HtmlView extends BaseHtmlView
 
 		if ($canDo->get('core.create') || count($user->getAuthorisedCategories('com_extengen', 'core.create')) > 0) {
 			$toolbar->addNew('project.add');
+
+			// Creating a project, by reading a model somebody else wrote rather
+			// than by typing it, so it belongs beside New.
+			$toolbar->standardButton('upload', 'COM_EXTENGEN_LIONWEB_IMPORT', 'projects.importLionweb')
+				->icon('icon-download')
+				->listCheck(false);
 		}
 
 		if ($canDo->get('core.edit.state')) {

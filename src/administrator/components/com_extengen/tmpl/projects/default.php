@@ -48,6 +48,27 @@ if ($saveOrder && !empty($this->items))
 		<?php endif; ?>
 		<div class="<?php if (!empty($this->sidebar)) {echo 'col-md-10'; } else { echo 'col-md-12'; } ?>">
 			<div id="j-main-container" class="j-main-container">
+				<?php
+				/*
+				 * A path on this site rather than an upload. JcbInOut writes a
+				 * blueprint here, so the two components meet on the filesystem
+				 * and there is no temporary file and no second copy of a model
+				 * to keep in step. Open when there is one waiting, because then
+				 * the panel is the reason somebody came to this screen.
+				 */
+				$suggested = \Yepr\Component\Extengen\Administrator\Model\LionwebModel::JCBINOUT;
+				$waiting   = is_file(JPATH_ROOT . '/' . $suggested);
+				?>
+				<details class="mb-3" <?php echo $waiting ? 'open' : ''; ?>>
+					<summary class="h5"><?php echo Text::_('COM_EXTENGEN_LIONWEB_IMPORT'); ?></summary>
+					<p class="mt-2"><?php echo Text::_('COM_EXTENGEN_LIONWEB_INTRO'); ?></p>
+					<label class="form-label" for="chunk"><?php echo Text::_('COM_EXTENGEN_LIONWEB_PATH'); ?></label>
+					<input class="form-control" type="text" id="chunk" name="chunk"
+						value="<?php echo $waiting ? htmlspecialchars($suggested, ENT_QUOTES, 'UTF-8') : ''; ?>"
+						placeholder="<?php echo htmlspecialchars($suggested, ENT_QUOTES, 'UTF-8'); ?>">
+					<small class="form-text"><?php echo Text::_('COM_EXTENGEN_LIONWEB_PATH_HELP'); ?></small>
+				</details>
+
 				<?php echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this)); ?>
 				<?php if (empty($this->items)) : ?>
 					<div class="alert alert-warning">
