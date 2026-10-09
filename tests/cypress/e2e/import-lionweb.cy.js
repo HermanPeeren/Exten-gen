@@ -153,10 +153,23 @@ describe('importing a project from LionWeb', () => {
     cy.get('#toolbar').contains('Export LionWeb model').should('be.enabled');
   });
 
-  it('says so when the chunk holds no model', () => {
+  /**
+   * An empty chunk is empty whichever language it claims.
+   *
+   * The first version of this named Testlang and passed here while failing in
+   * CI, because Testlang is installed by `metalanguages.cy.js` and that spec
+   * runs *after* this one - so locally it was found, left over from an earlier
+   * run, and on a clean checkout it was not. The same trap the metalanguages
+   * spec documents at length.
+   *
+   * It names a language nothing has ever installed on purpose: the answer must
+   * not depend on that, and the model asks whether there is a model before it
+   * asks whether it can read one.
+   */
+  it('says so when the chunk holds no model, whatever language it claims', () => {
     cy.writeFile(`joomla/${chunkPath}`, {
       serializationFormatVersion: '2024.1',
-      languages: [{ key: 'Testlang', version: '1.0' }],
+      languages: [{ key: 'NoSuchLanguage', version: '9.9' }],
       nodes: [],
     });
 
@@ -164,6 +177,6 @@ describe('importing a project from LionWeb', () => {
     cy.get('#chunk').clear().type(chunkPath);
     cy.get('#toolbar').contains('Import LionWeb model').click();
 
-    messages().should('match', /holds no model|does not say which language/);
+    messages().should('contain', 'holds no model');
   });
 });

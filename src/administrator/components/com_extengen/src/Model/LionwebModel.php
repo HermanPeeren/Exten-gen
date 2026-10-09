@@ -123,10 +123,18 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
         // than one - LionCore-builtins travels with every language - so the
         // one the root is classified by is the one that matters.
         $root = $chunk->roots()[0] ?? null;
-        $key  = $root === null
-            ? $languages[0]['key']
-            : $this->languageOf($chunk, $root, $languages[0]['key']);
 
+        // Asked before the language is looked up, because the answer does not
+        // depend on it: a chunk with nothing in it is empty whichever language
+        // it claims, and saying "that metalanguage is not imported" first
+        // sends somebody off to install a language that would not have helped.
+        if ($root === null) {
+            throw new \RuntimeException(
+                'This chunk holds no model: nothing in it is a node that nothing else contains.'
+            );
+        }
+
+        $key     = $this->languageOf($chunk, $root, $languages[0]['key']);
         $version = $chunk->versionOf($key) ?? '';
         $stored  = $this->manifestFor($key, $version);
 
@@ -134,8 +142,10 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
         $converted = $reader->toStoredModel();
 
         if ($converted === []) {
+            // Not the same case as the one above: there is a root, and the
+            // reader still made nothing of it. Its own diagnostics say why.
             throw new \RuntimeException(
-                'This chunk holds no model: nothing in it is a node that nothing else contains.'
+                'Nothing could be read from this chunk\'s root node.'
             );
         }
 
