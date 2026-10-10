@@ -171,9 +171,9 @@ final class ImportedGeneratorTest extends TestCase
     public function testAnotherFormatIsRefused(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('format 2');
+        $this->expectExceptionMessage('format 3');
 
-        GeneratorPackage::fromZip($this->zip($this->rules(), ['format' => 2]));
+        GeneratorPackage::fromZip($this->zip($this->rules(), ['format' => 3]));
     }
 
     /**

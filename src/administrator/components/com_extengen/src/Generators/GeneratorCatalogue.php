@@ -15,6 +15,7 @@ namespace Yepr\Component\Extengen\Administrator\Generators;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use Yepr\Component\Extengen\Administrator\Generator\Imported\GeneratorPackage;
+use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\RuleDrivenTarget;
 use Yepr\Gen\Core\Target\TargetInterface;
 use Yepr\Gen\Core\Target\TargetRegistry;
@@ -30,6 +31,12 @@ use Yepr\Gen\Core\Target\TargetRegistry;
  * stored. The imported ones are Gen-gen packages: a rule set for one of those
  * targets, kept in `#__extengen_generators`.
  *
+ * Since 5.9 there is a third kind between the two: a package this component
+ * ships, read like an import and listed like a built-in. The LedgerLang
+ * generator is one. It extends the Joomla 6 generator, which is the other thing
+ * 5.9 added: any generator but a code-only target may be extended, and
+ * `GeneratorAncestry` works out what the child runs.
+ *
  * @since  1.3.0
  */
 final class GeneratorCatalogue
@@ -40,6 +47,15 @@ final class GeneratorCatalogue
      * @since  1.3.0
      */
     public const TABLE = '#__extengen_generators';
+
+    /**
+     * The generator packages this component ships, beside its rule file: step 5.9.
+     *
+     * @var string[]
+     *
+     * @since  1.6.0
+     */
+    public const SHIPPED = [];
 
     /**
      * @param  DatabaseInterface  $database      Where the imported generators are.
@@ -68,6 +84,12 @@ final class GeneratorCatalogue
 
         foreach ($this->targets as $target) {
             $entries[] = GeneratorEntry::builtIn($target);
+        }
+
+        foreach (self::shippedPackages() as $package) {
+            if ($this->targets->has($package->target)) {
+                $entries[] = GeneratorEntry::fromPackage($package, $this->targets->get($package->target)->label(), true);
+            }
         }
 
         $query = $this->database->getQuery(true)
@@ -115,12 +137,78 @@ final class GeneratorCatalogue
      */
     public function forLanguage(array $ancestry): array
     {
+        $entries = $this->all();
+        $walk    = self::walkOver($entries);
+
         return array_values(array_filter(
-            $this->all(),
+            $entries,
             fn (GeneratorEntry $entry): bool => $entry->published
                 && $this->targets->has($entry->target)
-                && $entry->appliesTo($ancestry)
+                && $walk->appliesTo($entry, $ancestry)
         ));
+    }
+
+    /**
+     * Whether a generator, and every generator it extends, applies to this language ancestry: step 5.9.
+     *
+     * @param  GeneratorEntry                                     $entry     The generator.
+     * @param  \Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry[]  $ancestry  The language and its ancestors.
+     *
+     * @since  1.6.0
+     */
+    public function appliesTo(GeneratorEntry $entry, array $ancestry): bool
+    {
+        return $this->ancestry()->appliesTo($entry, $ancestry);
+    }
+
+    /**
+     * The walk over `extends`, resolving against this catalogue: step 5.9.
+     *
+     * `extends` names a generator as its manifest would: a target's id for a
+     * built-in one, a key for a shipped or an imported one.
+     *
+     * @since  1.6.0
+     */
+    public function ancestry(): GeneratorAncestry
+    {
+        return self::walkOver($this->all());
+    }
+
+    /**
+     * The walk over `extends`, resolving against a list of generators.
+     *
+     * @param  GeneratorEntry[]  $entries  What a parent may be.
+     *
+     * @since  1.6.0
+     */
+    private static function walkOver(array $entries): GeneratorAncestry
+    {
+        return new GeneratorAncestry(static function (string $id) use ($entries): ?GeneratorEntry {
+            foreach ($entries as $entry) {
+                if ($entry->id === $id || $entry->id === GeneratorEntry::IMPORTED . $id) {
+                    return $entry;
+                }
+            }
+
+            return null;
+        });
+    }
+
+    /**
+     * The packages this component ships, read with the import's own reader.
+     *
+     * @return GeneratorPackage[]
+     *
+     * @since  1.6.0
+     */
+    public static function shippedPackages(): array
+    {
+        $directory = \dirname(RuleDrivenGenerator::defaultRuleFile());
+
+        return array_map(
+            static fn (string $manifest): GeneratorPackage => GeneratorPackage::fromFile($directory . '/' . $manifest),
+            self::SHIPPED
+        );
     }
 
     /**
@@ -138,7 +226,7 @@ final class GeneratorCatalogue
 
         $target = $this->targets->get($entry->target);
 
-        if ($entry->builtIn) {
+        if ($entry->builtIn && $entry->extends === '') {
             return $target;
         }
 
@@ -182,6 +270,17 @@ final class GeneratorCatalogue
 
         $problems = $package->problems($target->vocabulary(), $target->rulePrefixes());
 
+        // What it extends has to be here, for the same target, and not lead back
+        // to itself. Walked as the entry it would become, so a re-import that
+        // makes a generator extend its own child is refused before it is stored.
+        if ($package->extends !== '') {
+            try {
+                $this->ancestry()->of(GeneratorEntry::fromPackage($package, $target->label(), false));
+            } catch (\RuntimeException $e) {
+                $problems[] = $e->getMessage();
+            }
+        }
+
         if ($problems !== []) {
             throw new \RuntimeException(
                 'The generator was not imported: ' . implode(' ', \array_slice($problems, 0, 5))
@@ -196,7 +295,10 @@ final class GeneratorCatalogue
             'metalanguage_key'     => $package->metalanguageKey,
             'metalanguage_version' => $package->metalanguageVersion,
             'rules'                => $package->rules->toJson(),
-            'manifest'             => json_encode(['groups' => $package->groups], \JSON_UNESCAPED_SLASHES),
+            'manifest'             => json_encode(
+                ['groups' => $package->groups] + ($package->extends === '' ? [] : ['extends' => $package->extends]),
+                \JSON_UNESCAPED_SLASHES
+            ),
             'imported'             => gmdate('Y-m-d H:i:s'),
             'published'            => 1,
         ];
@@ -216,10 +318,33 @@ final class GeneratorCatalogue
     /**
      * Forget an imported generator.
      *
+     * Not one another generator extends: the child would stop working, and
+     * nothing on the screen would say why.
+     *
+     * @throws \RuntimeException  When another generator extends it.
+     *
      * @since  1.3.0
      */
     public function remove(int $rowId): void
     {
+        $ancestry = $this->ancestry();
+
+        foreach ($this->all() as $other) {
+            try {
+                $parents = $ancestry->of($other);
+            } catch (\RuntimeException) {
+                continue;
+            }
+
+            foreach ($parents as $parent) {
+                if (!$parent->builtIn && $parent->rowId === $rowId) {
+                    throw new \RuntimeException(
+                        'The generator ' . $parent->name . ' was not removed: ' . $other->name . ' extends it.'
+                    );
+                }
+            }
+        }
+
         $query = $this->database->getQuery(true)
             ->delete($this->database->quoteName(self::TABLE))
             ->where($this->database->quoteName('id') . ' = :id')
@@ -245,8 +370,9 @@ final class GeneratorCatalogue
     }
 
     /**
-     * The imported rules as a file, which is what a rule-driven generator reads.
+     * The rules a generator runs as a file, which is what a rule-driven generator reads.
      *
+     * Its own rules, or since 5.9 its parents' with its own laid over them.
      * Named by a hash of the rules, so a re-import is a new file rather than a
      * stale one, and a file that is already there is used as it is.
      *
@@ -258,15 +384,19 @@ final class GeneratorCatalogue
             throw new \RuntimeException('The generator ' . $entry->name . ' has no rules stored.');
         }
 
-        $path = $this->ruleCacheDir . '/' . substr($entry->id, \strlen(GeneratorEntry::IMPORTED))
-            . '-' . sha1($entry->rules) . '.rules.json';
+        $rules = $entry->extends === '' ? $entry->rules : $this->ancestry()->rules($entry)->toJson();
+        $name  = str_starts_with($entry->id, GeneratorEntry::IMPORTED)
+            ? substr($entry->id, \strlen(GeneratorEntry::IMPORTED))
+            : $entry->id;
+
+        $path = $this->ruleCacheDir . '/' . $name . '-' . sha1($rules) . '.rules.json';
 
         if (!is_file($path)) {
             if (!is_dir($this->ruleCacheDir) && !mkdir($this->ruleCacheDir, 0755, true) && !is_dir($this->ruleCacheDir)) {
                 throw new \RuntimeException('Cannot create ' . $this->ruleCacheDir . '.');
             }
 
-            file_put_contents($path, $entry->rules);
+            file_put_contents($path, $rules);
         }
 
         return $path;

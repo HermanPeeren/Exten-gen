@@ -34,6 +34,14 @@ use Joomla\CMS\Session\Session;
 					</tr>
 				</thead>
 				<tbody>
+				<?php
+				// Who a generator extends, by the name a person reads: step 5.9.
+				$names = [];
+
+				foreach ($this->items as $item) {
+					$names[$item->id] = $item->name;
+				}
+				?>
 				<?php foreach ($this->items as $item) : ?>
 					<tr class="generator-row" data-id="<?php echo $this->escape($item->id); ?>">
 						<th scope="row">
@@ -45,6 +53,14 @@ use Joomla\CMS\Session\Session;
 									<?php echo Text::sprintf('COM_EXTENGEN_GENERATOR_IMPORTED_ON', $this->escape($item->imported)); ?>
 								</div>
 							<?php endif; ?>
+							<?php if ($item->extends !== '') : ?>
+								<div class="small text-muted generator-extends">
+									<?php echo Text::sprintf(
+										'COM_EXTENGEN_GENERATOR_EXTENDS',
+										$this->escape($names[$item->extends] ?? $names['imported.' . $item->extends] ?? $item->extends)
+									); ?>
+								</div>
+							<?php endif; ?>
 						</th>
 						<td><?php echo $this->escape($item->targetLabel); ?></td>
 						<td>
@@ -53,7 +69,7 @@ use Joomla\CMS\Session\Session;
 								<span class="badge bg-secondary"><?php echo $this->escape($item->metalanguageVersion); ?></span>
 							<?php endif; ?>
 						</td>
-						<td><?php echo $item->builtIn ? Text::_('COM_EXTENGEN_GENERATOR_RULES_BUILT_IN') : (int) $item->ruleCount; ?></td>
+						<td><?php echo $item->builtIn && $item->extends === '' ? Text::_('COM_EXTENGEN_GENERATOR_RULES_BUILT_IN') : (int) $item->ruleCount; ?></td>
 						<td class="text-end">
 							<?php if (!$item->builtIn) : ?>
 								<a class="btn btn-sm btn-danger"

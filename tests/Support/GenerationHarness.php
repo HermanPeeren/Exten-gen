@@ -7,6 +7,9 @@ namespace Yepr\Component\Extengen\Tests\Support;
 use Yepr\Component\Extengen\Administrator\Generator\Generator;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorAncestry;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorEntry;
 use Yepr\Gen\Core\Output\FileCollection;
 use Yepr\Gen\Core\Pipeline;
 use Yepr\Gen\Core\Target\Target;
@@ -42,6 +45,86 @@ final class GenerationHarness
             Project::fromObject($ast),
             new Target($target->id(), $target->label(), $target->validator(), ...$target->generators())
         );
+    }
+
+    /**
+     * Generate with one of the generators this component ships or builds in: step 5.9.
+     *
+     * The rules are the ones the catalogue would run - the generator's own laid
+     * over every parent's - so a test sees what the screen would produce,
+     * without the database the catalogue keeps its imports in.
+     */
+    public static function runWithGenerator(object $ast, string $generatorId): FileCollection
+    {
+        self::bootstrap();
+
+        $target = (new Joomla6Target(self::componentRoot() . '/generator_templates'))
+            ->withRules(self::ruleFileOf($generatorId));
+
+        return (new Pipeline())->run(
+            Project::fromObject($ast),
+            new Target($target->id(), $target->label(), $target->validator(), ...$target->generators())
+        );
+    }
+
+    /**
+     * The generators a site has before anything is imported: the built-in target and the shipped packages.
+     *
+     * @return GeneratorEntry[]
+     */
+    public static function builtInGenerators(): array
+    {
+        self::bootstrap();
+
+        $target  = new Joomla6Target(self::componentRoot() . '/generator_templates');
+        $entries = [GeneratorEntry::builtIn($target)];
+
+        foreach (GeneratorCatalogue::shippedPackages() as $package) {
+            $entries[] = GeneratorEntry::fromPackage($package, $target->label(), true);
+        }
+
+        return $entries;
+    }
+
+    /** The walk over `extends`, resolving against the generators above. */
+    public static function ancestry(): GeneratorAncestry
+    {
+        $entries = self::builtInGenerators();
+
+        return new GeneratorAncestry(static function (string $id) use ($entries): ?GeneratorEntry {
+            foreach ($entries as $entry) {
+                if ($entry->id === $id) {
+                    return $entry;
+                }
+            }
+
+            return null;
+        });
+    }
+
+    /** One of those generators by id. */
+    public static function generator(string $id): GeneratorEntry
+    {
+        foreach (self::builtInGenerators() as $entry) {
+            if ($entry->id === $id) {
+                return $entry;
+            }
+        }
+
+        throw new \RuntimeException('No built-in generator ' . $id . '.');
+    }
+
+    /** The rules a generator runs, written to a temporary file the way the catalogue writes them. */
+    public static function ruleFileOf(string $generatorId): string
+    {
+        $json = self::ancestry()->rules(self::generator($generatorId))->toJson();
+        $path = sys_get_temp_dir() . '/extengen-' . $generatorId . '-' . sha1($json) . '.rules.json';
+
+        if (!is_file($path)) {
+            file_put_contents($path, $json);
+        }
+
+        return $path;
     }
 
     /** Generate for a project stored as JSON. */

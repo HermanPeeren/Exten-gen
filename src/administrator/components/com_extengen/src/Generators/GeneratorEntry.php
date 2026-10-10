@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Yepr\Component\Extengen\Administrator\Generators;
 
+use Yepr\Component\Extengen\Administrator\Generator\Imported\GeneratorPackage;
 use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Gen\Core\Target\TargetInterface;
 use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
@@ -27,6 +28,10 @@ use Yepr\Gen\Joomla\Metalanguage\MetalanguageEntry;
  * from Gen-gen, which is a rule set for one of those targets. Both are written
  * for one metalanguage, and a project may only be generated with a generator
  * whose language is in the project's ancestry.
+ *
+ * Since 5.9 a generator may extend another: it runs every rule of its parent
+ * plus its own. The component ships one such generator, for LedgerLang, and an
+ * imported one may say `extends` in its manifest. See `GeneratorAncestry`.
  *
  * @since  1.3.0
  */
@@ -57,8 +62,43 @@ final class GeneratorEntry
         public readonly string $rules = '',
         public readonly string $imported = '',
         public readonly int $rowId = 0,
-        public readonly bool $published = true
+        public readonly bool $published = true,
+        public readonly string $extends = ''
     ) {
+    }
+
+    /**
+     * A generator read from a package, before it is stored: step 5.9.
+     *
+     * Two uses. A package this component ships becomes a generator that counts
+     * as built in: it cannot be removed, and its id is its key rather than
+     * `imported.<key>`. It is read with the same reader an import uses, so a
+     * shipped generator is held to everything an imported one is. And an
+     * import is walked as the entry it would become, before it is written.
+     *
+     * @param  GeneratorPackage  $package      The manifest and its rules.
+     * @param  string            $targetLabel  The label of the target it names.
+     * @param  bool              $builtIn      Shipped with this component, rather than imported.
+     *
+     * @since  1.6.0
+     */
+    public static function fromPackage(GeneratorPackage $package, string $targetLabel, bool $builtIn): self
+    {
+        return new self(
+            ($builtIn ? '' : self::IMPORTED) . $package->key,
+            $package->name,
+            $package->target,
+            $targetLabel,
+            $package->metalanguageKey ?: RuleDrivenGenerator::LANGUAGE,
+            $package->metalanguageVersion,
+            $builtIn,
+            \count($package->rules),
+            $package->rules->toJson(),
+            '',
+            0,
+            true,
+            $package->extends
+        );
     }
 
     /**
@@ -114,8 +154,27 @@ final class GeneratorEntry
             $rules,
             (string) ($row->imported ?? ''),
             (int) ($row->id ?? 0),
-            (int) ($row->published ?? 1) === 1
+            (int) ($row->published ?? 1) === 1,
+            self::extendsOf((string) ($row->manifest ?? ''))
         );
+    }
+
+    /**
+     * Which generator an imported one extends, out of the manifest column: step 5.9.
+     *
+     * The column already holds the manifest's other half as JSON, so `extends`
+     * travels there and the table does not change. A row written before 5.9
+     * has no `extends` in it, which reads as extending nothing - true.
+     *
+     * @param  string  $manifest  The stored JSON.
+     *
+     * @since  1.6.0
+     */
+    private static function extendsOf(string $manifest): string
+    {
+        $decoded = $manifest === '' ? null : json_decode($manifest, true);
+
+        return \is_array($decoded) ? trim((string) ($decoded['extends'] ?? '')) : '';
     }
 
     /**

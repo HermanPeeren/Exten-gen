@@ -438,8 +438,9 @@ class GenerateModel extends AdminModel implements
 		// derives from: steps 4.5 and 5.4. A derived language adds and may not
 		// remove or rename - `AncestryCheck` refuses the import otherwise - so
 		// every path a rule for the parent walks is still there, and the nodes
-		// the child added are simply never read.
-		if ($generator->appliesTo($this->ancestry())) {
+		// the child added are simply never read. Since 5.9 the same holds for
+		// every generator this one extends, because their rules run too.
+		if ($this->getGeneratorCatalogue()->appliesTo($generator, $this->ancestry())) {
 			return $entry;
 		}
 

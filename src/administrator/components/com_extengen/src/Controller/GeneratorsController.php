@@ -80,7 +80,14 @@ class GeneratorsController extends BaseController implements GeneratorCatalogueA
         $this->checkToken('get');
         $this->assertAllowed();
 
-        $this->getGeneratorCatalogue()->remove($this->app->getInput()->getInt('id', 0));
+        try {
+            $this->getGeneratorCatalogue()->remove($this->app->getInput()->getInt('id', 0));
+        } catch (\RuntimeException $e) {
+            // Another generator extends it: step 5.9.
+            $this->setRedirect(Route::_('index.php?option=com_extengen&view=generators', false), $e->getMessage(), 'error');
+
+            return;
+        }
 
         $this->setRedirect(
             Route::_('index.php?option=com_extengen&view=generators', false),

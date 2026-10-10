@@ -51,11 +51,27 @@ final class GeneratorPackage
     public const MANIFEST = 'generator.json';
 
     /**
-     * The manifest format this reader understands.
+     * The newest manifest format this reader understands.
+     *
+     * 2 added `extends`: step 5.9. A reader that ignored it would import a
+     * derived generator as a root one, with only the handful of rules it adds,
+     * and generate a package missing everything it inherits - without an error.
+     * So the number goes up, as it did for a language's `dependsOn` at 4.5.
      *
      * @since  1.3.0
      */
-    public const FORMAT = 1;
+    public const FORMAT = 2;
+
+    /**
+     * The oldest manifest format this reader still reads.
+     *
+     * 1 differs from 2 only by `extends`, whose absence means "extends nothing",
+     * which is what a format 1 package is. Refusing a newer format is the point;
+     * refusing an older one would be the opposite of it.
+     *
+     * @since  1.6.0
+     */
+    public const OLDEST_READABLE_FORMAT = 1;
 
     /**
      * @param  string                                                   $key                  Stable identity: re-importing the same key replaces it.
@@ -65,6 +81,7 @@ final class GeneratorPackage
      * @param  string                                                   $metalanguageVersion  That language's version, '' for any.
      * @param  RuleSet                                                  $rules                The rules.
      * @param  array<int, array{class: string, prefix: string, emits: bool}>  $groups      The groups the rules are sliced into.
+     * @param  string                                                   $extends              The generator this one extends, '' for none: step 5.9.
      *
      * @since  1.3.0
      */
@@ -75,7 +92,8 @@ final class GeneratorPackage
         public readonly string $metalanguageKey,
         public readonly string $metalanguageVersion,
         public readonly RuleSet $rules,
-        public readonly array $groups
+        public readonly array $groups,
+        public readonly string $extends = ''
     ) {
     }
 
@@ -127,6 +145,39 @@ final class GeneratorPackage
     }
 
     /**
+     * Read a package that is not zipped: a manifest with its rule file beside it, step 5.9.
+     *
+     * How this component reads the generator packages it ships. The rule file
+     * is taken by its name only, never as a path, so a manifest cannot point
+     * anywhere but its own directory.
+     *
+     * @param  string  $manifest  Path to the manifest.
+     *
+     * @throws \RuntimeException  With a sentence a person can act on.
+     *
+     * @since  1.6.0
+     */
+    public static function fromFile(string $manifest): self
+    {
+        $data = json_decode((string) @file_get_contents($manifest), true);
+
+        if (!\is_array($data)) {
+            throw new \RuntimeException(basename($manifest) . ' is missing or not valid JSON.');
+        }
+
+        $rulesName = basename((string) ($data['rules'] ?? ''));
+        $rules     = $rulesName === '' ? false : @file_get_contents(\dirname($manifest) . '/' . $rulesName);
+
+        if ($rules === false) {
+            throw new \RuntimeException(
+                'The rule file ' . basename($manifest) . ' names, "' . $rulesName . '", is not beside it.'
+            );
+        }
+
+        return self::fromManifest($data, $rules);
+    }
+
+    /**
      * Read a manifest and the rule file it names.
      *
      * @param  array<string, mixed>  $data   The decoded manifest.
@@ -138,10 +189,12 @@ final class GeneratorPackage
      */
     public static function fromManifest(array $data, string $rules): self
     {
-        if ((int) ($data['format'] ?? 0) !== self::FORMAT) {
+        $format = (int) ($data['format'] ?? 0);
+
+        if ($format < self::OLDEST_READABLE_FORMAT || $format > self::FORMAT) {
             throw new \RuntimeException(
-                'This package is format ' . (int) ($data['format'] ?? 0) . '; this Extension Generator reads format '
-                . self::FORMAT . '.'
+                'This package is format ' . $format . '; this Extension Generator reads formats '
+                . self::OLDEST_READABLE_FORMAT . ' to ' . self::FORMAT . '.'
             );
         }
 
@@ -182,7 +235,8 @@ final class GeneratorPackage
             trim((string) ($language['key'] ?? '')),
             trim((string) ($language['version'] ?? '')),
             $ruleSet,
-            $groups
+            $groups,
+            trim((string) ($data['extends'] ?? ''))
         );
     }
 
