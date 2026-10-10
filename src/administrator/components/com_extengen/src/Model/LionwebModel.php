@@ -277,7 +277,20 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
 
         $manifest = $this->manifestFor($binding['key'], $binding['version']);
 
-        $writer = InstanceChunk::of($manifest);
+        // The model says which language it is written in, because the import
+        // put it there and a hidden field on the root form carries it through
+        // every save. A project *built* here rather than imported says
+        // nothing, and then the language it is bound to answers for it - which
+        // a manifest can only do since format 5.
+        //
+        // The model first, not the manifest: a chunk that arrived saying `jcb`
+        // goes back out saying `jcb`, whatever the package it was read
+        // against happens to call itself.
+        $told = isset($stored[InstanceModel::LANGUAGE]) && $stored[InstanceModel::LANGUAGE] !== ''
+            ? ''
+            : $manifest->lionwebKey;
+
+        $writer = InstanceChunk::of($manifest, $told, $told === '' ? '' : $manifest->version);
         $chunk  = $writer->write($stored);
 
         $json = json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -312,16 +325,42 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
 
         $rows = $db->setQuery($query)->loadObjectList() ?: [];
 
-        // Matched here rather than in the query, and without regard to case.
-        // A chunk names the LionWeb language - `jcb` - and a package names
-        // itself after the language's *name* - `JCB` - so the two spellings
-        // differ by convention rather than by accident. Letting the database
-        // decide would make this work or not work depending on a collation
-        // nobody chose with this in mind.
+        // Matched here rather than in the query. A chunk names the LionWeb
+        // language - `jcb` - and a package is filed under the language's
+        // *name* - `JCB`. Since format 5 a manifest says the first outright,
+        // so the two can be compared rather than assumed to be each other in
+        // a different case.
+        //
+        // The case-insensitive match on the row's key stays for every package
+        // built before that, ER1 and Testlang among them. It is a guess, and
+        // it is why a language whose key was not a case-variant of its name
+        // could not be found at all - but refusing those packages would be
+        // refusing languages that already work.
+        // Either spelling, because the two callers hold different ones: an
+        // import knows what the chunk said, `jcb`, and an export knows what
+        // the project is bound to, `JCB`. Exact matches first, in both
+        // spellings, and the case-insensitive one last.
+        $looseMatch = null;
+
         foreach ($rows as $row) {
-            if (strcasecmp((string) $row->lang_key, $key) === 0) {
-                return PackageManifest::fromJson((string) $row->manifest);
+            $manifest = PackageManifest::fromJson((string) $row->manifest);
+
+            if ($manifest->lionwebKey === $key || (string) $row->lang_key === $key) {
+                return $manifest;
             }
+
+            if ($looseMatch === null && strcasecmp((string) $row->lang_key, $key) === 0) {
+                $looseMatch = $manifest;
+            }
+        }
+
+        // Nothing said it outright. Every package built before format 5 is
+        // silent about its language's key, ER1 and Testlang among them, so a
+        // chunk saying `er1` can only be matched to a row called `ER1` by
+        // ignoring case - a guess, and the reason a language whose key is not
+        // a case-variant of its name could not be found at all.
+        if ($looseMatch !== null) {
+            return $looseMatch;
         }
 
         throw new \RuntimeException(sprintf(
