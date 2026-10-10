@@ -2658,6 +2658,85 @@ golden model had page custom code for it to strip.
 - **The Generator Generator**'s model of the Joomla 6 generator has the two stylesheet rules, and
   its acceptance check reproduces all 277 approved files.
 
+**5.9 Generator ancestry, and a generator for LedgerLang.** 4.5 let a language derive from
+another. LedgerLang (the Metalanguage Generator, 10 October) derives from ER1 and adds account roles,
+posting rules, localisation packs and a state machine on an entity. ER1's generator already
+generates a LedgerLang project, because a derived language only adds, but it generates only
+the ER1 part. Generators should be able to grow the same way: a generator for LedgerLang
+*extends* the Joomla 6 generator for ER1, runs every one of its rules, and adds rules for
+what LedgerLang added.
+
+*The design, mirroring 4.5:*
+
+| Language ancestry (4.5) | Generator ancestry (5.9) |
+|---|---|
+| `dependsOn` on the language | `extends` in `generator.json`, naming a generator by id |
+| a child adds concepts, may not remove or rename one | a child adds rules, may override one by giving it the parent's id, and has no way to remove one |
+| package format 2, reader reads 1 to 2 | generator package format 2, reader reads 1 to 2 |
+| `Ancestry`: a resolver, the cycle, the missing parent | `GeneratorAncestry`: a resolver, the cycle, the missing parent, a parent for another target |
+| a generator applies when its language is in the project's ancestry | ... and so does every generator it extends, because their rules run too |
+
+The rules a child runs are its parent's, in order, with its own laid over them: a rule with a
+parent's id takes that rule's place, any other is added at the end. The groups slice that one
+list by prefix, as always, so an added `admin.general.ledger.*` rule runs in `AdminGeneral`,
+after the parent's `admin.general.*` rules. That is also why a child needs no PHP: a new
+group would need a class, and an imported generator cannot bring one (5.4).
+
+*What a child may name is still the target's vocabulary.* Templates and derivations for
+LedgerLang's concepts are in the Joomla 6 target, beside ER1's, and the vocabulary lists them.
+ER1's rules do not name them, so an ER1 run never reaches them. Putting a template into an
+imported package would mean rendering Twig from an upload, which 5.4 decided against for good
+reasons.
+
+**Done.** In the Extension Generator:
+
+- `GeneratorPackage` reads `extends`; `FORMAT` is 2 and `OLDEST_READABLE_FORMAT` 1.
+  `GeneratorPackage::fromFile()` reads a package that is not zipped.
+- `GeneratorAncestry` walks `extends` and composes the rules. `GeneratorCatalogue` uses it
+  for `forLanguage()`, for `target()` (the composed rules are written to the rule cache, as
+  an import's are), at import (the parent must be on the site, for the same target, and
+  not lead back to the child) and at removal (a generator another one extends is not
+  removed). An import's `extends` travels in the `manifest` column, so no table changes.
+- **The LedgerLang generator ships with the component:** `Rules/ledgerlang.package.json`
+  and `Rules/ledgerlang.rules.json`, read with the import's own reader and listed as built
+  in. Three rules. `AccountRoles.php` holds the roles with their nature and normal balance.
+  `PostingRules.php` turns a business event into balanced journal lines.
+  `JournalLine.php` is the line. The amount expression (`amount - vat`) becomes PHP at
+  generation time. `LedgerDerivations` parses it and lets through only names, numbers,
+  `+ - * /` and brackets in an order that makes arithmetic. Anything else becomes a line
+  that throws when posted, plus a warning in the log. A line posting to a role the project
+  does not declare is a warning too.
+- The Generators page says which generator a generator extends.
+
+In the Generator Generator: the generator form has an *Extends* field, `GeneratorDefinition`
+keeps it, and `GeneratorManifest` writes `extends` with format 2. A generator that extends
+nothing is still written as format 1, so an Extension Generator from before 5.9 goes on
+reading those and refuses only the packages that need `extends`. The LedgerLang generator is
+modelled there too (`ledgerlang.generator.json`, made with `import-generator` from a manifest
+that says `extends` and names its rule file). `ExtendedGeneratorTest` checks that it writes
+the rule file the Extension Generator ships, byte for byte, and that the Extension
+Generator's reader reads its package as a generator that extends `joomla6`.
+
+*The test that carries the claim*, `GeneratorAncestryTest`: BalloonLedger generated with the
+LedgerLang generator gives every one of the 80 files the ER1 generator gives it, byte for
+byte, plus the three ledger files. An ER1 golden model generated with the LedgerLang generator
+gives exactly the ER1 output. The ER1 golden files did not change. The generated
+`PostingRules` is loaded and run: `FlightFlown` with amount 121 and VAT 21 posts 121 debit
+and 100 + 21 credit, the wind cancellation posts nothing, and an event without a rule or an
+amount without its VAT is refused. `LedgerLangGoldenTest` pins all 83 files, in
+`tests/Fixtures/golden-joomla6-ledgerlang/`. The model is Meta-gen's `balloonledger.json`,
+copied unchanged.
+
+*Left open, said now:*
+
+- **What the generated classes are wired to.** Nothing calls `PostingRules` yet. The design
+  document's next step is an event (`onAccountingPost`) that a plugin raises and the
+  component handles, which needs a plugin in the generated package. Plug-gen is where that
+  lives.
+- **Localisation packs and state machines** are in the language and not in the generator.
+- **Money as floats**, rounded to cents. Good enough to show. An accounting component needs
+  decimals.
+
 ---
 
 ## Decisions outstanding

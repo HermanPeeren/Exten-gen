@@ -593,6 +593,12 @@ The comparison comes from the shared library's `GoldenTestCase`, so
 `GoldenOutputTest` is two methods: where the fixtures are, and how to turn one
 into files.
 
+**A generator that extends another has golden files of its own** (5.9), in
+`tests/Fixtures/golden-<generator id>/`, generated with its own rules laid over its
+parents': `php tools/capture-golden.php balloonledger joomla6-ledgerlang`.
+`LedgerLangGoldenTest` is the first. `GeneratorAncestryTest` checks the claim
+under it: the child's output holds every file of the parent's, byte for byte.
+
 **It is a baseline, not an endorsement.** The approved output was captured with
 the current bugs in it, on purpose, so that the port at step 1.4 can be done as a
 diff: anything that changes is either an improvement somebody can see, or a
