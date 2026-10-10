@@ -7,6 +7,7 @@ namespace Yepr\Component\Extengen\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Yepr\Component\Extengen\Administrator\Generator\LanguageStringUtil;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
+use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
 use Yepr\Component\Extengen\Tests\Support\GenerationHarness;
 use Yepr\Component\Extengen\Tests\Support\RecordingRenderer;
@@ -101,6 +102,25 @@ final class TemplateReachabilityTest extends TestCase
         );
 
         foreach ($this->models() as $model) {
+            $project = Project::fromJson((string) file_get_contents($model));
+            $files   = new FileCollection();
+
+            foreach ($generators as $generator) {
+                $generator->generate($project, $files);
+            }
+        }
+
+        // And the LedgerLang project through the LedgerLang generator, which
+        // is what renders the templates for the concepts LedgerLang adds: 5.9.
+        $ruleFile = GenerationHarness::ruleFileOf('joomla6-ledgerlang');
+
+        foreach ($generators as $generator) {
+            if ($generator instanceof RuleDrivenGenerator) {
+                $generator->useRuleFile($ruleFile);
+            }
+        }
+
+        foreach (glob(\dirname(__DIR__) . '/Fixtures/golden-joomla6-ledgerlang/models/*.json') ?: [] as $model) {
             $project = Project::fromJson((string) file_get_contents($model));
             $files   = new FileCollection();
 

@@ -53,6 +53,7 @@ parameters:
             # analysing them reports the framework rather than this project.
             # GeneratedSyntaxTest parses them instead.
             - tests/Fixtures/golden/expected/*
+            - tests/Fixtures/golden-joomla6-ledgerlang/expected/*
 
             # Somebody else's library, vendored into src/ rather than required
             # through composer - `namespace Statickidz`, by Adrian Barrio

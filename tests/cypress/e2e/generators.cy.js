@@ -63,6 +63,22 @@ describe('generators', () => {
     });
   });
 
+  it('lists the LedgerLang generator as extending the Joomla 6 one, and keeps it from ER1 projects', () => {
+    cy.visitExtengen('generators');
+
+    cy.get('#generatorList tr[data-id="joomla6-ledgerlang"]')
+      .should('contain.text', 'Built in')
+      .and('contain.text', 'LedgerLang')
+      .and('contain.text', 'Extends Joomla component');
+
+    // Its rules read LedgerLang's posting rules, and an ER1 project has none.
+    generateLinkOfAnEr1Project().then((href) => {
+      cy.visit(href);
+      cy.get('#generate-choose-form input[value="joomla6"]').should('exist');
+      cy.get('#generate-choose-form input[value="joomla6-ledgerlang"]').should('not.exist');
+    });
+  });
+
   it('refuses a package whose rules name a template the target has not got', () => {
     cy.visitExtengen('generators');
     cy.get('input[name="package"]').selectFile(BROKEN);

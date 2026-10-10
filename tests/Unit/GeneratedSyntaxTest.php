@@ -38,6 +38,12 @@ final class GeneratedSyntaxTest extends TestCase
             $models[$name] = [$name];
         }
 
+        // A generator that extends the Joomla 6 one, over its own fixtures: 5.9.
+        foreach (glob(\dirname(__DIR__) . '/Fixtures/golden-joomla6-ledgerlang/models/*.json') ?: [] as $path) {
+            $name          = basename($path, '.json') . '@joomla6-ledgerlang';
+            $models[$name] = [$name];
+        }
+
         return $models;
     }
 
@@ -205,6 +211,20 @@ final class GeneratedSyntaxTest extends TestCase
     private function generate(string $name): array
     {
         static $runs = [];
+
+        if (!isset($runs[$name]) && str_contains($name, '@')) {
+            [$model, $generator] = explode('@', $name, 2);
+
+            $runs[$name] = GenerationHarness::runWithGenerator(
+                json_decode(
+                    (string) file_get_contents(\dirname(__DIR__) . '/Fixtures/golden-' . $generator . '/models/' . $model . '.json'),
+                    false,
+                    512,
+                    \JSON_THROW_ON_ERROR
+                ),
+                $generator
+            )->all();
+        }
 
         if (!isset($runs[$name])) {
             $runs[$name] = GenerationHarness::runJson(

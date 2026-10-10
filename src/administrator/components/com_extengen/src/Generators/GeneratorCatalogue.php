@@ -55,7 +55,9 @@ final class GeneratorCatalogue
      *
      * @since  1.6.0
      */
-    public const SHIPPED = [];
+    public const SHIPPED = [
+        'ledgerlang.package.json',
+    ];
 
     /**
      * @param  DatabaseInterface  $database      Where the imported generators are.

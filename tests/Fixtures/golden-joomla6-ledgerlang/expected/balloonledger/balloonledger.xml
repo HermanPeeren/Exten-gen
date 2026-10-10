@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" version="4.3" method="upgrade">
+	<name>com_balloonledger</name>
+	<creationDate>2026-10-16</creationDate>
+	<author>Herman Peeren</author>
+	<authorEmail>herman@yepr.nl</authorEmail>
+	<authorUrl>https://hermanpeeren.nl</authorUrl>
+	<copyright>Yepr, Herman Peeren</copyright>
+	<license>GPL3</license>
+	<version>0.1.0</version>
+	<description>COM_BALLOONLEDGER_DESCRIPTION</description>
+	<namespace path="src">Yepr\Component\BalloonLedger</namespace>
+
+	<!-- Scripts to run on installation -->
+	<!--
+		No scriptfile. Nothing generates a script.php, and a manifest that
+		names one that is not in the package is a manifest saying something
+		untrue - Joomla tolerates it by quietly ignoring the declaration,
+		which is worse than refusing it. It comes back when the model can
+		say what an install script should do.
+	-->
+
+	<!-- Runs on install -->
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<!-- Runs on uninstall -->
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<!-- Runs on update -->
+	<update>
+		<schemas>
+			<!--todo: <schemapath type="mysql">sql/updates/mysql</schemapath>-->
+		</schemas>
+	</update>
+
+	<!-- Media files -->
+	<media folder="media/com_balloonledger" destination="com_balloonledger">
+		<!-- One stylesheet per site page, written from the page's custom code. -->
+		<folder>css</folder>
+
+		<!--<folder>attachments</folder>
+		<folder>fonts</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+
+		<filename>joomla.asset.json</filename>-->
+	</media>
+
+	<!-- Front-end files -->
+	<files folder="components/com_balloonledger">
+		<folder>language</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+	</files>
+
+	<!-- Back-end files -->
+	<administration>
+		<!-- Menu entries --><!--todo: sys-language-string?  , '', 'Administrator', true-->
+		<menu view="journalentries">COM_BALLOONLEDGER_MENUNAME</menu>
+		<submenu>
+			<!-- all backend index pages as submenu item -->
+			
+			<menu link="option=com_balloonledger&amp;view=accounts">COM_BALLOONLEDGER_SUBMENUNAME_ACCOUNTS
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_ACCOUNTS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=accounts</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonledger&amp;view=journals">COM_BALLOONLEDGER_SUBMENUNAME_JOURNALS
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_JOURNALS</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=journals</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonledger&amp;view=parties">COM_BALLOONLEDGER_SUBMENUNAME_PARTIES
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_PARTIES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=parties</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonledger&amp;view=taxcodes">COM_BALLOONLEDGER_SUBMENUNAME_TAXCODES
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_TAXCODES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=taxcodes</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonledger&amp;view=journalentries">COM_BALLOONLEDGER_SUBMENUNAME_JOURNALENTRIES
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_JOURNALENTRIES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=journalentries</menu-quicktask>
+			</params>
+			</menu>
+			
+			<menu link="option=com_balloonledger&amp;view=entrylines">COM_BALLOONLEDGER_SUBMENUNAME_ENTRYLINES
+			<params>
+				<menu-quicktask-title>COM_BALLOONLEDGER_SUBMENUNAME_ENTRYLINES</menu-quicktask-title>
+				<menu-quicktask>index.php?option=com_balloonledger&amp;view=entrylines</menu-quicktask>
+			</params>
+			</menu>
+					</submenu>
+
+		<!-- Core files -->
+		<files folder="administrator/components/com_balloonledger">
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<!--<filename>version.php</filename>-->
+			<filename>LICENSE.txt</filename>
+
+			<folder>forms</folder>
+			<folder>language</folder>
+			<!--<folder>layouts</folder>-->
+			<folder>services</folder>
+			<folder>sql</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+		</files>
+	</administration>
+
+	<!-- Update servers -->
+	<!--<updateservers>
+		<server type="extension" priority="1" name="BalloonLedger">/balloonledger</server>
+	</updateservers>-->
+</extension>

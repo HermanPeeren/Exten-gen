@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonLedger\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonLedger\Administrator\Field">
+    <field name="code" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_CODE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_CODE_DESC"/>
+    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_NAME_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_NAME_DESC"/>
+    <field name="nature" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_NATURE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_NATURE_DESC"/>
+    <field name="normal_balance" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_NORMAL_BALANCE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_NORMAL_BALANCE_DESC"/>
+    <field name="postable" type="yes_no_buttons" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_POSTABLE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_POSTABLE_DESC"/>
+    <field name="reconcilable" type="yes_no_buttons" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_RECONCILABLE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_RECONCILABLE_DESC"/>
+    <field name="active" type="yes_no_buttons" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ACCOUNT_FIELD_ACTIVE_LABEL" description="COM_BALLOONLEDGER_ACCOUNT_FIELD_ACTIVE_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

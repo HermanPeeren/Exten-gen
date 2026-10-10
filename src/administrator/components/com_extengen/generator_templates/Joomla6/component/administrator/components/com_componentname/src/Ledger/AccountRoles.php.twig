@@ -1,0 +1,42 @@
+<?php
+/**
+ * @package    {{ projectName }}
+ * @subpackage {{ componentName }}
+ * @version    {{ version }}
+ *
+ * @copyright  {{ copyright }}
+ * @license    {{ license }}
+ */
+
+namespace {{ company_namespace }}\Component\{{ componentName }}\Administrator\Ledger;
+
+defined('_JEXEC') or die;
+
+/**
+ * The account roles this component posts to.
+ *
+ * A role is a stable key with a nature and a normal balance. A chart of
+ * accounts maps each role to one of its accounts; the posting rules only
+ * ever name the role.
+ */
+final class AccountRoles
+{
+    /**
+     * Every role, by key.
+     *
+     * @var array<string, array{name: string, nature: string, normalBalance: string}>
+     */
+    public const ROLES = [
+{% for role in roles %}
+        {{ role.key }} => ['name' => {{ role.name }}, 'nature' => {{ role.nature }}, 'normalBalance' => {{ role.normalBalance }}],
+{% endfor %}
+    ];
+
+    /**
+     * Whether a role is one of this component's.
+     */
+    public static function has(string $role): bool
+    {
+        return isset(self::ROLES[$role]);
+    }
+}

@@ -9,6 +9,7 @@ use Yepr\Component\Extengen\Administrator\Generator\RuleDrivenGenerator;
 use Yepr\Component\Extengen\Administrator\Generator\Rules\Joomla6Derivations;
 use Yepr\Component\Extengen\Administrator\Generator\Rules\Joomla6Selectors;
 use Yepr\Component\Extengen\Administrator\Generator\Target\Joomla6Target;
+use Yepr\Component\Extengen\Administrator\Generators\GeneratorCatalogue;
 use Yepr\Gen\Core\Rule\Binding;
 use Yepr\Gen\Core\Rule\Rule;
 use Yepr\Gen\Core\Rule\RuleSet;
@@ -136,9 +137,16 @@ final class RuleSetTest extends TestCase
      */
     public function testEveryDerivationIsUsed(): void
     {
-        $used = [];
+        $used  = [];
+        $rules = $this->rules();
 
-        foreach ($this->rules() as $rule) {
+        // The vocabulary is the target's, and since 5.9 the generators that
+        // extend the Joomla 6 one may use what its own rules do not.
+        foreach (GeneratorCatalogue::shippedPackages() as $package) {
+            $rules = [...$rules, ...iterator_to_array($package->rules)];
+        }
+
+        foreach ($rules as $rule) {
             foreach ($rule->bind as $binding) {
                 if ($binding->kind === Binding::DERIVE || $binding->kind === Binding::FRAGMENTS) {
                     $used[(string) $binding->value] = true;

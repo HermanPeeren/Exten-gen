@@ -1,0 +1,12 @@
+{
+    "format": 2,
+    "key": "joomla6-ledgerlang",
+    "name": "Joomla component with posting rules",
+    "target": "joomla6",
+    "metalanguage": {
+        "key": "LedgerLang",
+        "version": ""
+    },
+    "extends": "joomla6",
+    "rules": "ledgerlang.rules.json"
+}

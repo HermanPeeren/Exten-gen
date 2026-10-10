@@ -64,6 +64,28 @@ final class Joomla6Derivations
     private array $fieldCache = [];
 
     /**
+     * The derivations the LedgerLang generator adds: step 5.9.
+     *
+     * Registered beside ER1's because the vocabulary is the target's, not one
+     * generator's: whatever a rule for Joomla 6 may name, in one list. ER1's
+     * rules never name these, so an ER1 run never calls them.
+     *
+     * @var    LedgerDerivations
+     * @since  1.6.0
+     */
+    private LedgerDerivations $ledger;
+
+    /**
+     * Constructor.
+     *
+     * @since  1.6.0
+     */
+    public function __construct()
+    {
+        $this->ledger = new LedgerDerivations();
+    }
+
+    /**
      * The derivations, ready for the engine.
      *
      * @return  Registry
@@ -116,7 +138,11 @@ final class Joomla6Derivations
                 => $this->propertyFieldNames($this->siteIndexEntity($n, $m)))
             ->register('siteIndexForeign', fn (object $n, object $m): array => $this->siteIndexForeign($n, $m))
             ->register('siteDetailsForeign', fn (object $n, object $m): array => $this->siteDetailsForeign($n, $m))
-            ->register('siteRouterViews', fn (mixed $n, object $m): array => $this->routerViews($m));
+            ->register('siteRouterViews', fn (mixed $n, object $m): array => $this->routerViews($m))
+
+            // What a generator for a language derived from ER1 adds: LedgerLang's.
+            ->register('ledgerAccountRoles', fn (mixed $n, object $m): array => $this->ledger->accountRoles($m))
+            ->register('ledgerPostingRules', fn (mixed $n, object $m): array => $this->ledger->postingRules($m));
     }
 
     /**
@@ -181,7 +207,7 @@ final class Joomla6Derivations
      */
     public function warnings(): array
     {
-        return $this->warnings;
+        return array_merge($this->warnings, $this->ledger->warnings());
     }
 
     /**

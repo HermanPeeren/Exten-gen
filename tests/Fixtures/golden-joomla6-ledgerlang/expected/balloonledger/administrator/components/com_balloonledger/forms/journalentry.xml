@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset addruleprefix="Yepr\Component\BalloonLedger\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonLedger\Administrator\Field">
+    <field name="number" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_NUMBER_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_NUMBER_DESC"/>
+    <field name="entry_date" type="calendar" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_ENTRY_DATE_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_ENTRY_DATE_DESC"/>
+    <field name="journal" type="sql" query="SELECT id, `code` FROM `#__balloonledger_journal`" header="&amp;nbsp;" key_field="id" value_field="code" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_JOURNAL_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_JOURNAL_DESC"/>
+    <field name="description" type="textarea" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_DESCRIPTION_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_DESCRIPTION_DESC"/>
+    <field name="status" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_STATUS_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_STATUS_DESC"/>
+    <field name="origin" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_ORIGIN_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_ORIGIN_DESC"/>
+    <field name="external_id" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_EXTERNAL_ID_LABEL" description="COM_BALLOONLEDGER_JOURNALENTRY_FIELD_EXTERNAL_ID_DESC"/>
+    <field name="id" type="hidden"/>
+  </fieldset>
+</form>

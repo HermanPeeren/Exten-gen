@@ -1,0 +1,104 @@
+[
+    {
+        "id": "admin.general.ledger.roles",
+        "for": "root",
+        "template": "component/administrator/components/com_componentname/src/Ledger/AccountRoles.php.twig",
+        "target": "administrator/components/com_{componentName|lower}/src/Ledger/AccountRoles.php",
+        "when": [
+            {
+                "operator": "has",
+                "path": "account_roles"
+            }
+        ],
+        "bind": {
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "roles": {
+                "derive": "ledgerAccountRoles"
+            }
+        }
+    },
+    {
+        "id": "admin.general.ledger.line",
+        "for": "root",
+        "template": "component/administrator/components/com_componentname/src/Ledger/JournalLine.php.twig",
+        "target": "administrator/components/com_{componentName|lower}/src/Ledger/JournalLine.php",
+        "when": [
+            {
+                "operator": "has",
+                "path": "posting_rules"
+            }
+        ],
+        "bind": {
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            }
+        }
+    },
+    {
+        "id": "admin.general.ledger.postingrules",
+        "for": "root",
+        "template": "component/administrator/components/com_componentname/src/Ledger/PostingRules.php.twig",
+        "target": "administrator/components/com_{componentName|lower}/src/Ledger/PostingRules.php",
+        "when": [
+            {
+                "operator": "has",
+                "path": "posting_rules"
+            }
+        ],
+        "bind": {
+            "componentName": {
+                "derive": "componentNameUcfirst"
+            },
+            "projectName": {
+                "path": "name"
+            },
+            "version": {
+                "path": "extensions.component.manifest.version"
+            },
+            "copyright": {
+                "path": "extensions.component.manifest.copyright"
+            },
+            "license": {
+                "path": "extensions.component.manifest.license"
+            },
+            "company_namespace": {
+                "path": "extensions.component.manifest.company_namespace"
+            },
+            "rules": {
+                "derive": "ledgerPostingRules"
+            }
+        }
+    }
+]

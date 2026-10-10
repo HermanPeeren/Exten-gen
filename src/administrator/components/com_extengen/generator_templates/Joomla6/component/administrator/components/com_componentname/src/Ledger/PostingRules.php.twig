@@ -1,0 +1,118 @@
+<?php
+/**
+ * @package    {{ projectName }}
+ * @subpackage {{ componentName }}
+ * @version    {{ version }}
+ *
+ * @copyright  {{ copyright }}
+ * @license    {{ license }}
+ */
+
+namespace {{ company_namespace }}\Component\{{ componentName }}\Administrator\Ledger;
+
+defined('_JEXEC') or die;
+
+/**
+ * The posting rules: which journal entry each business event becomes.
+ *
+ * Generated from the model's posting rules. Each line posts an amount to an
+ * account role, on the debit or the credit side, and every entry balances or
+ * is refused.
+ */
+final class PostingRules
+{
+    /**
+     * The events there is a rule for, with what each one means.
+     *
+     * @var array<string, string>
+     */
+    public const EVENTS = [
+{% for rule in rules %}
+        {{ rule.event }} => {{ rule.description }},
+{% endfor %}
+    ];
+
+    /**
+     * The lines of the journal entry an event becomes.
+     *
+     * @param   string                $event  One of the keys of self::EVENTS.
+     * @param   array<string, mixed>  $data   The event's data, such as 'amount' and 'vat'.
+     *
+     * @return  JournalLine[]  An empty list when the event posts nothing.
+     *
+     * @throws  \DomainException  When there is no rule for the event, or the entry does not balance.
+     */
+    public function linesFor(string $event, array $data): array
+    {
+        $lines = match ($event) {
+{% for rule in rules %}
+{% if rule.lines is empty %}
+            {{ rule.event }} => [],
+{% else %}
+            {{ rule.event }} => [
+{% for line in rule.lines %}
+                new JournalLine({{ line.role }}, {{ line.side }}, {{ line.amount }}),
+{% endfor %}
+            ],
+{% endif %}
+{% endfor %}
+            default => throw new \DomainException('There is no posting rule for the event "' . $event . '".'),
+        };
+
+        $this->assertBalanced($event, $lines);
+
+        return $lines;
+    }
+
+    /**
+     * Refuse an entry whose debits and credits differ.
+     *
+     * @param   string         $event  For the message.
+     * @param   JournalLine[]  $lines  The entry.
+     *
+     * @return  void
+     */
+    private function assertBalanced(string $event, array $lines): void
+    {
+        $balance = 0.0;
+
+        foreach ($lines as $line) {
+            $balance += $line->side === JournalLine::DEBIT ? $line->amount : -$line->amount;
+        }
+
+        if (round($balance, 2) !== 0.0) {
+            throw new \DomainException(
+                'The entry for "' . $event . '" does not balance: debit and credit differ by ' . round($balance, 2) . '.'
+            );
+        }
+    }
+
+    /**
+     * A number from the event's data.
+     *
+     * @param   array<string, mixed>  $data  The event's data.
+     * @param   string                $name  The field an amount expression names.
+     *
+     * @return  float
+     */
+    private function value(array $data, string $name): float
+    {
+        if (!isset($data[$name]) || !is_numeric($data[$name])) {
+            throw new \DomainException('The event has no number called "' . $name . '".');
+        }
+
+        return (float) $data[$name];
+    }
+
+    /**
+     * A line the generator could not read: its model needs correcting.
+     *
+     * @param   string  $event  The event whose rule holds it.
+     *
+     * @return  never
+     */
+    private function unreadable(string $event): never
+    {
+        throw new \DomainException('The posting rule for "' . $event . '" has a line that could not be generated.');
+    }
+}
