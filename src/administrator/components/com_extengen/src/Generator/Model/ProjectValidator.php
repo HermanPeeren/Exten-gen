@@ -65,7 +65,7 @@ final class ProjectValidator implements ValidatorInterface
 
         if (!\in_array($model->modelVersion(), self::SUPPORTED_VERSIONS, true)) {
             $errors[] = \sprintf(
-                'the project was stored in format version %s, and this version of Exten-gen reads %s',
+                'the project was stored in format version %s, and this version of the Extension Generator reads %s',
                 $model->modelVersion(),
                 implode(', ', self::SUPPORTED_VERSIONS)
             );

@@ -23,7 +23,7 @@ $repositories = [
 <div class="p-3" id="extengen-info">
 	<p class="text-muted"><?php echo Text::_('COM_EXTENGEN_INFO_DATE'); ?></p>
 
-	<h2>Exten-gen</h2>
+	<h2><?php echo Text::_('COM_EXTENGEN_INFO_EXTENGEN_HEADING'); ?></h2>
 	<p><?php echo Text::_('COM_EXTENGEN_INFO_EXTENGEN'); ?></p>
 	<ul>
 		<li><?php echo Text::_('COM_EXTENGEN_INFO_EXTENGEN_LANGUAGE'); ?></li>
@@ -33,10 +33,10 @@ $repositories = [
 		<li><?php echo Text::_('COM_EXTENGEN_INFO_EXTENGEN_SITE'); ?></li>
 	</ul>
 
-	<h2>Meta-gen</h2>
+	<h2><?php echo Text::_('COM_EXTENGEN_INFO_METAGEN_HEADING'); ?></h2>
 	<p><?php echo Text::_('COM_EXTENGEN_INFO_METAGEN'); ?></p>
 
-	<h2>Gen-gen</h2>
+	<h2><?php echo Text::_('COM_EXTENGEN_INFO_GENGEN_HEADING'); ?></h2>
 	<p><?php echo Text::_('COM_EXTENGEN_INFO_GENGEN'); ?></p>
 
 	<h2><?php echo Text::_('COM_EXTENGEN_INFO_SHARED_HEADING'); ?></h2>

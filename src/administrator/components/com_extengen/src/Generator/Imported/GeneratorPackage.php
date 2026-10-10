@@ -101,7 +101,7 @@ final class GeneratorPackage
 
             if ($manifest === false) {
                 throw new \RuntimeException(
-                    'There is no ' . self::MANIFEST . ' in this zip. Generate it again with Gen-gen 0.4 or later.'
+                    'There is no ' . self::MANIFEST . ' in this zip. Generate it again with the Generator Generator 0.4 or later.'
                 );
             }
 
@@ -140,7 +140,7 @@ final class GeneratorPackage
     {
         if ((int) ($data['format'] ?? 0) !== self::FORMAT) {
             throw new \RuntimeException(
-                'This package is format ' . (int) ($data['format'] ?? 0) . '; this Exten-gen reads format '
+                'This package is format ' . (int) ($data['format'] ?? 0) . '; this Extension Generator reads format '
                 . self::FORMAT . '.'
             );
         }

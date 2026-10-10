@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <extension type="component" method="upgrade">
 	<name>com_extengen</name>
-	<creationDate>08-10-2026</creationDate>
+	<creationDate>10-10-2026</creationDate>
 	<author>Herman Peeren</author>
 	<authorEmail>herman@yepr.nl</authorEmail>
 	<authorUrl>https://yepr.nl</authorUrl>
 	<copyright>Yepr, Herman Peeren, 2022</copyright>
 	<license>GNU General Public License version 3 or later;</license>
-	<version>1.4.0</version>
+	<version>1.4.1</version>
 	<description>COM_EXTENGEN_XML_DESCRIPTION</description>
 	<namespace path="src">Yepr\Component\Extengen</namespace>
 	<scriptfile>script.php</scriptfile>
@@ -64,6 +64,6 @@
 	</administration>
 	<changelogurl>https://raw.githubusercontent.com/hermanpeeren/extengen/changelog.xml</changelogurl>
 	<updateservers>
-		<server type="extension" name="Exten-gen Updates">https://raw.githubusercontent.com/HermanPeeren/Exten-gen/main/updates.xml</server>
+		<server type="extension" name="Extension Generator Updates">https://raw.githubusercontent.com/HermanPeeren/Exten-gen/main/updates.xml</server>
 	</updateservers>
 </extension>

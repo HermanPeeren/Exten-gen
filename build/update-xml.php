@@ -33,7 +33,7 @@ if ($xml === false) {
 
 $version = trim((string) $xml->version);
 $element = trim((string) $xml->name);
-$name    = 'Exten-gen';
+$name    = 'Extension Generator';
 
 if ($version === '' || $element === '') {
     fwrite(STDERR, "The manifest needs both a version and a name.\n");
