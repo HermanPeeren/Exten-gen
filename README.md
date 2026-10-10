@@ -1,7 +1,7 @@
-# Exten-gen
+# Extension Generator (Exten-gen)
 
-Exten-gen is a Joomla component that models CMS extensions and generates them. A
-model here is what Model Driven Engineering means by the word: a complete
+The Extension Generator (Exten-gen) is a Joomla component that models CMS
+extensions and generates them. A model here is what Model Driven Engineering means by the word: a complete
 description of the thing you want — its data model, its pages, and what kind of
 extension it is — stated in the vocabulary of the domain rather than in PHP, and
 precise enough that the implementation can be derived from it.
@@ -22,7 +22,7 @@ Models are called **projects**, and a project is in three parts:
 
 ## Where this came from
 
-Exten-gen succeeds [Extengen](https://github.com/HermanPeeren/Extengen), whose
+The Extension Generator succeeds [Extengen](https://github.com/HermanPeeren/Extengen), whose
 history it carries. Before that the same ideas were an XText language, eJSL, in
 [JooMDD](https://github.com/HermanPeeren/JooMDD), and then a port to JetBrains
 MPS in [eJSL-MPS](https://github.com/HermanPeeren/eJSL-MPS).
@@ -32,9 +32,9 @@ It is one of a family:
 | | |
 |---|---|
 | [generator-core](https://github.com/HermanPeeren/generator-core) | the shared generation engine, `Yepr\Gen` |
-| **Exten-gen** | models extensions and generates them |
-| Gen-gen | models the generators themselves |
-| Meta-gen | models the model language, and generates the forms that collect it |
+| **Extension Generator** (Exten-gen) | models extensions and generates them |
+| [Generator Generator](https://github.com/HermanPeeren/Gen-gen) (Gen-gen) | models the generators themselves |
+| [Metalanguage Generator](https://github.com/HermanPeeren/Meta-gen) (Meta-gen) | models the model language, and generates the forms that collect it |
 | [Plug-gen](https://github.com/HermanPeeren/plug-gen) | plugin types, developed separately first |
 
 ## Status

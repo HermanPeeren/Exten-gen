@@ -1,7 +1,7 @@
-# Developing Exten-gen
+# Developing the Extension Generator (Exten-gen)
 
-How this repository is put together and how to work on it. What Exten-gen is
-*for* is in the [README](../README.md); where it is going, step by step, is in
+How this repository is put together and how to work on it. What the Extension
+Generator is *for* is in the [README](../README.md); where it is going, step by step, is in
 [rework-plan.md](rework-plan.md).
 
 ## Layout
@@ -52,7 +52,8 @@ whatever the manifest says.
 
 The generation engine lives in
 [generator-core](https://github.com/HermanPeeren/generator-core) under the
-`Yepr\Gen` namespace, shared with Gen-gen, Meta-gen and Plug-gen. It is a
+`Yepr\Gen` namespace, shared with the Generator Generator, the Metalanguage Generator and
+Plug-gen. It is a
 composer dependency here, and on a Joomla site it is an installed library —
 `lib_yepr_gen` — that every extension in the family uses one copy of.
 
@@ -312,11 +313,11 @@ all - no release, no failure, no mail. A tag is only a release procedure once
 something is listening for it.
 
 **Driving a whole generated component.** `generated-front-end.cy.js` leaves
-Exten-gen: it generates a component, installs it, and visits its front end
+the Extension Generator: it generates a component, installs it, and visits its front end
 through a menu item, as a visitor would.
 
-**A spec installs in the web server, never through the CLI.** It uses Exten-gen's
-own *Install on this site* button, with `allow_install` switched on for the
+**A spec installs in the web server, never through the CLI.** It uses the Extension
+Generator's own *Install on this site* button, with `allow_install` switched on for the
 spec. Joomla clears the opcode cache for the files an install writes - the
 namespace map among them - in the process that writes them, so an install
 through the CLI left the server running the old map for up to two seconds and
@@ -363,7 +364,7 @@ where a type lives in the stored model and how the browser finds its rows: the
 class on the name input, and how that input's element id relates to the hidden
 id beside it. The client half is handed over in the same payload. Two
 descriptions, one in PHP and one in a hand-written script, is what drifts - and
-Meta-gen is meant to generate this table from a concept model, which it could
+the Metalanguage Generator is meant to generate this table from a concept model, which it could
 not do if half of it lived in JavaScript.
 
 **One model here, and the mechanism is not here at all.**
@@ -374,8 +375,8 @@ to so a scoped dropdown can filter before anything is saved.
 
 The mechanism used to be here, carrying two tables — this one and LionCore M3's
 — and saying in its own docblock that they were a map rather than a method per
-type *because Meta-gen generates this from a concept model*. Meta-gen does now,
-and Meta-gen is [its own component](https://github.com/HermanPeeren/Meta-gen).
+type *because Meta-gen generates this from a concept model*. The Metalanguage
+Generator does now, and it is [its own component](https://github.com/HermanPeeren/Meta-gen).
 Three components edit models with reference dropdowns, so what is shared is the
 mechanism and what stays is the table.
 
@@ -661,8 +662,8 @@ the `node_modules/` tree that exists for one uuid helper.
 manifest to declare a dependency on another extension, so `lib_yepr_gen` rides
 along under `library/` and `src/script.php` installs it when the site has none or
 has an older one — the Regular Labs and Akeeba pattern. The check runs on update
-as well as install, because a site can be updated to a version of Exten-gen that
-needs a newer library.
+as well as install, because a site can be updated to a version of the Extension
+Generator that needs a newer library.
 
 `script.php` names the library version it needs, and the build reads that number
 to decide what to bundle, so the two cannot drift. It prefers a sibling
@@ -702,7 +703,7 @@ Generating the forms of a modelled language writes the same two things, beside
 those:
 
 ```
-(Generating the forms of a modelled language is Meta-gen's job now, and it
+(Generating the forms of a modelled language is the Metalanguage Generator's job now, and it
 writes its output the same way, in its own repository.)
 ```
 
