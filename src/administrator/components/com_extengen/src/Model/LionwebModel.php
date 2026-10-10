@@ -267,7 +267,13 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
         // comes off again here rather than being reported by the writer as a
         // feature the root concept does not have. A root concept that has its
         // own `name` has a collision with the chrome already, on the way in.
-        unset($stored['name']);
+        //
+        // `id` and `modelVersion` the same way, and for the same reason: the
+        // row's own number and the shape its JSON is written in, both put
+        // there by `ProjectModel::save()`. Left in, they came back out of a
+        // saved project as two warnings about features the root concept does
+        // not have - true, and about nothing the model said.
+        unset($stored['name'], $stored['id'], $stored['modelVersion']);
 
         $manifest = $this->manifestFor($binding['key'], $binding['version']);
 
