@@ -45,11 +45,16 @@ class Com_ExtengenInstallerScript
     /**
      * The oldest library release that has everything this version calls.
      *
-     * 0.15.0 for `lib_yepr_gen.generation-modal`, the script the projects list
-     * uses to tell the generate modal which row was pressed. It was this
-     * component's own until Meta-gen turned out to need the same twelve lines.
+     * 0.18.0 for `PackageManifest::$lionwebKey`, which this version reads to
+     * match a chunk's language against an imported one by the key the language
+     * calls itself by rather than by ignoring case on its name.
+     *
+     * Before that, 0.15.0 for `lib_yepr_gen.generation-modal`, the script the
+     * projects list uses to tell the generate modal which row was pressed. It
+     * was this component's own until Meta-gen turned out to need the same
+     * twelve lines.
      */
-    private const LIBRARY_MINIMUM = '0.17.0';
+    private const LIBRARY_MINIMUM = '0.18.0';
 
     /**
      * The oldest Joomla this runs on.
