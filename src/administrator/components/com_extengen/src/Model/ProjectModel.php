@@ -317,9 +317,14 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 		$item = $this->getItem();
 
 		// A project that has never been saved has nothing stored yet, and the
-		// form renders from its own defaults.
+		// form renders from its own defaults - over the row's own number,
+		// which it has even when it holds no model.
 		if (empty($item->form_data)) {
-			return new \stdClass();
+			$empty = new \stdClass();
+
+			$empty->id = (int) ($item->id ?? 0);
+
+			return $empty;
 		}
 
 		// The binding lives in two columns and renders through one field, so
@@ -338,6 +343,26 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 			$stored = Project::fromJson((string) $item->form_data)->raw();
 
 			$stored->metalanguage = $binding;
+
+			// Which row this is, from the row. A stored model is not entitled
+			// to an opinion about that, and it had one: `save()` serialised
+			// the whole of the posted data, `id` among it, and what `id` held
+			// at that moment was whatever the request had said. A project
+			// created through the screen is saved while its url still reads
+			// `id=0`, so `0` went into its model and stayed there; one made by
+			// the LionWeb import carries no `id` at all; and a seeded fixture
+			// carries whichever number it was exported with.
+			//
+			// The form was then given that copy as its data instead of the
+			// row, so `getValue('id')` answered for a record that may not
+			// exist. `MetalanguageField` unlocks on it, and so left the
+			// language editable on an existing project - the one thing the
+			// field exists to prevent, because the forms that opened a project
+			// stop describing what is stored.
+			//
+			// Saving is not affected: `FormController::save()` takes the
+			// record from the url, not from the posted `id`.
+			$stored->id = (int) ($item->id ?? 0);
 
 			return $stored;
 		} catch (\JsonException | \InvalidArgumentException $e) {
@@ -493,8 +518,14 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 
         unset($data['metalanguage']);
 
-        $form_data = json_encode($data);
-        $data['form_data'] = $form_data;
+        // Everything except the row's own number, for the reason
+        // `loadFormData()` sets out: a model carrying an `id` is a model that
+        // disagrees with the row holding it as soon as either moves.
+        $model = $data;
+
+        unset($model['id']);
+
+        $data['form_data'] = json_encode($model);
 
         // Only on a new project. The field renders read-only once a project
         // has an id, and a post is not a thing to trust about that: changing

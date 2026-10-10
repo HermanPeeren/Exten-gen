@@ -201,6 +201,32 @@ describe('metalanguages', () => {
   });
 
   /**
+   * And its language is locked, which on a project made this way it was not.
+   *
+   * `MetalanguageField` unlocks on the form's `id`, and the form's data came
+   * from the stored model rather than from the row - so it read whichever
+   * `id` that model had been serialised with. A new project is saved while
+   * its url still says `id=0`, so `0` went into the model and `0` is what the
+   * field read ever afterwards: an existing project whose language could
+   * still be changed under the forms that opened it.
+   *
+   * The test higher up this file could not see that. It opens whichever
+   * project sorts first, and in CI that is `BalloonPlanning`, whose seeded
+   * fixture happens to carry a non-zero `id` - so the lock held there, and
+   * nowhere a project had actually been made through the screen.
+   */
+  it('locks the language on a project made through the screen', () => {
+    expect(testlangProject, 'the Testlang project was created above').to.be.a('number');
+
+    cy.visit(
+      '/administrator/index.php?option=com_extengen&view=project&layout=edit&id=' + testlangProject
+    );
+
+    cy.get('#jform_metalanguage', { timeout: 20000 })
+      .should('satisfy', ($el) => $el.is(':disabled') || $el.attr('readonly') !== undefined);
+  });
+
+  /**
    * ...and refuses to generate from it: step 3.6.
    *
    * A project bound to Testlang is one this component can open, edit and save
