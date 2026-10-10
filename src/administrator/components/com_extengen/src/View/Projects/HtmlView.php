@@ -194,7 +194,7 @@ class HtmlView extends BaseHtmlView
 			}
 
 			if ($this->state->get('filter.published') != -2) {
-				$childBar->trash('extengen.trash')->listCheck(true);
+				$childBar->trash('projects.trash')->listCheck(true);
 			}
 		}
 
