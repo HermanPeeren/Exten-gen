@@ -1,4 +1,4 @@
-# Rework plan: Exten-gen, Gen-gen, Meta-gen
+# Rework plan: Extension Generator (Exten-gen), Generator Generator (Gen-gen), Metalanguage Generator (Meta-gen)
 
 Drawn up 2026-09-18, from an analysis of Extengen at commit `a1acd77`.
 
@@ -16,7 +16,7 @@ installs it when missing, as the Regular Labs and Akeeba libraries do. The same 
 tree also publishes a composer package, which keeps the engine usable outside Joomla -
 Drupal, Symfony, anything PHP.
 
-**Exten-gen v1 is deliberately minimal.** Joomla's built-in features — categories, tags,
+**The Extension Generator v1 is deliberately minimal.** Joomla's built-in features — categories, tags,
 versioning, workflow, custom fields, full ACL, routing, action logs, finder — are out of
 v1. They land after Stage 2, when adding a feature is cheap. Some may need no more than a
 toggle; others will need more of the model.
@@ -61,41 +61,41 @@ Meta-gen ──── metalanguage ────▶ Exten-gen ── runs a gener
 
 - **A project** is *written in* a metalanguage.
 - **A generator** maps *one metalanguage* to *one target*.
-- **Exten-gen** holds many projects, many metalanguages and many generators, and may run
+- **The Extension Generator** holds many projects, many metalanguages and many generators, and may run
   generator G over project P only when they name the same language.
 
 A **metalanguage package** is what travels, and one payload serves both consumers:
 
 | Part | Who needs it |
 |---|---|
-| the concept model | Gen-gen, to know what a rule may select |
-| generated forms | Exten-gen, to edit a model written in that language |
+| the concept model | Generator Generator, to know what a rule may select |
+| generated forms | Extension Generator, to edit a model written in that language |
 | the reference table | both, for the dropdowns |
 | a language file, keyed to the language | both, so the forms read as words rather than constants |
 | a manifest: key, version, root classifier | both, to bind a project or a generator to it |
 
-Meta-gen is the only writer. Carrying the concept model *and* its derived forms means
-neither consumer needs Meta-gen installed.
+The Metalanguage Generator is the only writer. Carrying the concept model *and* its derived forms means
+neither consumer needs the Metalanguage Generator installed.
 
 **Three consequences, named here because each is invisible until it blocks something.**
-ER1 stops being implicit: Exten-gen's own hand-written forms become the first
+ER1 stops being implicit: the Extension Generator's own hand-written forms become the first
 metalanguage package, which makes 3.5 a migration rather than only a proof. Selectors
 have to become data, because `Joomla6Selectors::entities()` is PHP hard-keyed to ER1 and
 a generator written for an arbitrary language needs a path through *that* language - which
-reaches generator-core and Gen-gen, not just the two components. And a project must record
+reaches generator-core and the Generator Generator, not just the two components. And a project must record
 which language it is in, while `Vocabulary` gains a source half: it publishes what a rule
 may say about a *target* and nothing yet about what it may select from.
 
 ### Why this order
 
-The three components are mutually dependent: Exten-gen's forms should come from Meta-gen,
-its generators from Gen-gen, and both of those are themselves components that Exten-gen
+The three components are mutually dependent: the Extension Generator's forms should come from the Metalanguage Generator,
+its generators from the Generator Generator, and both of those are themselves components that the Extension Generator
 should generate. The cycle breaks by hand-writing one layer and bootstrapping from it.
 
 The hand-written layer is the generator *core* — the runtime that executes a generator.
-That is not the same thing as Gen-gen, which is the modelling tool that produces one.
+That is not the same thing as the Generator Generator, which is the modelling tool that produces one.
 
-Gen-gen cannot come first, because a generator is a transformation between two
+The Generator Generator cannot come first, because a generator is a transformation between two
 metamodels and neither endpoint currently exists as a nameable thing. The model language
 is implicit, spread across 25 XML form files with its real semantics living in the PHP
 that reads them. The target has no representation at all: "a Joomla component" exists
@@ -103,7 +103,7 @@ only as the output side-effect of seven hand-written PHP classes. Stage 1 makes 
 endpoints explicit, which is what makes Stage 2 possible.
 
 Writing generators by hand in Stage 1 that Stage 2 will later regenerate is not waste.
-It is the reference implementation Gen-gen must reproduce, and without it Gen-gen has
+It is the reference implementation the Generator Generator must reproduce, and without it the Generator Generator has
 nothing to be checked against. MPS was bootstrapped the same way.
 
 ---
@@ -158,7 +158,7 @@ What genuinely favours Twig here:
   PHP templates come from files; holding one in a database means `eval()` or writing a
   temp file. This was the original reason for choosing Twig and it is a sound one.
 - **Untrusted templates.** If a generator's templates become editable (which is where
-  Gen-gen leads), a native-PHP template is arbitrary code execution. Twig's sandbox is a
+  the Generator Generator leads), a native-PHP template is arbitrary code execution. Twig's sandbox is a
   real answer; native PHP has none.
 - **No tag collision.** A native-PHP template that generates PHP must escape its own
   opening tag (`<?php echo "<?php\n"; ?>`), because the literal text it wants to emit is
@@ -194,11 +194,11 @@ generalised into a reusable `TestCase`: comparison in both directions (every gen
 file has a golden counterpart, and every golden file is still generated), fixture
 auto-discovery, CRLF normalisation, plus a `generate-fixture` command to accept a
 reviewed change.
-*Done when* Exten-gen and Gen-gen obtain golden tests by extending one class.
+*Done when* the Extension Generator and the Generator Generator obtain golden tests by extending one class.
 
 **0.6 The shared Joomla library.** One installable library, `lib_yepr_gen`, holding
 everything the generator extensions share: the engine and the third-party packages it
-needs. Exten-gen, Meta-gen, Gen-gen, Plug-gen and whatever follows take their shared code
+needs. The Extension Generator, the Metalanguage Generator, the Generator Generator, Plug-gen and whatever follows take their shared code
 from that one copy rather than each carrying its own. The namespace prefix is `Yepr\Gen`,
 and the engine is its first occupant at `Yepr\Gen\Core`.
 
@@ -247,7 +247,7 @@ library with it.
 
 ---
 
-## Stage 1 — Exten-gen
+## Stage 1 — Extension Generator
 
 The large stage. Order matters: behaviour is captured before it is changed.
 
@@ -297,10 +297,10 @@ the golden files are unchanged.
 **1.6 Real packaging.** A package manifest covering component, media and the library
 dependency; `build.php` producing an installable zip; generation output delivered as a
 downloadable zip rather than files written under `generated/`.
-*Done when* a generated component installs on a clean Joomla 6 from the zip Exten-gen
+*Done when* a generated component installs on a clean Joomla 6 from the zip the Extension Generator
 produces.
 
-**1.7 Joomla 6 sweep — Exten-gen itself.** `JHtmlSidebar` (7 sites), `Factory::getUser`
+**1.7 Joomla 6 sweep — the Extension Generator itself.** `JHtmlSidebar` (7 sites), `Factory::getUser`
 (9), `CMSObject` with `getProperties()` (4 files), `Factory::getDbo` (2), `Table::$_db` (2),
 `Factory::getDocument` (1), `User::get('id')` (1). `JHtmlSidebar` is the only one that was
 broken rather than merely deprecated: it is not a class in Joomla 6 but an alias registered
@@ -311,7 +311,7 @@ view beside it that nothing references; deleted rather than swept.
 `getError()` / `setError()` stay. They are not a call the component makes on its own:
 `AdminModel::save()` invokes `check()` on a table and reads `getError()` off it, and every
 core Joomla 6 table still answers that way. Dropping them changes a contract with code
-that is not Exten-gen's, and nothing in the suite runs far enough to see whether it held.
+that is not the Extension Generator's, and nothing in the suite runs far enough to see whether it held.
 It waits for 1.11, where a Cypress run can drive a real site.
 
 `tests/Unit/JoomlaApiTest.php` holds the removed calls out. It is a grep over the source
@@ -499,7 +499,7 @@ to the details view.
 `tests/cypress/e2e/generated-front-end.cy.js` is what makes that a claim rather than a hope. It
 generates a component, installs it with `tools/install-generated.php`, points a menu item
 at one of its views with `tools/seed-menu-item.php`, and looks at the page a visitor gets.
-Nothing else in this repository leaves Exten-gen.
+Nothing else in this repository leaves the Extension Generator.
 
 *Not in 1.0:* a Router service, so generated front-end URLs are the ones Joomla builds from
 a menu item rather than paths of their own. `/component/<name>/` is a 404 without one.
@@ -520,7 +520,7 @@ because each is invisible until something needs it and then blocks a whole line 
 None of the three blocks v1, and that is worth stating rather than assuming: the current
 generator emits only stock field types - `text`, `sql` for a relation, `hidden`, `number`,
 `calendar`, `list`, `subform`, `editor` - so a generated CRUD component needs no field
-class of its own. What the gaps block is **Exten-gen generating itself**, because its own
+class of its own. What the gaps block is the **Extension Generator generating itself**, because its own
 forms use eleven custom field classes and a rule.
 
 How many of those eleven survive is not fixed yet. Step 1.9 replaces the reference-field
@@ -530,7 +530,7 @@ after 1.9 rather than estimated now.
 
 ---
 
-## Stage 2 — Gen-gen
+## Stage 2 — Generator Generator
 
 Possible only now, because both endpoints exist: an explicit source model from 1.3 and an
 explicit target structure model from 1.4.
@@ -546,7 +546,7 @@ closed on purpose: four condition operators, five binding kinds, four path filte
 selectors and derivations that must be registered by name. A rule set that could name any
 callable would be a program stored as JSON, with no analysis, no debugger and no types.
 
-Exten-gen's own mapping is 27 rules in `Rules/joomla6.rules.json`, four selectors
+The Extension Generator's own mapping is 27 rules in `Rules/joomla6.rules.json`, four selectors
 (`root`, `entities`, `backendPages`, `frontendPages` - the last two being the join between
 the flat page list and the sections that reference it, which used to be re-derived inline
 twice) and twenty named derivations. The five template-rendering generators are between
@@ -584,16 +584,16 @@ generation with an undefined index instead of skipping it.
 **2.2 Model the generator.** Forms for transformation rules, MPS-style: source pattern to
 target structure, with conditions and iteration.
 
-Done in **Gen-gen**, whose repository now holds something: four forms - a generator, a
+Done in the **Generator Generator**, whose repository now holds something: four forms - a generator, a
 rule, a condition, a binding - and the model behind them. One rule reads as the sentence
 2.1 made it: for each node this source pattern yields, when it passes these conditions,
 render this template to this output path, binding these variables.
 
 **Everything a rule may say is a choice, not a text box**, which is the part that makes it
 modelling rather than JSON editing with rounded corners. A target publishes what its rules
-may say - `Vocabulary` in the library at 0.3.0, written by Exten-gen's
+may say - `Vocabulary` in the library at 0.3.0, written by the Extension Generator's
 `build/vocabulary.php` off the live registries and the template directory - and
-`VocabularyLibrary` finds those descriptors among the installed components. So Gen-gen
+`VocabularyLibrary` finds those descriptors among the installed components. So the Generator Generator
 depends on none of the components it models generators for, a new target appears in the
 list by being installed, and a rule naming a selector that does not exist cannot be
 written. The operators and binding kinds come from the library instead: a target may add
@@ -604,7 +604,7 @@ Joomla's form layer cannot hold a rule the way the engine wants it - a repeating
 an object keyed `binding0`, `binding1`, and a field holds a scalar, not a key that is
 itself the meaning.
 
-*Done:* Exten-gen's own twenty-seven rules, through the form shape and back, identical -
+*Done:* the Extension Generator's own twenty-seven rules, through the form shape and back, identical -
 and then checked against the target's vocabulary, because two arrays matching proves
 nothing if both are nonsense. 24 tests, PHPStan level 5, phpcs. Three things the
 translation gets right that a naive one would not: an empty literal is a value and not an
@@ -630,7 +630,7 @@ Three defects, two of them found by CI on the first push and invisible on this m
   types are spelled `RuleSelector` now, and the test resolves them the way Joomla does.
 - **PHPStan scanning the shared library twice**, once from composer and once from the copy
   installed into the development site, analysing against whichever resolved first. It
-  surfaced in Gen-gen as "undefined constant `Binding::KINDS`" against a constant that very
+  surfaced in the Generator Generator as "undefined constant `Binding::KINDS`" against a constant that very
   much exists; here it had not surfaced yet, which is not the same as not being there.
 - And the fix for that broke both builds, because PHPStan errors on an `excludePath` that
   does not exist and a freshly fetched Joomla has no extensions installed in it. A wildcard
@@ -643,7 +643,7 @@ workflow. That is 2.4, and 2.3 comes first.
 the hand-written generator it replaces, measured against Stage 1's golden files. Not a
 judgement call.
 
-**Met.** `composer acceptance` in Gen-gen generates the generator, runs it over all three
+**Met.** `composer acceptance` in the Generator Generator generates the generator, runs it over all three
 golden models and compares every file:
 
 > 228 files compared, all identical to the approved output.
@@ -673,16 +673,16 @@ Three things the check needed, each of which is the interesting part of it:
   and every sql and language file did not: a template's output ends with exactly one
   newline and a file assembled by `implode()` ends with none. `GoldenFiles::normalise()` is
   what Stage 1's golden test uses, so it is what this uses.
-- **A canonical rule file.** "Gen-gen generates this file" is only checkable if there is
-  one way to write a given rule set down, so Exten-gen's committed `joomla6.rules.json` is
+- **A canonical rule file.** "The Generator Generator generates this file" is only checkable if there is
+  one way to write a given rule set down, so the Extension Generator's committed `joomla6.rules.json` is
   now `RuleSet::toJson()` output rather than the hand formatting it had, and a test keeps
   it that way. `RuleDrivenGenerator` also gained an overridable `ruleFile()`, which is how
   a generated generator runs beside the committed one.
 
-Gen-gen's CI checks Exten-gen out beside it so the criterion actually runs there. A skipped
+The Generator Generator's CI checks the Extension Generator out beside it so the criterion actually runs there. A skipped
 test that is the whole point of a repository is worse than no test.
 
-**2.4 Repository, package, release.** Gen-gen is an installable Joomla 6 component and
+**2.4 Repository, package, release.** The Generator Generator is an installable Joomla 6 component and
 0.1.0 is released. Model a generator in its forms, press Generate, get a generator.
 
 The row is thin on purpose: a name, a target, and the whole modelled generator as JSON.
@@ -701,7 +701,7 @@ copy** - 33 checks, no login - and it earned its place immediately:
   closure in a file Joomla includes at run time. It looks like a working component right
   up until the first request reaches it.
 - it reported that no target published a vocabulary - correctly, because the *installed*
-  Exten-gen predated 2.2. A checkout cannot tell you that.
+  Extension Generator predated 2.2. A checkout cannot tell you that.
 
 **Cypress covers the one thing none of that sees: whether a screen renders.** Five specs,
 against the same Joomla 6: the list comes up, a stored generator opens for editing, and
@@ -717,24 +717,24 @@ Two CI failures, both of them this machine hiding something. PHPStan was scannin
 `include JPATH_LIBRARIES . '/vendor/autoload.php'` folds to an absolute `/vendor/...` that
 Linux checks and Windows does not.
 
-**Building Gen-gen by hand is also the evidence for 4.2.** Its forms need custom field
+**Building the Generator Generator by hand is also the evidence for 4.2.** Its forms need custom field
 types and nested subforms, which are two of the three model gaps named as blocking
-self-hosting. Exten-gen could not have generated this component today.
+self-hosting. The Extension Generator could not have generated this component today.
 
 ---
 
-## Stage 3 — Meta-gen
+## Stage 3 — Metalanguage Generator
 
-**Read this before 3.1 and 3.2.** Both were built *inside Exten-gen*, which was wrong: the
-repository table at the top of this plan has always said Meta-gen is its own component
+**Read this before 3.1 and 3.2.** Both were built *inside the Extension Generator*, which was wrong: the
+repository table at the top of this plan has always said the Metalanguage Generator is its own component
 package. "3.4 Repository, package, release" was read as permission to build in place and
 move it later, the way the old Extengen had everything in one component. It is its own
-repository now - [Meta-gen](https://github.com/HermanPeeren/Meta-gen) - and 3.0 below is
+repository now - the [Metalanguage Generator](https://github.com/HermanPeeren/Meta-gen) - and 3.0 below is
 that move. The two records that follow describe work that is now over there.
 
-**3.0 Meta-gen becomes its own component.** Everything about modelling a language left
-Exten-gen: the LionCore M3 forms, the CRUD around a stored language, the reference table
-for it, and the forms generator from 3.2. Exten-gen's own side referenced it exactly once,
+**3.0 The Metalanguage Generator becomes its own component.** Everything about modelling a language left
+the Extension Generator: the LionCore M3 forms, the CRUD around a stored language, the reference table
+for it, and the forms generator from 3.2. The Extension Generator's own side referenced it exactly once,
 in a stale comment, so this was a move rather than an untangling.
 
 **The entity is a Metalanguage**, and getting there cost a rename. It was a
@@ -749,8 +749,8 @@ layout. Neither failure names the class that caused it. **An entity name must no
 "model", in any case**, and `JoomlaNamingTest` over there is that rule written down.
 
 **The reference dropdown moved into the shared library**, released as 0.4.0. Three
-components edit models with one - Exten-gen a project, Meta-gen a metalanguage, Gen-gen a
-generator - and Exten-gen was carrying the mechanism for all three. What is shared is the
+components edit models with one - the Extension Generator a project, the Metalanguage Generator a metalanguage, the Generator Generator a
+generator - and the Extension Generator was carrying the mechanism for all three. What is shared is the
 mechanism; what stays with each component is its *table*, because that is the only thing
 that differs. `ReferenceIndex` said exactly this in its own docblock at 1.9, as the reason
 its types were a map rather than a method each.
@@ -766,7 +766,7 @@ directory is `ucfirst` of the view name exactly; a tmpl directory is `strtolower
 exactly, because `AbstractView::getName()` lowercases the last namespace segment. Both broken
 here, in opposite directions, and both resolve on a case-insensitive filesystem and 404 on a
 Linux server - the third time this family has turned up, after `HtmltypesField` at 3.1 and
-`RuleselectorField` in Gen-gen at 2.2.
+`RuleselectorField` in the Generator Generator at 2.2.
 
 **Applying the rule found something worse than a casing defect.** `src/extengen.xml` opened
 with `<menu view="extengen">`, and that attribute is what Joomla writes into `#__menu` at
@@ -774,7 +774,7 @@ install time - so the component's own entry in the administrator sidebar had poi
 `View\Extengen` that was never written, since before this plan. Clicking it returned *"View
 not found [name, type, prefix]: extengen, html, Administrator"*. The submenu still offered
 `view=projectforms` as well, which is a 500 behind a link nothing opened once that view had
-moved to Meta-gen. Both are gone, with the forty-two language strings the project-form
+moved to the Metalanguage Generator. Both are gone, with the forty-two language strings the project-form
 screens used and nothing names any more.
 
 `ViewNamesTest` is the rule, and it was checked by breaking things rather than by passing:
@@ -804,13 +804,13 @@ offering every site running 1.0.0 an update whose download 404s, which is the fa
 added that file's test for, arriving from the other direction. It says 1.0.0 again.
 
 Tagging 1.1.0 is held until 3.3 and 3.4, and not for tidiness: the 1.1.0 update script
-drops `#__extengen_projectforms`, Meta-gen has no release, and nothing can export or import
+drops `#__extengen_projectforms`, the Metalanguage Generator has no release, and nothing can export or import
 a metalanguage yet. An update that removes a feature *and* the data behind it, with no way
 to move that data first, is not one to offer. The version goes back up when there is
 somewhere for the data to go.
 
-*Done:* generator-core 0.4.0 with 135 unit and 27 browser-JavaScript tests; Meta-gen with
-132 unit tests and 12 Cypress specs against its own Joomla; Exten-gen with 228 unit tests
+*Done:* generator-core 0.4.0 with 135 unit and 27 browser-JavaScript tests; the Metalanguage Generator with
+132 unit tests and 12 Cypress specs against its own Joomla; the Extension Generator with 228 unit tests
 and 16 Cypress specs, and every static gate green in all three.
 
 **3.1 Repair or rebuild the LionWeb model.** The concept forms work; the field classes and
@@ -831,7 +831,7 @@ anywhere, and an audit rather than a hunt is what found them:
 - **`editfield.xml` asked for `type="htmltypes"`** and the class is `HtmlTypesField`.
   Joomla builds the class name with `ucwords`, which only touches letters after whitespace,
   so it looked for `HtmltypesField` - one letter out, and on this filesystem no letters out
-  at all. The same defect Gen-gen's CI caught in its own forms at 2.2.
+  at all. The same defect the Generator Generator's CI caught in its own forms at 2.2.
 - **`concept.xml` named a field type under a prefix that did not hold it.**
 - **`interface.xml` pointed at a `classifier_property.xml` that never existed**, and at an
   ER1 form from inside the meta-model. Nothing reached it at all, which is why nobody had
@@ -891,7 +891,7 @@ it as well, `_field__field` included. Modelling ER1 properly is still 3.3; this 
 part of it the containment walk has to get right.
 
 `ReferenceIndex` said in its own docblock, at 1.9, that its type table was a map rather
-than a method per type *because Meta-gen generates this from a concept model in stage 3*.
+than a method per type *because the Metalanguage Generator generates this from a concept model in stage 3*.
 It does now, and the two are compared by running them - a table is not checked by matching
 two arrays, because two arrays matching proves nothing if both are nonsense. Both halves
 of an entry come from one walk of the language, which is the whole reason to generate
@@ -978,7 +978,7 @@ green - five of them new, and the reason they exist is that the unit suite canno
 button. It found the one defect of this step that no other gate could: `writeToDirectory()`
 refuses a root that is not there, and the model created that root's *parent*.
 
-**3.3 The metalanguage package, and exporting one.** Meta-gen writes a zip: the concept
+**3.3 The metalanguage package, and exporting one.** The Metalanguage Generator writes a zip: the concept
 model, the generated forms, the reference table, a language file and a manifest naming the
 language, its version and its root classifier. Nothing installs it yet.
 *Done when* a package round-trips - exported, read back, and the forms in it are the forms
@@ -1059,7 +1059,7 @@ are there for the part no unit test can see: a controller that streams a file an
 is an archive that will not open with nothing reported anywhere.
 
 *Not in 3.3.* Nothing installs a package - that is 3.4, in the two components that consume
-one. `PackageReader` lives in Meta-gen and will not stay: a format two components read is a
+one. `PackageReader` lives in the Metalanguage Generator and will not stay: a format two components read is a
 mechanism, which belongs in `Yepr\Gen\Core` by the argument 3.0 already made, and the
 reference dropdown set the precedent for moving it when the second consumer appears rather
 than before. A metalanguage has one label per feature and no notion of a translation, so one
@@ -1096,11 +1096,11 @@ key naming the *language*. The consumer loads the file from the package's own pa
 **`LanguageStringUtil` is not the mechanism here, and that is structural rather than a
 preference.** It is a Twig extension: `addLanguageString` is a Twig *function*, so strings
 are collected while templates render, which is why `LanguageFiles` runs last in
-`Joomla6Target`. Meta-gen's forms generator renders no templates at all - it builds XML
+`Joomla6Target`. The Metalanguage Generator's forms generator renders no templates at all - it builds XML
 through DOM, which is the line 2.1 drew - so there is no render pass to collect during.
 And `initLangTree()` reads `$AST->extensions->component->languages`, the *project's*
 translation list; a metalanguage has no `extensions` node, so the tree comes out empty and
-the first call fatals. It stays where it is, generating a component's strings, and Meta-gen
+the first call fatals. It stays where it is, generating a component's strings, and the Metalanguage Generator
 collects its own as it builds each form.
 
 *Decided: the meta-model gains a `label`, and a `description`, on a Feature and a
@@ -1110,9 +1110,9 @@ it should read "Is this a value object?" - so the package format would be fixed 
 text nobody chose. It lands before the package rather than after, because adding it later
 changes that format.
 
-**3.4 Importing one.** Exten-gen and Gen-gen each grow an import screen and a store, so a
+**3.4 Importing one.** The Extension Generator and the Generator Generator each grow an import screen and a store, so a
 site can hold several metalanguages at once. A project records which language it is written
-in; a generator records which language it is *for*, and Exten-gen refuses to run one over a
+in; a generator records which language it is *for*, and the Extension Generator refuses to run one over a
 project in a different language.
 
 *Decided: they sit beside each other, and a project binds to one when it is created.* A
@@ -1120,23 +1120,23 @@ site holds as many metalanguages as have been imported, and starting a new model
 choosing one from a dropdown of them - so the binding is made once, visibly, by the person
 making the model, rather than inferred from whatever the component happens to ship. ER1 is
 one entry in that list like any other; until 3.5 turns it into a package, the entry is the
-forms Exten-gen ships, which is what keeps every existing project openable while the
+forms the Extension Generator ships, which is what keeps every existing project openable while the
 mechanism lands.
 
 Two things follow. A project row has to carry its language - key and version - because
 nothing else can say which forms to open it with. And the dropdown is the join 3.5 needs:
 once ER1 arrives as a generated package it becomes another row in the same list, and
 nothing above it changes.
-*Done when* Exten-gen edits a project through imported forms rather than through forms it
-ships, and Gen-gen offers an imported language's concepts when a rule names what to select.
+*Done when* the Extension Generator edits a project through imported forms rather than through forms it
+ships, and the Generator Generator offers an imported language's concepts when a rule names what to select.
 
-**Exten-gen's half is done; Gen-gen's is not, and that order is forced.** Gen-gen's CI
-checks Exten-gen out beside itself and compares against its current `main`, so its side
-cannot land until this one has. The library moved first for the same reason: Exten-gen and
-Gen-gen both read a package now, so `Package\*` is `Yepr\Gen\Core`'s at **0.5.0** -
-written in Meta-gen at 3.3 and moved when there was a second reader, which is the order the
+**The Extension Generator's half is done; the Generator Generator's is not, and that order is forced.** The Generator Generator's CI
+checks the Extension Generator out beside itself and compares against its current `main`, so its side
+cannot land until this one has. The library moved first for the same reason: the Extension Generator and
+the Generator Generator both read a package now, so `Package\*` is `Yepr\Gen\Core`'s at **0.5.0** -
+written in the Metalanguage Generator at 3.3 and moved when there was a second reader, which is the order the
 reference dropdown set at 3.0. `PackageReader::model()` returns decoded JSON there rather
-than Meta-gen's `ConceptModel`: a library that handed back one consumer's model type would
+than the Metalanguage Generator's `ConceptModel`: a library that handed back one consumer's model type would
 make every consumer depend on that consumer's idea of what a language is.
 
 **A site holds a catalogue, and ER1 is a row in it.** `MetalanguageCatalogue` answers "what
@@ -1180,7 +1180,7 @@ this one - 1.1.0 was never released - but this machine's had, from the hours 3.0
 not re-running.
 
 **The version goes back up.** 3.0 held 1.1.0 because the update script drops
-`#__extengen_projectforms` and there was nowhere for that data to go; Meta-gen exports a
+`#__extengen_projectforms` and there was nowhere for that data to go; the Metalanguage Generator exports a
 package now and this imports one, so the condition the plan set is met. `src/extengen.xml`
 says 1.1.0 and `updates.xml` is regenerated to match, which means the tag should follow the
 push rather than wait - an update server offering a version with no release is the failure
@@ -1191,28 +1191,28 @@ one that matters is the step's own criterion: a project bound to an imported lan
 renders that language's fields, with that language's labels out of the package's own
 language file, and none of ER1's. Nothing in this component knows those field names.
 
-**Gen-gen's half, and 3.4 is done.** A generator is written *for* a metalanguage the same
+**The Generator Generator's half, and 3.4 is done.** A generator is written *for* a metalanguage the same
 way a project is written *in* one: same store, same import screen, same two columns. What
-differs is that Gen-gen ships no language of its own, and that is an answer rather than a
+differs is that the Generator Generator ships no language of its own, and that is an answer rather than a
 gap - a generator written before 3.4 names selectors from its target's vocabulary,
 `Joomla6Selectors` hard-keyed to ER1, and every one of them keeps working. So the dropdown
 offers "no metalanguage" first and means it.
 
 The step's own criterion is `RuleSelectorField`: when a language is bound, a rule's *what to
-select* offers that language's concepts instead of the target's selectors. Gen-gen reads
+select* offers that language's concepts instead of the target's selectors. The Generator Generator reads
 them from the package's manifest and never from the concept model - how a language is stored
-is Meta-gen's business, and teaching a third component would be teaching it to three. The
+is the Metalanguage Generator's business, and teaching a third component would be teaching it to three. The
 value stored is the concept's **key** and the label is its name, because a rule that stored
 the name would come unpicked the moment somebody renamed a concept, silently, since it would
 still be a string and still look like one.
 
 **The store is the library's now**, at 0.6.0, for the reason two components keeping one kind
 of list always means: `Joomla\Metalanguage` holds Entry, Catalogue, Installer and Importer,
-and what each component passes in is its table and whatever language it ships. Exten-gen's
+and what each component passes in is its table and whatever language it ships. The Extension Generator's
 four copies are gone. The library's entry no longer knows what ER1 is, so 3.5 turning it into
 a package is one argument fewer at one call site.
 
-**Gen-gen 0.1.0 could not save a generator at all**, and that had nothing to do with this
+**The Generator Generator 0.1.0 could not save a generator at all**, and that had nothing to do with this
 step. `checked_out` arrives from the form as an empty string, `checked_out` is an unsigned
 int, and MySQL in strict mode refuses the row - so every save from the edit screen failed
 with the edit still on screen. The form already declares `filter="unset"` on it, which is
@@ -1232,13 +1232,13 @@ shape, and the fix was to re-seed and to stop writing shared fixture state: the 
 its own generator now, under a name unique per run, because two runs leaving two rows with
 one name means finding it again by name picks the wrong one.
 
-*Done:* generator-core 0.6.0 with 155 unit tests; Meta-gen 194; Exten-gen 245 and 24 Cypress
-specs; Gen-gen 48 and 9 Cypress specs - PHPStan and phpcs green in all four. The criterion
+*Done:* generator-core 0.6.0 with 155 unit tests; the Metalanguage Generator 194; the Extension Generator 245 and 24 Cypress
+specs; the Generator Generator 48 and 9 Cypress specs - PHPStan and phpcs green in all four. The criterion
 is checked in a browser on both sides: a project bound to an imported language renders that
 language's fields with that language's labels, and a generator bound to one offers that
 language's concepts where a rule says what to select.
 
-*Not done, and moved to 3.6:* Exten-gen refusing to run a generator over a project in a
+*Not done, and moved to 3.6:* the Extension Generator refusing to run a generator over a project in a
 different language. Both halves now record a language, so the check is a comparison - but a
 generator's selectors are still `Joomla6Selectors`, PHP hard-keyed to ER1, so today every
 modelled generator is honestly written for ER1 whatever its binding says. Refusing on a
@@ -1246,7 +1246,7 @@ binding that nothing downstream reads would be theatre. 3.6 makes selectors a pa
 modelled language, and the refusal belongs with it. *Done there.*
 
 **3.5 ER1 as a package, and the round-trip proof.** Model ER1 in LionCore M3, generate its
-forms, and compare against Exten-gen's hand-written ones as golden files - then keep the
+forms, and compare against the Extension Generator's hand-written ones as golden files - then keep the
 generated set, which makes this the migration rather than only a proof. The table of six
 differences under 3.2 is what has to be reconciled, and each one is a decision: presentation
 attributes the model cannot hold, the Joomla item chrome on a root form, how language
@@ -1297,8 +1297,8 @@ always done that, now doing it against forms nobody wrote.
 rule that stops reaching its subject stops being a rule, and this one said so.
 
 **Started: ER1 is modelled, and the differences are an inventory rather than an argument.**
-`tools/import-forms.php` in Meta-gen reads a set of Joomla forms back into a language, and
-`tests/Fixtures/languages/er1-full.json` is what it made of Exten-gen's twenty-six files: 19
+`tools/import-forms.php` in the Metalanguage Generator reads a set of Joomla forms back into a language, and
+`tests/Fixtures/languages/er1-full.json` is what it made of the Extension Generator's twenty-six files: 19
 classifiers, 4 datatypes, `Project` at the root, and `Field` abstract over `Property` and
 `EntityReferenceField`.
 
@@ -1320,7 +1320,7 @@ model rather than the reader, because the reader ran once and the model is what 
 root of a subtree of four more - `indexpage.xml`, `detailspage.xml` and their two customcode
 forms. The root form reaches `page.xml`, singular, which is a different design. So the
 language is 21 forms, and the generated set is not missing anything. This is 3.1's finding in
-a new place, and Exten-gen has no test for reachability the way Meta-gen's `FormsTest` does;
+a new place, and the Extension Generator has no test for reachability the way the Metalanguage Generator's `FormsTest` does;
 adding one belongs here.
 
 *`showon` means two different things, and only one of them is subtyping.* `field.xml` offers
@@ -1403,7 +1403,7 @@ page in order, with its own wording. Three type differences remain, all custom f
 generator written for an arbitrary metalanguage needs a selector that is a path through
 *that* language's concept model, so `Vocabulary` gains a source half and the rule engine
 learns to walk one. The largest item in this stage, and it reaches generator-core and
-Gen-gen rather than only the two components.
+the Generator Generator rather than only the two components.
 
 **Done.** A selector is a `SelectorPath`: a list of steps, each of which is an object rather
 than a segment of a dotted string. Three kinds - `contain` into a containment, `follow` along
@@ -1419,7 +1419,7 @@ re-derived rather than something you could name. Had a path not been able to exp
 targets would have kept closures for the interesting selectors and data for the easy ones,
 which is worse than either.
 
-*Both sides of a selector have to be one list.* 3.4 had Gen-gen offer a language's concepts
+*Both sides of a selector have to be one list.* 3.4 had the Generator Generator offer a language's concepts
 when one was bound, and nothing added them to the vocabulary - so a rule written that way was
 refused when it ran, by a validator checking the name against the vocabulary's list. The
 offering and the checking were answering different questions. `Vocabulary::withConcepts()` is
@@ -1427,7 +1427,7 @@ now what both go through, and it adds concepts by **name**, not by key: a stored
 keeps a key so that renaming a concept cannot move what a model points at, but a rule file is
 read by people and `for: c-entity` is a rule nobody can check by eye.
 
-*And the thing that had not actually landed.* Exten-gen's vocabulary is generated by
+*And the thing that had not actually landed.* The Extension Generator's vocabulary is generated by
 `build/vocabulary.php`, and that script was never taught to write the paths - so the committed
 descriptor had none, `RuleDrivenGenerator::selectors()` took its no-paths branch every time,
 and the closures were still doing all the work. Every gate was green throughout, because
@@ -1463,9 +1463,9 @@ generates. It captures the id now.
 
 *The reference table follows from the same question.* A `follow` step needs the language's
 table, and `RuleDrivenGenerator` took ER1's by name. It takes the bound language's now, through
-`LanguageContext` - the third instance of the same seam as `VocabularyContext` and Gen-gen's
+`LanguageContext` - the third instance of the same seam as `VocabularyContext` and the Generator Generator's
 `MetalanguageContext`: chosen once at the top of a run, needed several layers down, small
-enough to name and resettable enough to test. Null stays a real state, because Gen-gen's
+enough to name and resettable enough to test. Null stays a real state, because the Generator Generator's
 acceptance check runs this pipeline directly without going through the screen. Resolving an
 entry to a table moved to `Metalanguages::referenceTable()`, which the edit screen already did
 its own way - the dropdown offering what a field may point at and the selector following that
@@ -1473,10 +1473,10 @@ reference have to read the same table.
 
 *Done:* 251 unit tests, PHPStan, phpcs and 25 Cypress specs green, on generator-core 0.10.0.
 
-**3.7 Package and release Meta-gen.** 0.1.0 is unreleased: the repository exists, the
+**3.7 Package and release the Metalanguage Generator.** 0.1.0 is unreleased: the repository exists, the
 gates run, and nothing is published yet.
 
-**Ready, and the tag is the only step left.** Meta-gen already had the machinery - a build
+**Ready, and the tag is the only step left.** The Metalanguage Generator already had the machinery - a build
 script, an update-xml script, a release workflow that checks the tag against the manifest and
 publishes what it built. What it had never had was anything reading that machinery between
 tags, and three things had quietly gone wrong in the gap.
@@ -1485,23 +1485,23 @@ tags, and three things had quietly gone wrong in the gap.
 `Lionweb\ChunkBuilder` arrived, and `src/script.php` still insisted on `0.6.0` from before the
 LionWeb import existed. The build reads `LIBRARY_MINIMUM` to decide what to bundle, so the
 released package would have carried a library with no `Lionweb` namespace in it: install,
-accept the library, fatal on the import screen. Exten-gen and Gen-gen have had a test pinning
-those two together for some time. Meta-gen was the one repository without it, which is why it
+accept the library, fatal on the import screen. The Extension Generator and the Generator Generator have had a test pinning
+those two together for some time. The Metalanguage Generator was the one repository without it, which is why it
 was the one that drifted.
 
 *The one on the screen where it matters.* `updates.xml` described this component as "Model a
-Joomla extension, and generate it" - Exten-gen's description, which came over with the build
+Joomla extension, and generate it" - the Extension Generator's description, which came over with the build
 script. That line is what the extension manager shows somebody deciding whether to install.
 The manifest holds a language key rather than a sentence, so `update-xml.php` resolves it out
 of `com_metagen.sys.ini` now instead of repeating it.
 
 *And the one that was only a comment.* `build/update-xml.php` has said since it was written
 that "`UpdateServerTest` fails when the committed file and the manifest disagree". That
-sentence came from Exten-gen and the test did not. Nothing in this repository read
+sentence came from the Extension Generator and the test did not. Nothing in this repository read
 `updates.xml` at all; the release workflow's own regenerate-and-diff check runs when a tag is
 pushed, which is the one moment it is too late to find out.
 
-So two test files, ported from Exten-gen where every rule in them was written after the thing
+So two test files, ported from the Extension Generator where every rule in them was written after the thing
 it checks had already shipped broken. `ReleaseTest` reads the manifest against the filesystem
 in both directions - the direction that bites being a folder that exists and is not listed,
 which works perfectly in development and is simply absent the moment somebody installs the
@@ -1518,7 +1518,7 @@ and 22 Cypress specs green against it.
 What no gate here reaches: an install onto a site that has never had this component. The
 development site always has the tables already, so the install SQL runs as an update.
 
-The release procedure is written down in Meta-gen's `docs/development.md` now, including why
+The release procedure is written down in the Metalanguage Generator's `docs/development.md` now, including why
 a locally built package and the one CI publishes can carry different library versions and both
 be right, and why `updates.xml` has to be committed and tagged together - it is served from
 `main`, so a site learns of a version the moment the commit lands, tag or no tag.
@@ -1562,7 +1562,7 @@ for the same problem.
 inside itself, so it had no install script at all. A component that reads a shared library and
 does not ship one installs cleanly and fatals on the first screen that generates anything, and
 Joomla has no way for a manifest to declare a dependency - so `src/script.php` and the
-`library/` folder in the package are ported from Meta-gen, and the build reads
+`library/` folder in the package are ported from the Metalanguage Generator, and the build reads
 `LIBRARY_MINIMUM` to decide what to bundle. Verified on a real site: the package installs and
 says "The Yepr Gen library was installed."
 
@@ -1574,7 +1574,7 @@ never needed one. And `build/update-xml.php` had claimed since it was written th
 writes the version in `joomla.asset.json` - it did not, and that file sat at 0.4.4 while this
 was being prepared, which after an upgrade serves everybody the previous release's stylesheet.
 The workflow's regenerate-and-diff check could not have caught it: the script wrote nothing to
-diff. Exactly what 3.7 found in Meta-gen, in a different file.
+diff. Exactly what 3.7 found in the Metalanguage Generator, in a different file.
 
 Released as 0.5.0 rather than 0.4.5: the PHP floor moves to 8.3 with the library.
 
@@ -1636,7 +1636,7 @@ has to become a migration that reads the models, and the release that does it ha
 *And one thing that only existed in a browser.* Exporting a language package was something only
 the screen could do: 3.5 built ER1's package by clicking, and recorded what came out, so the
 plan said what the package contains and nothing said how to make it again. `tools/export-language.php`
-in Meta-gen runs the same target through the same pipeline. Regenerating ER1 for this step is
+in the Metalanguage Generator runs the same target through the same pipeline. Regenerating ER1 for this step is
 the second time it has been needed.
 
 *Verified on a real site.* The package installs, the twelve ER1 projects move from 1.0 to 1.1
@@ -1648,17 +1648,17 @@ exactly what every other gate here cannot see.
 "this feature only applies when". That one is about the metalanguage rather than about ER1, and
 it is still where 3.5 left it.
 
-*Done:* 256 unit tests, PHPStan, phpcs and 25 Cypress specs green in Exten-gen; 241 and the
-same three gates in Meta-gen.
+*Done:* 256 unit tests, PHPStan, phpcs and 25 Cypress specs green in the Extension Generator; 241 and the
+same three gates in the Metalanguage Generator.
 
-**4.3 Self-hosting.** Exten-gen generates Exten-gen. Everything it needs exists by now:
+**4.3 Self-hosting.** The Extension Generator generates the Extension Generator. Everything it needs exists by now:
 the engine from Stage 0, working generation from Stage 1, modelled generators from Stage
 2, generated forms and an imported metalanguage from Stage 3, and the model gaps closed in
 4.2. The criterion is
 byte-identical output against the hand-written component, the same way 2.3 checks a
 modelled generator.
 
-**Done, and the criterion is wrong.** Exten-gen is modelled in ER1 -
+**Done, and the criterion is wrong.** The Extension Generator is modelled in ER1 -
 `tests/Fixtures/golden/models/extengen.json`, the two tables it stores, field for field out
 of its own install SQL, with an index page and a detail page for each - and it generates 35
 files from that model. None of them is byte-identical to the hand-written component, and the
@@ -1674,14 +1674,14 @@ number that explains it is this:
 
 **Half of this component is a code generator, and a generator of data-driven components does
 not produce one.** The criterion was written before anybody counted. Generating
-`src/Generator/` byte for byte would need a model of *generators*, which is Gen-gen's
+`src/Generator/` byte for byte would need a model of *generators*, which is the Generator Generator's
 subject and not ER1's - and 2.3 already checks that a modelled generator reproduces a
 hand-written one, which is the same claim at the scale where it means something.
 
 *What the exercise was worth anyway, and it was worth a lot.* The self-model sits in
 `Fixtures/golden/models` beside the other three, so its output goes through every check they
 do: the golden comparison, the PHP, XML, INI and SQL parsers, name resolution, the
-template-tag sweep. **Exten-gen generates a valid component from a model of itself** - the
+template-tag sweep. **The Extension Generator generates a valid component from a model of itself** - the
 manifest, the services provider, the SQL, the language files, and a controller, model, table,
 view and layout per entity, on the paths this component keeps them at. Twenty-four of the
 thirty-five land on a file that exists; the other eleven are the second entity's screens and
@@ -1706,7 +1706,7 @@ nothing is byte-identical yet. That last one is an assertion, so the day somethi
 it fails - which is news, and this is where news belongs.
 
 **What the criterion should have been**, and what this step therefore leaves behind:
-*Exten-gen generates the part of Exten-gen that is a component, and that output is pinned.* It
+*The Extension Generator generates the part of the Extension Generator that is a component, and that output is pinned.* It
 is. The stronger claim needs the generator to stop being half the component - which is what
 4.1 did for plug-gen and what this repository has not done for itself.
 
@@ -1822,16 +1822,16 @@ a fresh clone is not left with the file unchecked.
 **4.5 Language ancestry.** A language may declare that it derives from another, and everything
 that reasons about a language reasons about its ancestry.
 
-**Done, across four repositories.** A metalanguage declares `dependsOn`; Meta-gen offers it on
-the language form; the library walks it and refuses a child that breaks its parent; Exten-gen
-generates from any language with ER1 in its ancestry; Gen-gen offers a parent's concepts as
+**Done, across four repositories.** A metalanguage declares `dependsOn`; the Metalanguage Generator offers it on
+the language form; the library walks it and refuses a child that breaks its parent; the Extension Generator
+generates from any language with ER1 in its ancestry; the Generator Generator offers a parent's concepts as
 selectors and lists a parent's generators under the child.
 
 *Two corrections to the design below, both found by building it.*
 
 **The format number.** The design said it goes up, and it does - to 2, for `dependsOn`. What it
 did not say is that the reader has to learn a *range*: strict equality would have made the new
-reader refuse every package ever built, including the ER1 Exten-gen ships. Refusing a newer
+reader refuse every package ever built, including the ER1 the Extension Generator ships. Refusing a newer
 format is the point, refusing an older one is the opposite of it, and 1 and 2 differ only by a
 field whose absence is meaningful. `OLDEST_READABLE_FORMAT` is what the next format change has
 to argue with.
@@ -1846,7 +1846,7 @@ suite boots no framework. That is the same split as `MetalanguageInstaller` and 
 the walk testable at all - the cycle, the shared grandparent, the two versions of one parent,
 the uninstalled parent.
 
-*What the browser caught, twice, and nothing else could.* Meta-gen's metalanguage edit template
+*What the browser caught, twice, and nothing else could.* The Metalanguage Generator's metalanguage edit template
 renders fields by name, one call each, so the new `dependsOn` field was on the form and not on
 the screen: every unit test passed against a form whose new field nothing drew. And `PackageTest`
 caught the design error before that - the first attempt declared the picker's field class on the
@@ -1854,7 +1854,7 @@ caught the design error before that - the first attempt declared the picker's fi
 may name a component because a package is loaded by more than one. 3.5 wrote that rule down;
 4.5 tried to break it within the hour.
 
-*A gap this step found rather than made.* Gen-gen's generators list has no filter bar. The
+*A gap this step found rather than made.* The Generator Generator's generators list has no filter bar. The
 filter form has existed since 0.1 and the template has never rendered it, so `target` is
 reachable by request and by nothing else - and now `metalanguage` is too. The filtering is
 asserted; the bar is not there to assert.
@@ -1906,7 +1906,7 @@ Drupal ones - compares `field_type` against the lower-case `'property'` and `'re
 reads the payload from `->property` and `->reference`. Those were the *hand-written* form's
 names, and the hand-written forms were deleted at 3.5.
 
-So **a project modelled today, through Exten-gen's own screens, generates a component with no
+So **a project modelled today, through the Extension Generator's own screens, generates a component with no
 relations in it.** Reproduced by taking the conference model and changing only the
 discriminator value to the one the generated form produces: three foreign-key columns become
 zero. No error anywhere - the fields are simply not recognised as references, so no column, no
@@ -1917,7 +1917,7 @@ seeded projects, the Cypress specs. `reference-fields.cy.js` exercises the refer
 and never generates from one.
 
 The fix is a decision rather than a line. The generators could learn both spellings, which
-keeps the old models working and is a compatibility shim in fifteen places; or Meta-gen's form
+keeps the old models working and is a compatibility shim in fifteen places; or the Metalanguage Generator's form
 generator could be taught what a discriminator's values should be; or the generators could stop
 hard-coding either and read the discriminator and the subtype keys out of the language, which
 is the only one of the three that would not be wrong again the next time a concept is renamed.
@@ -1935,7 +1935,7 @@ The claim is checked rather than asserted. `FieldKindTest` runs all four golden 
 both spellings and compares the output **byte for byte**, guards that against vacuity by
 counting the references it rewrote, reads the two concept names back out of the shipped
 package's manifest, and reads the discriminator out of the shipped `field.xml` - because
-`field_type` is not a feature of the language at all. It is the name Meta-gen gives the radio
+`field_type` is not a feature of the language at all. It is the name the Metalanguage Generator gives the radio
 that chooses between an abstract concept's subtypes, so the manifest cannot confirm it and the
 form is the only witness there is. That test also pins the `lcfirst` rule against the subform
 the form generator actually emits, which is the exact step that broke.
@@ -2018,31 +2018,31 @@ output with it. Restoring `reference_id` turns three of the four fixtures red.
 It also names `reference_id` in its vacuity guard, so the day somebody tidies it out of the
 fixtures the test says it has stopped checking anything rather than passing quietly.
 
-Exten-gen stood at 351 unit tests and 38 browser specs by then, all four gates green.
+The Extension Generator stood at 351 unit tests and 38 browser specs by then, all four gates green.
 
 ### The same question, asked of the other two
 
 4.5 was the last numbered step, so this is follow-through rather than a step: the defect above
-was not about Exten-gen, it was about a record stored as one JSON blob being written back from
-a form. Meta-gen and Gen-gen both store their models that way, and neither had a spec that ever
-pressed Save. Gen-gen's own `save()` already says so in a comment - *"nothing had noticed
+was not about the Extension Generator, it was about a record stored as one JSON blob being written back from
+a form. The Metalanguage Generator and the Generator Generator both store their models that way, and neither had a spec that ever
+pressed Save. The Generator Generator's own `save()` already says so in a comment - *"nothing had noticed
 because nothing had ever saved one: the browser spec opened the screens and read them"* - which
 describes the testing gap precisely and had been left open.
 
-**Meta-gen is clean.** Its forms are static XML rather than merged from a package at runtime, so
+**The Metalanguage Generator is clean.** Its forms are static XML rather than merged from a package at runtime, so
 the cause could not be the same one, and the round trip loses nothing: the save only adds the
 empty fields the form declares. `metalanguage-round-trip.cy.js` holds that.
 
-**Gen-gen was not.** Opening the generator that reproduces Exten-gen and pressing Save kept all
+**The Generator Generator was not.** Opening the generator that reproduces the Extension Generator and pressing Save kept all
 twenty-seven rules and all five groups, and rewrote what was inside every one of them.
 `derivation` and `fragment_template` are lists with no empty entry, so Joomla rendered the first
 option as selected wherever the stored value was empty; `showon` hides such a field but does not
 stop it posting; and the save wrote that first option back. All 115 bindings that named no
 derivation came back deriving `adminLinkPageName` from a fragment template called `LICENSE`.
 
-Nothing in Gen-gen would have reported it. The counts are unchanged, the names are unchanged,
+Nothing in the Generator Generator would have reported it. The counts are unchanged, the names are unchanged,
 and the first thing to fail would have been `check-against-extengen.php` - the acceptance check
-that reproduces Exten-gen's output file for file - a long way from the cause and with no
+that reproduces the Extension Generator's output file for file - a long way from the cause and with no
 obvious connection to a Save that happened days earlier.
 
 The fix is an empty option on a vocabulary list that the form has not marked required, so that a
@@ -2055,7 +2055,7 @@ The lesson is the one from the discriminator, a third time in a different regist
 reads a screen is not a test that the screen round-trips. All three repositories now have a spec
 that opens a stored record, saves it, and reads it back from a fresh request.
 
-Meta-gen: 250 unit tests, 25 browser specs. Gen-gen: 48 and 13. Both green on every gate.
+The Metalanguage Generator: 250 unit tests, 25 browser specs. The Generator Generator: 48 and 13. Both green on every gate.
 
 ### The gate the conventions file had always claimed
 
@@ -2083,7 +2083,7 @@ takes the `D` modifier now.
 The pattern is exported from one place and compared as text, and `LetterRuleTest` covers the
 twelve cases on the PHP side.
 
-Gen-gen gets no such script: it owns no browser JavaScript at all, only Joomla's own assets, and
+The Generator Generator gets no such script: it owns no browser JavaScript at all, only Joomla's own assets, and
 its conventions file correctly never claimed otherwise. Both gates run in CI and in the release
 workflow, as generator-core's already did - a gate nobody runs is a gate only for whoever
 remembers to type it.
@@ -2098,12 +2098,12 @@ Everything above was on `main` and in no released package, including both pieces
 `com_extengen 1.2.0`, `com_gengen 0.3.0` and `com_metagen 0.2.0` close that. No schema changed
 in any of them, so none carries an update file.
 
-One thing to keep: Exten-gen was first tagged `v0.2.0` by mistake, and the release workflow
+One thing to keep: the Extension Generator was first tagged `v0.2.0` by mistake, and the release workflow
 refused it - *"Tag v0.2.0 does not match the manifest version 1.2.0"*. That check exists because
 3.7 found a tag that had nothing listening to it, and this is the first time it has stopped
 something. It cost one wrong tag and no wrong release.
 
-Exten-gen: 363 unit tests, 14 browser-side, 39 browser specs. Meta-gen: 250, 8 and 26. Gen-gen:
+The Extension Generator: 363 unit tests, 14 browser-side, 39 browser specs. The Metalanguage Generator: 250, 8 and 26. The Generator Generator:
 48 and 13.
 
 ### One copy of the generate-modal script
@@ -2117,21 +2117,21 @@ only reason they still agreed.
 there runs 35. Both components ask for `lib_yepr_gen.generation-modal`, registering the
 library's asset file by name first, the way the reference element already is.
 
-Meta-gen therefore owns no browser JavaScript again, so its `test-js` would have run over an
+The Metalanguage Generator therefore owns no browser JavaScript again, so its `test-js` would have run over an
 empty directory and passed. It goes, with its CI and release steps, the Node setup that existed
 only for it, and its `src/media` - an asset file declaring nothing inside a media block naming
-an empty folder. `CLAUDE.md` there says why, so it does not come back. Exten-gen keeps its own,
+an empty folder. `CLAUDE.md` there says why, so it does not come back. The Extension Generator keeps its own,
 because the name validator is still its own.
 
-That also closed the last item the audit had left: Meta-gen had been pinned to `^0.13` since
+That also closed the last item the audit had left: the Metalanguage Generator had been pinned to `^0.13` since
 0.14, harmlessly - it calls nothing that release fixed - and is now on 0.15 with everything
-else. Two checkouts turned out to be further behind than their own constraints: Exten-gen was
-running 0.13 against `^0.14`, and Gen-gen 0.12 against `^0.14`, including for the tests meant to
+else. Two checkouts turned out to be further behind than their own constraints: the Extension Generator was
+running 0.13 against `^0.14`, and the Generator Generator 0.12 against `^0.14`, including for the tests meant to
 cover the feature check that arrived in 0.14. The lock file is git-ignored, so CI had always
 resolved correctly and only the working copies had drifted. Both were refreshed; everything
 still passes.
 
-Gen-gen stays at `^0.14`. It needs nothing from 0.15, and a minimum raised without a reason is
+The Generator Generator stays at `^0.14`. It needs nothing from 0.15, and a minimum raised without a reason is
 an upgrade forced on a site for nothing.
 
 ### The browser gate, in CI
@@ -2148,17 +2148,17 @@ action and the assets 404ing from `/administrator/media`. Worth keeping: the fir
 the fix changed nothing, because it was taken within a second of the edit and the built-in
 server revalidates timestamps on a delay, so the response came from the compile before it.
 
-Meta-gen and Gen-gen now have the same workflow, and all three are green. Gen-gen's is the
-awkward one: its specs run against Exten-gen's site, with both components installed on it.
+The Metalanguage Generator and the Generator Generator now have the same workflow, and all three are green. The Generator Generator's is the
+awkward one: its specs run against the Extension Generator's site, with both components installed on it.
 
 *What it found, which is the point of it.* Three defects that every other gate passed:
 
-- **A first install did not import ER1.** Exten-gen's `script.php` imported it without first
+- **A first install did not import ER1.** The Extension Generator's `script.php` imported it without first
   registering the component's namespace or requiring the library's autoloader, so the import
   failed on any site where nothing had loaded them yet - which is every real first install and
   no development machine.
-- **A view could not find its model on a filesystem that cares about case**, in Meta-gen *and*
-  Exten-gen. `AbstractView::getName()` lowercases the last namespace segment, so `View\ERD` asks
+- **A view could not find its model on a filesystem that cares about case**, in the Metalanguage Generator *and*
+  the Extension Generator. `AbstractView::getName()` lowercases the last namespace segment, so `View\ERD` asks
   for `ErdModel` and `View\GenerateForms` for `GenerateformsModel`. Named the obvious way, both
   files resolved on Windows and nowhere else: `createModel()` returned null, the controller
   skipped `setModel()`, the view called a method on null, and the log said `Undefined array
@@ -2175,8 +2175,8 @@ calls `getModel()`, and every model asked for by name, checked against a `scandi
 compared as strings. Not `is_file`, which on Windows answers the question the test exists to ask
 - it finds `GenerateFormsModel.php` when asked for `GenerateformsModel.php`, which is the bug.
 
-*Done:* generator-core 0.15.0; Meta-gen 256 unit tests and 26 browser specs; Exten-gen 370 and
-39; Gen-gen 53 and 13, with the acceptance check still reproducing Exten-gen's approved output
+*Done:* generator-core 0.15.0; the Metalanguage Generator 256 unit tests and 26 browser specs; the Extension Generator 370 and
+39; the Generator Generator 53 and 13, with the acceptance check still reproducing the Extension Generator's approved output
 file for file.
 
 **The intermittent 500, after 1.3.4.** `generated-front-end.cy.js` failed now and then in CI
@@ -2195,7 +2195,7 @@ on this machine never showed it.
 A first fix set `opcache.revalidate_freq=0` on CI's server. That hid the window rather than
 removing it, and made CI's PHP unlike a real site's, so it is gone again. Instead:
 
-- the spec installs with Exten-gen's own *Install on this site* button, in the server, as a real
+- the spec installs with the Extension Generator's own *Install on this site* button, in the server, as a real
   site does, which is also the first end-to-end test of that button (5.6 had checked only that
   it is offered and refused);
 - `BrowserSpecInstallsTest` fails on a spec that installs through the CLI;
@@ -2225,7 +2225,7 @@ and version - the pair, because two versions of a parent are two different paren
 `PackageManifest` gains `dependsOn`, and **no table changes.** The metalanguages table already
 has a `manifest` text column holding the whole manifest JSON, and `MetalanguageEntry` already
 reads `concepts` back out of it - defended all the way down, because a manifest written by an
-older Meta-gen has no `concepts` in it either. `dependsOn` travels the same road for the same
+older the Metalanguage Generator has no `concepts` in it either. `dependsOn` travels the same road for the same
 reason, and an older package reads as "derives from nothing", which is true.
 
 The package format number goes up, because a reader that ignores `dependsOn` would import a
@@ -2250,11 +2250,11 @@ Two things it must do rather than may:
 | | |
 |---|---|
 | generator-core | `PackageManifest.dependsOn`; `MetalanguageEntry::ancestors()`; `MetalanguageCatalogue::ancestry()`; the import-time guard below |
-| Meta-gen | LionCore M3 gains `dependsOn`; the metalanguage form gains a repeating reference; `PackageFiles` writes it into the manifest |
-| Gen-gen | `RuleSelectorField` offers the union of the language's concepts and its ancestors'; the generators list gains a metalanguage filter that matches the language **or any ancestor** |
-| Exten-gen | `RuleDrivenGenerator::LANGUAGE` stops meaning "the key is ER1" and starts meaning "ER1 is in the ancestry" |
+| Metalanguage Generator | LionCore M3 gains `dependsOn`; the metalanguage form gains a repeating reference; `PackageFiles` writes it into the manifest |
+| Generator Generator | `RuleSelectorField` offers the union of the language's concepts and its ancestors'; the generators list gains a metalanguage filter that matches the language **or any ancestor** |
+| Extension Generator | `RuleDrivenGenerator::LANGUAGE` stops meaning "the key is ER1" and starts meaning "ER1 is in the ancestry" |
 
-Gen-gen's half is nearly free. `Vocabulary::withConcepts()` already takes a list of names and
+The Generator Generator's half is nearly free. `Vocabulary::withConcepts()` already takes a list of names and
 already skips names the target uses, so offering an ancestor's concepts is a longer list rather
 than a new mechanism - and it was built at 3.6 with exactly this shape for exactly this reason.
 
@@ -2299,14 +2299,14 @@ argument, not this one.
 The thing that makes this cheap is already proved. Adding four nodes ER1 has no idea about to a
 golden model generates all 103 files unchanged - the validator only checks what it names and
 the generator only reads named paths - so **a derived language already renders as its parent's
-subset**. The only thing in the way is that Exten-gen refuses on the key. Ancestry is what turns
+subset**. The only thing in the way is that the Extension Generator refuses on the key. Ancestry is what turns
 an accident of the implementation into something a language can say out loud.
 
 ---
 
 ## Stage 5 — the dots on the i
 
-Drawn up 2026-10-08, after Stage 4 had closed and Exten-gen stood at 1.2.0. Each item is
+Drawn up 2026-10-08, after Stage 4 had closed and the Extension Generator stood at 1.2.0. Each item is
 something somebody using the three components runs into in the first ten minutes. None of
 them is large on its own, but together they are what separates "it works" from "it can be
 shown". The JWC demo on 16 October is the deadline for most of them.
@@ -2324,12 +2324,12 @@ missing strings.
 
 | Where | What |
 |---|---|
-| Exten-gen and Gen-gen, the administrator menu | `*_SUBMENU_MANAGER_METALANGUAGES` was in the `.ini` and not in the `.sys.ini`. The menu reads only the system file, so the entry was correct on the component's own pages and raw on every other page. That is the one anybody would have seen. |
-| Exten-gen, configuration | three keys spelled `PROJECT_` where the ini has `PROJECTS_` or the reverse. The form now points at the existing keys, so no duplicates were added. |
-| Exten-gen, project picker modal | the same near-miss, `PROJECTS_TABLE_CAPTION` against `PROJECT_TABLE_CAPTION`. |
-| Exten-gen, batch dialog | `COM_EXTENGEN_BATCH_TIP` had never been written. |
+| Extension Generator and Generator Generator, the administrator menu | `*_SUBMENU_MANAGER_METALANGUAGES` was in the `.ini` and not in the `.sys.ini`. The menu reads only the system file, so the entry was correct on the component's own pages and raw on every other page. That is the one anybody would have seen. |
+| Extension Generator, configuration | three keys spelled `PROJECT_` where the ini has `PROJECTS_` or the reverse. The form now points at the existing keys, so no duplicates were added. |
+| Extension Generator, project picker modal | the same near-miss, `PROJECTS_TABLE_CAPTION` against `PROJECT_TABLE_CAPTION`. |
+| Extension Generator, batch dialog | `COM_EXTENGEN_BATCH_TIP` had never been written. |
 
-Meta-gen had none, and the ER1 package defines all 72 of the constants its forms use.
+The Metalanguage Generator had none, and the ER1 package defines all 72 of the constants its forms use.
 
 The test has four parts. The scan finds what it should (a vacuity guard). Every constant
 with the component's prefix is defined. Every constant in the manifest is in the `.sys.ini`.
@@ -2340,15 +2340,15 @@ is not counted as a use.
 
 The browser half, `shouldShowNoRawConstants`, reads the rendered text of every view, every
 menu link and a project's edit screen. It is the only check that can see a constant built at
-run time. In Meta-gen's and Gen-gen's CI the unit tests now run after Joomla is fetched,
-because the core-string test skips without it. That is how Exten-gen's CI was already ordered.
+run time. In the Metalanguage Generator's and the Generator Generator's CI the unit tests now run after Joomla is fetched,
+because the core-string test skips without it. That is how the Extension Generator's CI was already ordered.
 
 **5.2 Entities, Pages and Extensions on three tabs.** Since 3.5 made ER1 a package, a
 project opens through the branch for imported languages, which renders the whole root form
 in one tab. Extengen had three tabs, and they were lost because a generated form has no way
 to say that some fields belong together. That has to come from the meta-model, so:
 
-- **Meta-gen:** LionCore M3's `Feature` gains an optional `fieldset`, a name. `FormXml` puts
+- **The Metalanguage Generator:** LionCore M3's `Feature` gains an optional `fieldset`, a name. `FormXml` puts
   each feature with a fieldset into a `<fieldset name="...">` of that name, with a label
   constant in the package's language file. Features without a fieldset stay in the unnamed
   fieldset they are in now, so a language that names none generates byte for byte what it
@@ -2357,7 +2357,7 @@ to say that some fields belong together. That has to come from the meta-model, s
   fieldsets `entities`, `pages` and `extensions`. Re-exported with
   `tools/export-language.php` into `Exten-gen/packages`, and `bindProjects` moves 1.1
   projects forward, as it did for 1.0 to 1.1.
-- **Exten-gen:** the edit template renders one tab per named fieldset of the language's
+- **The Extension Generator:** the edit template renders one tab per named fieldset of the language's
   form, in the order the form declares them. Anything without a fieldset goes on one tab
   named after the language, as now. The ERD button goes on the Entities tab again, but the
   template finds that tab by the reference table rather than by its name.
@@ -2365,7 +2365,7 @@ to say that some fields belong together. That has to come from the meta-model, s
 *Done when* an ER1 project opens on three tabs and the round-trip spec still passes. A
 language with no fieldsets still opens on one tab.
 
-**Done.** In Meta-gen, `Feature` reads an optional `fieldset`, normalised to
+**Done.** In the Metalanguage Generator, `Feature` reads an optional `fieldset`, normalised to
 `[a-z0-9_]` because it becomes both a fieldset name and a tab id. `FormXml` puts features
 that share one into a `<fieldset name="..." label="YEPR_<LANG>_<CLASSIFIER>_FIELDSET_<NAME>_LABEL">`
 after the form's own unnamed fieldset, which keeps the hidden fields. `FieldsetTest` checks
@@ -2378,7 +2378,7 @@ ER1 1.2 is ER1 1.1 with three fieldsets, re-exported with `tools/export-language
 `bindProjects` moves 1.1 projects forward. Nothing was removed from the language, so every
 1.1 model is a valid 1.2 model.
 
-In Exten-gen, `FormTabs` reads the language's root form, not Joomla's merged `Form`, because
+In the Extension Generator, `FormTabs` reads the language's root form, not Joomla's merged `Form`, because
 after the merge nothing records which fieldsets were the language's. There is one tab per
 named fieldset, plus one named after the language for any visible fields in no fieldset.
 Hidden fields are rendered outside the tabs. The ERD button goes on whichever tab holds
@@ -2387,7 +2387,7 @@ but the field name is simpler and just as honest). The template's other branch, 
 written by field name for a built-in ER1, has been dead since 3.5 removed built-in entries,
 and it is gone.
 
-*Done:* Meta-gen 265 unit tests and 30 browser tests; Exten-gen 380 unit tests,
+*Done:* the Metalanguage Generator 265 unit tests and 30 browser tests; the Extension Generator 380 unit tests,
 `project-binds.cy.js` asserting the three tabs, the field in each and the ERD button, and the
 whole browser suite green against ER1 1.2.
 
@@ -2413,12 +2413,12 @@ same way.
 whether it is built in. The import works the way the metalanguage import does.
 
 - **Built in:** the three targets in `Targets`. Listed out of the registry, not stored.
-- **Imported:** a Gen-gen package, in a new table `#__extengen_generators`. Gen-gen's zip
+- **Imported:** a Generator Generator package, in a new table `#__extengen_generators`. The Generator Generator's zip
   holds a rule file and three classes and does not say which language it is for, so it
   gains a `generator.json` manifest: format, key, name, version, target, metalanguage key
   and version, groups and rule file.
-- **No PHP from a package runs.** The classes in a Gen-gen package are wiring, and 2.3 shows
-  that the only thing they add is the path to a rule file. Exten-gen reads the rule file,
+- **No PHP from a package runs.** The classes in a Generator Generator package are wiring, and 2.3 shows
+  that the only thing they add is the path to a rule file. The Extension Generator reads the rule file,
   validates it against the target's vocabulary (a rule naming a selector, derivation or
   template the target does not have is refused at import), and runs the *target's own*
   generators with the rule file swapped in. This matters doubly for 5.7: an upload that
@@ -2426,17 +2426,17 @@ whether it is built in. The import works the way the metalanguage import does.
 - *What that rules out, said now:* an imported generator cannot add a group that the target
   has no class for. Its rules under an unknown prefix would never run, so the import
   reports them instead of accepting them silently.
-- The format is written in Gen-gen and read in Exten-gen. To keep the two from drifting,
-  Gen-gen's suite reads its own package with Exten-gen's reader, the way its acceptance
-  check already uses Exten-gen.
+- The format is written in the Generator Generator and read in the Extension Generator. To keep the two from drifting,
+  the Generator Generator's suite reads its own package with the Extension Generator's reader, the way its acceptance
+  check already uses the Extension Generator.
 
-**Done.** Gen-gen's Generate button now adds `generator.json` to the zip it already wrote:
+**Done.** The Generator Generator's Generate button now adds `generator.json` to the zip it already wrote:
 format 1, key, name, target, metalanguage key and version, the path of the rule file, and the
 groups. `GeneratorDefinition::ruleFilePath()` is the one place that path is computed, read by
 both the rule-file generator and the manifest. The manifest is added after the pipeline, not
 by a generator inside it, so the acceptance check's output is unchanged.
 
-In Exten-gen:
+In the Extension Generator:
 
 - `GeneratorPackage` reads the zip and checks it. Every rule must name only the selectors,
   derivations and templates the target's vocabulary publishes. Every rule must fall under a
@@ -2462,7 +2462,7 @@ reason.
 *The test that carries the claim:* every golden model is generated by the built-in generator
 and by the same rules minus the LICENSE rule, run as an imported generator. The output
 differs by exactly `LICENSE.txt`, and every other file is byte for byte the same.
-`GeneratorPackageTest` in Gen-gen builds a real package and reads it with Exten-gen's reader.
+`GeneratorPackageTest` in the Generator Generator builds a real package and reads it with the Extension Generator's reader.
 
 **5.5 Choose a generator when generating, then download.** The Generate button opens a
 chooser instead of generating straight away. It lists the generators whose metalanguage is
@@ -2592,10 +2592,10 @@ Checked on the MySQL 8.3 this machine runs, in a scratch database with
 "Invalid default value for 'time'", the new one installs, `NULL` stores, and `''` is refused.
 The development server's global `sql_mode` is empty, which is why nothing here had failed.
 `StrictSqlTest` states the rule over every approved Joomla schema. The golden diff is three
-columns and the same nine lines in each of the 17 Table classes. Gen-gen's acceptance check
+columns and the same nine lines in each of the 17 Table classes. The Generator Generator's acceptance check
 still reproduces it, because a template change is not a rule change.
 
-**And a site router, after 1.3.2.** The gap Exten-gen's own frontend had was also in what it
+**And a site router, after 1.3.2.** The gap the Extension Generator's own frontend had was also in what it
 generates. A generated component says it routes its own links, with `RouterServiceInterface`
 on the component and a `RouterFactory` in its provider, but it shipped no
 `Site\Service\Router`. So Joomla's factory threw "No router available", `Route::_()` returned
@@ -2610,20 +2610,20 @@ link the list's layout already builds. It is generated even with no frontend pag
 component declares a router either way. The spec now follows the menu link from the home page
 and fails on a deprecation there.
 
-Gen-gen's model of the Joomla 6 generator gained the rule, through `import-vocabularies` and
-`import-generator`, so a generator modelled in Gen-gen produces the router too. The acceptance
-check reproduces all 267 files, the new routers included. Two Gen-gen tests had the rule count
+The Generator Generator's model of the Joomla 6 generator gained the rule, through `import-vocabularies` and
+`import-generator`, so a generator modelled in the Generator Generator produces the router too. The acceptance
+check reproduces all 267 files, the new routers included. Two Generator Generator tests had the rule count
 written in as 27; one now compares with the imported rule file, the other is a floor.
 
-**5.8 Release.** All gates in all three repositories. Exten-gen 1.3.0, Meta-gen 0.3.0,
-Gen-gen 0.4.0. Each update file covers the schema changes: Exten-gen's new table and
-Meta-gen's none. Herman pushes and tags.
+**5.8 Release.** All gates in all three repositories. The Extension Generator 1.3.0, the Metalanguage Generator 0.3.0,
+the Generator Generator 0.4.0. Each update file covers the schema changes: the Extension Generator's new table and
+the Metalanguage Generator's none. Herman pushes and tags.
 
-**Prepared.** Exten-gen 1.3.0 carries one update file, `1.3.0.sql`: the generators table, and
-`created` and `created_by` on projects. Meta-gen and Gen-gen changed no schema. The release
-workflow adds the checksums. Exten-gen goes first, because Gen-gen's CI reads Exten-gen's
+**Prepared.** The Extension Generator 1.3.0 carries one update file, `1.3.0.sql`: the generators table, and
+`created` and `created_by` on projects. The Metalanguage Generator and the Generator Generator changed no schema. The release
+workflow adds the checksums. The Extension Generator goes first, because the Generator Generator's CI reads the Extension Generator's
 `main` for both the acceptance check and `GeneratorPackageTest`. At the time of release:
-Exten-gen 403 unit tests and 57 browser tests; Meta-gen 265 and 30; Gen-gen 59 and 17.
+The Extension Generator 403 unit tests and 57 browser tests; the Metalanguage Generator 265 and 30; the Generator Generator 59 and 17.
 
 ### Custom code on pages, again: ER1 1.3
 
@@ -2638,7 +2638,7 @@ offer exists, never that what exists is offered. `DeclaredKeysTest` should have
 caught the generator reading a name ER1 did not declare, and did not, because no
 golden model had page custom code for it to strip.
 
-- **ER1 1.3** (Meta-gen): `CustomcodePage` beside `CustomcodeEntity`, `customcode`
+- **ER1 1.3** (the Metalanguage Generator): `CustomcodePage` beside `CustomcodeEntity`, `customcode`
   on Page. Nothing removed, so every 1.2 model is a valid 1.3 model and the
   install moves projects forward.
 - **The dropdown** cannot know a page's type, which is chosen in the same form, so
@@ -2655,7 +2655,7 @@ golden model had page custom code for it to strip.
   of page slots byte for byte, and `generated-front-end.cy.js` checks the line is
   on the page and bold. `SlotContractTest` now requires every slot to be offered
   by a form in the shipped language; against ER1 1.2 it names all ten page slots.
-- **Gen-gen**'s model of the Joomla 6 generator has the two stylesheet rules, and
+- **The Generator Generator**'s model of the Joomla 6 generator has the two stylesheet rules, and
   its acceptance check reproduces all 277 approved files.
 
 ---
