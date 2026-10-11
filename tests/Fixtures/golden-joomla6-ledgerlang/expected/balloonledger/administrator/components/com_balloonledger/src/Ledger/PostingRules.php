@@ -27,10 +27,10 @@ final class PostingRules
      * @var array<string, string>
      */
     public const EVENTS = [
-        'VoucherSold' => 'A gift voucher is paid for. Nothing is earned yet: the company owes a flight.',
-        'FlightFlown' => 'The voucher is redeemed by flying. Now it is revenue, and VAT is due.',
-        'VoucherExpired' => 'The voucher was never used. What was owed becomes breakage revenue.',
-        'FlightCancelledDueToWind' => 'No entry: the voucher stays a liability until it is flown or expires.',
+        'TicketSold' => 'A ticket is paid for. Nothing is earned yet: the company owes a flight.',
+        'FlightFlown' => 'The ticket is used by flying. Now it is revenue, and VAT is due.',
+        'TicketExpired' => 'The ticket was never used. What was owed becomes breakage revenue.',
+        'FlightCancelledDueToWind' => 'No entry: the ticket stays a liability until it is flown or expires.',
     ];
 
     /**
@@ -46,17 +46,17 @@ final class PostingRules
     public function linesFor(string $event, array $data): array
     {
         $lines = match ($event) {
-            'VoucherSold' => [
+            'TicketSold' => [
                 new JournalLine('bank.psp', JournalLine::DEBIT, $this->value($data, 'amount')),
-                new JournalLine('liability.vouchers', JournalLine::CREDIT, $this->value($data, 'amount')),
+                new JournalLine('liability.tickets', JournalLine::CREDIT, $this->value($data, 'amount')),
             ],
             'FlightFlown' => [
-                new JournalLine('liability.vouchers', JournalLine::DEBIT, $this->value($data, 'amount')),
+                new JournalLine('liability.tickets', JournalLine::DEBIT, $this->value($data, 'amount')),
                 new JournalLine('revenue.flights', JournalLine::CREDIT, $this->value($data, 'amount') - $this->value($data, 'vat')),
                 new JournalLine('vat.output.standard', JournalLine::CREDIT, $this->value($data, 'vat')),
             ],
-            'VoucherExpired' => [
-                new JournalLine('liability.vouchers', JournalLine::DEBIT, $this->value($data, 'amount')),
+            'TicketExpired' => [
+                new JournalLine('liability.tickets', JournalLine::DEBIT, $this->value($data, 'amount')),
                 new JournalLine('revenue.breakage', JournalLine::CREDIT, $this->value($data, 'amount')),
             ],
             'FlightCancelledDueToWind' => [],

@@ -28,7 +28,7 @@ final class JournalLine
     public readonly float $amount;
 
     /**
-     * @param  string  $role    An account role's key, such as 'liability.vouchers'.
+     * @param  string  $role    An account role's key, such as 'liability.tickets'.
      * @param  string  $side    self::DEBIT or self::CREDIT.
      * @param  float   $amount  Rounded to cents.
      */

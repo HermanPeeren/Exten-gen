@@ -275,7 +275,7 @@ final class LedgerLangGeneratorTest extends TestCase
         $lines = $rules->linesFor('FlightFlown', ['amount' => 121, 'vat' => 21]);
 
         $this->assertSame(
-            [['liability.vouchers', 'debit', 121.0], ['revenue.flights', 'credit', 100.0], ['vat.output.standard', 'credit', 21.0]],
+            [['liability.tickets', 'debit', 121.0], ['revenue.flights', 'credit', 100.0], ['vat.output.standard', 'credit', 21.0]],
             array_map(static fn (object $line): array => [$line->role, $line->side, $line->amount], $lines)
         );
 
