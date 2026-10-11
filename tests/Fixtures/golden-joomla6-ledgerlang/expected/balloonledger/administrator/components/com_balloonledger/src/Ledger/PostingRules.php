@@ -27,9 +27,9 @@ final class PostingRules
      * @var array<string, string>
      */
     public const EVENTS = [
-        'TicketSold' => 'A ticket is paid for. Nothing is earned yet: the company owes a flight.',
-        'FlightFlown' => 'The ticket is used by flying. Now it is revenue, and VAT is due.',
-        'TicketExpired' => 'The ticket was never used. What was owed becomes breakage revenue.',
+        'TicketSold' => 'A ticket is paid for. VAT at the low rate is due now; the rest is owed as a flight.',
+        'FlightFlown' => 'The ticket is used by flying. What was owed is now revenue; the VAT was due at the sale.',
+        'TicketExpired' => 'The ticket was never used. What was owed becomes breakage revenue; the VAT was due at the sale.',
         'FlightCancelledDueToWind' => 'No entry: the ticket stays a liability until it is flown or expires.',
     ];
 
@@ -48,12 +48,12 @@ final class PostingRules
         $lines = match ($event) {
             'TicketSold' => [
                 new JournalLine('bank.psp', JournalLine::DEBIT, $this->value($data, 'amount')),
-                new JournalLine('liability.tickets', JournalLine::CREDIT, $this->value($data, 'amount')),
+                new JournalLine('liability.tickets', JournalLine::CREDIT, $this->value($data, 'amount') - $this->value($data, 'vat')),
+                new JournalLine('vat.output.low', JournalLine::CREDIT, $this->value($data, 'vat')),
             ],
             'FlightFlown' => [
                 new JournalLine('liability.tickets', JournalLine::DEBIT, $this->value($data, 'amount')),
-                new JournalLine('revenue.flights', JournalLine::CREDIT, $this->value($data, 'amount') - $this->value($data, 'vat')),
-                new JournalLine('vat.output.standard', JournalLine::CREDIT, $this->value($data, 'vat')),
+                new JournalLine('revenue.flights', JournalLine::CREDIT, $this->value($data, 'amount')),
             ],
             'TicketExpired' => [
                 new JournalLine('liability.tickets', JournalLine::DEBIT, $this->value($data, 'amount')),

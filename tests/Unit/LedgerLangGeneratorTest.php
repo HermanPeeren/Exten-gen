@@ -272,18 +272,25 @@ final class LedgerLangGeneratorTest extends TestCase
         $roles     = $namespace . 'AccountRoles';
 
         $rules = new $rulesName();
-        $lines = $rules->linesFor('FlightFlown', ['amount' => 121, 'vat' => 21]);
+        $sold = $rules->linesFor('TicketSold', ['amount' => 218, 'vat' => 18]);
 
         $this->assertSame(
-            [['liability.tickets', 'debit', 121.0], ['revenue.flights', 'credit', 100.0], ['vat.output.standard', 'credit', 21.0]],
-            array_map(static fn (object $line): array => [$line->role, $line->side, $line->amount], $lines)
+            [['bank.psp', 'debit', 218.0], ['liability.tickets', 'credit', 200.0], ['vat.output.low', 'credit', 18.0]],
+            array_map(static fn (object $line): array => [$line->role, $line->side, $line->amount], $sold)
         );
 
-        foreach ($lines as $line) {
+        $flown = $rules->linesFor('FlightFlown', ['amount' => 200]);
+
+        $this->assertSame(
+            [['liability.tickets', 'debit', 200.0], ['revenue.flights', 'credit', 200.0]],
+            array_map(static fn (object $line): array => [$line->role, $line->side, $line->amount], $flown)
+        );
+
+        foreach ([...$sold, ...$flown] as $line) {
             $this->assertTrue($roles::has($line->role), $line->role . ' is a declared role');
         }
 
-        $this->assertSame([], $rules->linesFor('FlightCancelledDueToWind', ['amount' => 121]));
+        $this->assertSame([], $rules->linesFor('FlightCancelledDueToWind', ['amount' => 200]));
 
         try {
             $rules->linesFor('ChampagneForFarmer', ['amount' => 40]);
@@ -293,7 +300,7 @@ final class LedgerLangGeneratorTest extends TestCase
         }
 
         try {
-            $rules->linesFor('FlightFlown', ['amount' => 121]);
+            $rules->linesFor('TicketSold', ['amount' => 218]);
             $this->fail('A missing amount is refused.');
         } catch (\DomainException $e) {
             $this->assertStringContainsString('"vat"', $e->getMessage());

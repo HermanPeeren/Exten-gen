@@ -2721,9 +2721,12 @@ Generator's reader reads its package as a generator that extends `joomla6`.
 LedgerLang generator gives every one of the 80 files the ER1 generator gives it, byte for
 byte, plus the three ledger files. An ER1 golden model generated with the LedgerLang generator
 gives exactly the ER1 output. The ER1 golden files did not change. The generated
-`PostingRules` is loaded and run: `FlightFlown` with amount 121 and VAT 21 posts 121 debit
-and 100 + 21 credit, the wind cancellation posts nothing, and an event without a rule or an
-amount without its VAT is refused. `LedgerLangGoldenTest` pins all 83 files, in
+`PostingRules` is loaded and run: `TicketSold` with amount 218 and VAT 18 posts 218 debit
+and 200 + 18 credit, `FlightFlown` with amount 200 posts 200 debit and 200 credit with no VAT
+line, the wind cancellation posts nothing, and an event without a rule or an amount without
+its VAT is refused. (Corrected after the release: in the Netherlands a balloon flight carries
+the low VAT rate, 9%, and the VAT is due when the ticket is sold, not when it is flown. The
+example first had 21% VAT posted at the flight.) `LedgerLangGoldenTest` pins all 83 files, in
 `tests/Fixtures/golden-joomla6-ledgerlang/`. The model is Meta-gen's `balloonledger.json`,
 copied unchanged.
 

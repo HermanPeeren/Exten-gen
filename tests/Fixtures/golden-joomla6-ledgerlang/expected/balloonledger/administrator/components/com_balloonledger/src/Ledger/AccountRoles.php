@@ -30,7 +30,7 @@ final class AccountRoles
         'bank.psp' => ['name' => 'Bank: payment provider', 'nature' => 'asset', 'normalBalance' => 'debit'],
         'cash' => ['name' => 'Cash', 'nature' => 'asset', 'normalBalance' => 'debit'],
         'liability.tickets' => ['name' => 'Liability: tickets not yet flown', 'nature' => 'liability', 'normalBalance' => 'credit'],
-        'vat.output.standard' => ['name' => 'VAT payable (standard rate)', 'nature' => 'liability', 'normalBalance' => 'credit'],
+        'vat.output.low' => ['name' => 'VAT payable 9%', 'nature' => 'liability', 'normalBalance' => 'credit'],
         'revenue.flights' => ['name' => 'Revenue: flights', 'nature' => 'income', 'normalBalance' => 'credit'],
         'revenue.breakage' => ['name' => 'Revenue: breakage (expired tickets)', 'nature' => 'income', 'normalBalance' => 'credit'],
         'expense.landowner' => ['name' => 'Expense: landowner compensation', 'nature' => 'expense', 'normalBalance' => 'debit'],
