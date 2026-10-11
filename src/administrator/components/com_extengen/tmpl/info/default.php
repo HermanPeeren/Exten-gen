@@ -10,6 +10,7 @@
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 
 /** @var \Yepr\Component\Extengen\Administrator\View\Info\HtmlView $this */
@@ -21,6 +22,13 @@ $repositories = [
 ];
 ?>
 <div class="p-3" id="extengen-info">
+	<?php echo HTMLHelper::_(
+		'image',
+		'com_extengen/extengen-logo.svg',
+		Text::_('COM_EXTENGEN_LOGO_ALT'),
+		['class' => 'extengen-logo float-end ms-3 mb-3', 'width' => 120, 'height' => 120],
+		true
+	); ?>
 	<p class="text-muted"><?php echo Text::_('COM_EXTENGEN_INFO_DATE'); ?></p>
 
 	<h2><?php echo Text::_('COM_EXTENGEN_INFO_EXTENGEN_HEADING'); ?></h2>

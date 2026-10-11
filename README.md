@@ -1,5 +1,7 @@
 # Extension Generator (Exten-gen)
 
+<img src="src/media/com_extengen/images/extengen-logo.svg" alt="Extension Generator logo" width="120" align="right">
+
 The Extension Generator (Exten-gen) is a Joomla component that models CMS
 extensions and generates them. A model here is what Model Driven Engineering means by the word: a complete
 description of the thing you want — its data model, its pages, and what kind of

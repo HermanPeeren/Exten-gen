@@ -38,6 +38,7 @@
 	</files>
 	<media folder="media/com_extengen" destination="com_extengen">
 		<filename>joomla.asset.json</filename>
+		<folder>images</folder>
 		<folder>js</folder>
 	</media>
 	<!-- Back-end files -->

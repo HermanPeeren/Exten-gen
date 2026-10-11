@@ -29,6 +29,17 @@ describe('the component renders', () => {
     });
   });
 
+  it('shows the logo on the info page, and the image arrives', () => {
+    // The logo is a media file the manifest has to carry: a folder missing
+    // from <media> installs a page with a broken image and no error anywhere.
+    cy.visitExtengen('info');
+    cy.get('#extengen-info img.extengen-logo')
+      .should('have.attr', 'alt', 'Extension Generator logo')
+      .and(($img) => {
+        expect($img[0].naturalWidth, 'the image loaded').to.be.greaterThan(0);
+      });
+  });
+
   it('shows the metalanguage each project is written in, and filters on it', () => {
     // Step 5.3. The column names the language, with the version beside it.
     cy.visitExtengen('projects&filter[metalanguage]=');
