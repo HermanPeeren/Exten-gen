@@ -2758,6 +2758,42 @@ copied unchanged.
 - **Money as floats**, rounded to cents. Good enough to show. An accounting component needs
   decimals.
 
+**5.10 Import a generator into the Generator Generator.** Done in the Generator Generator 0.6.0.
+Until now a modelled generator reached a site through `seed-generator.php` and a committed
+fixture. The Generators list now has an **Import** button: a zip goes in, and an editable
+generator comes out.
+
+- *Input.* A zip the Generator Generator generated holds `model.json` since 0.6.0, the form data
+  (`GeneratorDefinition::toFormData()`), so a round trip is exact. A zip without it is rebuilt from
+  the rule file with `GeneratorDefinition::fromRuleSet()`. The groups, output path and namespace
+  come from a modelling manifest (`*.manifest.json`, what `import-generator.php` reads) if the zip
+  holds one, else from `generator.json` or this component's `*.package.json`, else one group per
+  rule-id prefix, which the screen reports as a guess. This component's own LedgerLang files,
+  zipped with `ledgerlang.manifest.json`, import as exactly the committed model.
+- *Check.* The vocabulary the installed target publishes, through `VocabularyLibrary`, with the
+  bound language's concepts. A rule naming what the target does not have is refused with the
+  list of problems, and nothing is stored.
+- *The same generator twice* replaces the row with the same name, as importing a metalanguage or
+  a generator package here replaces by key.
+- *A child whose parent is missing* imports, with a note. `extends` names a generator on this
+  component by its id (`joomla6`), and the rules are composed here when it runs, so the
+  Generator Generator does not need the parent modelled. This component's import still refuses a
+  child whose parent is not on the site (5.9).
+- *The binding.* A package names its metalanguage. When that language is imported in the
+  Generator Generator, the generator is bound to it; a package without a version binds to the
+  newest one there. That closed the gap 5.9 left on the development site: LedgerLang is imported
+  there now, and the LedgerLang generator's package says `LedgerLang` 0.1, as the one shipped
+  here says `LedgerLang`.
+- *Wiring.* The Generator Generator gained its own MVC factory, the same shape as this
+  component's since 1.3.2: `VocabularyLibrary` is registered lazily in `services/provider.php`
+  and handed to `ImportModel` through `VocabularyLibraryAwareInterface`, and to the form fields
+  when the component boots.
+
+*Tests:* `ImportedGeneratorTest`, one per input shape (with `model.json`, without it, a child that
+extends, packages that are not packages, rules naming what the target does not publish), and
+`generator-import.cy.js`, which imports the LedgerLang package through the button, checks the
+binding and opens it.
+
 ## Stage 6 — large models
 
 Found while recording the JWC demo, 12 October 2026: JCB's "Demo J6" blueprint, imported
