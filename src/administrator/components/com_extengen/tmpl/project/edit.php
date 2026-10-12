@@ -18,11 +18,14 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
+use Yepr\Component\Extengen\Administrator\Helper\PostLimit;
 
 HTMLHelper::_('behavior.formvalidator');
 // A module now, so that `composer test-js` can import the rule it
 // registers - which is the same rule LetterRule.php applies server side.
 $this->getDocument()->getWebAssetManager()->useScript('com_extengen.letter');
+// How many inputs the form posts, for the message when PHP cuts it short.
+$this->getDocument()->getWebAssetManager()->useScript('com_extengen.inputs');
 // <extengen-reference>, and the reference index the view put in the page.
 // <yepr-reference>, and the reference index the view put in the page.
 //
@@ -49,6 +52,21 @@ $layout  = $isModal ? 'modal' : 'edit';
 $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=component' : '';
 ?>
 <form action="<?php echo Route::_('index.php?option=com_extengen&layout=' . $layout . $tmpl . '&id=' . (int) $this->item->id); ?>" method="post" name="adminForm" id="project-form" class="form-validate">
+
+	<?php /*
+		The task and the token first, and a sentinel last: PostLimit.
+
+		PHP reads no more than max_input_vars variables out of a post and drops
+		the rest silently. A model imported from JCB puts some 24,000 inputs on
+		this screen, and with the task and the token at the bottom both were
+		dropped - so Joomla showed the projects list, saved nothing and said
+		nothing. Up here they survive, the sentinel at the bottom is the first
+		thing to go, and ProjectModel::validate() refuses a post without it,
+		with the count the script fills in at submit.
+	*/ ?>
+	<input type="hidden" name="task" value="">
+	<?php echo HTMLHelper::_('form.token'); ?>
+	<input type="hidden" name="<?php echo PostLimit::COUNT; ?>" value="0">
 
     <?php echo $this->getForm()->renderField('name'); ?>
     <?php echo $this->getForm()->renderField('metalanguage'); ?>
@@ -106,8 +124,8 @@ $tmpl    = $isModal || $input->get('tmpl', '', 'cmd') === 'component' ? '&tmpl=c
 	<?php endforeach; ?>
 	<?php endif; ?>
 
-	<input type="hidden" name="task" value="">
-	<?php echo HTMLHelper::_('form.token'); ?>
+	<?php /* Last, and nothing after it: see the top of the form. */ ?>
+	<input type="hidden" name="<?php echo PostLimit::SENTINEL; ?>" value="1">
 </form>
 
 <?php

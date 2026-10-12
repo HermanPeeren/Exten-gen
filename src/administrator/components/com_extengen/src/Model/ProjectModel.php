@@ -48,6 +48,7 @@ use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
+use Yepr\Component\Extengen\Administrator\Helper\PostLimit;
 
 /**
  * Item Model for a project.
@@ -487,6 +488,52 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 
 		parent::preprocessForm($form, $data, $group);
 	}
+
+    /**
+     * Refuse a post that PHP cut short, before validating what is left of it.
+     *
+     * `max_input_vars` drops whatever comes after the limit, silently, and a
+     * large model is far past it - see `PostLimit`. Validating the rest would
+     * pass, because a missing field is an absent one, and saving it would
+     * store the first part of the model over the whole of it.
+     *
+     * Only for a form that was posted from the edit screen, which is the one
+     * that carries the sentinel; a save made in code builds its own data and
+     * never comes through here.
+     *
+     * @param   Form    $form   The form to validate against.
+     * @param   array   $data   The data to validate.
+     * @param   string  $group  The name of the field group to validate.
+     *
+     * @return  array|boolean  Array of filtered data if valid, false otherwise.
+     */
+    public function validate($form, $data, $group = null)
+    {
+        $app  = Factory::getApplication();
+        $post = $app->getInput()->post->getArray();
+
+        if (!PostLimit::isComplete($post)) {
+            $sent = PostLimit::sent($post);
+
+            // Enqueued rather than setError(), which is deprecated. The
+            // controller then sends the browser back to the edit screen, which
+            // reloads the project from the database - not from the half that
+            // arrived.
+            $app->enqueueMessage(
+                Text::sprintf(
+                    'COM_EXTENGEN_PROJECT_POST_TRUNCATED',
+                    $sent > 0 ? number_format($sent) : Text::_('COM_EXTENGEN_PROJECT_POST_TRUNCATED_MORE'),
+                    number_format(PostLimit::received($post)),
+                    number_format((int) \ini_get('max_input_vars'))
+                ),
+                'error'
+            );
+
+            return false;
+        }
+
+        return parent::validate($form, $data, $group);
+    }
 
     /**
      * Overriden method to save the form data.

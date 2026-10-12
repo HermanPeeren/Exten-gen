@@ -2786,6 +2786,15 @@ only (`LetterRule`), and the import named projects after the root node's id, suc
 becomes `HelloWorld` and `MDE-demo` becomes `MDEDemo`. A GUID is skipped. `ImportedNameTest`
 checks each result against `LetterRule`'s own pattern.
 
+**6.3 A post cut short by `max_input_vars` is refused.** Done, as the safety net. PHP reads
+`max_input_vars` variables (1000 by default) and drops the rest silently. The task and the
+token were at the bottom of the form, so the save landed on the list with nothing saved and
+nothing said. The layout now puts them first and a sentinel (`PostLimit::SENTINEL`) last, and
+a small script fills in how many inputs the form posts. `ProjectModel::validate()` refuses a
+post without the sentinel and says how many inputs there were, how many arrived and what
+`max_input_vars` is. Tests: `PostLimitTest` and `post-limit.cy.js`, which posts a truncated
+form.
+
 **6.4 What a browser save still changes.** Open. `lionweb-round-trip.cy.js` counts two kinds
 of difference after a browser save of Hello World, besides the edited value:
 
@@ -2801,6 +2810,24 @@ of difference after a browser save of Hello World, besides the edited value:
 Both need the form to know more about the model than a text box can: whether a property was
 present, and which line endings a value used. The generated forms are the Metalanguage
 Generator's, so the textarea half of the fix is there.
+
+**6.5 Edit a large model in parts.** Plan. One form for the whole model is too big for PHP and
+for the person using it: nobody works through 24,000 fields. The direction is to split large
+models, and large metalanguages, into parts that are each edited and saved on their own.
+
+- *Where to split.* At containment points. A new model in JCB's language starts as a screen
+  of empty repeatable fields. Each of those is a containment and can be its own screen: the
+  root shows its own properties and a list per containment, and a row opens its own form.
+- *What a part posts.* Only its own variables. That is how JCB builds its views: each view
+  edits one part of the blueprint and sends only that part. A save then merges the part into
+  the stored model, by node id (`LIonWeb_id`), and leaves the rest untouched.
+- *What it needs.* A way to address a part of a stored model, a form per containment (the
+  generated forms already have one per concept), a merge that refuses a stale part, and the
+  reference dropdowns reading the whole stored model rather than the form on screen.
+- *Large metalanguages* the same way in the Metalanguage Generator: JCB's language is 126
+  concepts on one screen.
+
+The sentinel from 6.3 stays as the safety net.
 
 ---
 
