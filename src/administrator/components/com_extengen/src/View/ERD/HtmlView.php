@@ -22,6 +22,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
+use Yepr\Component\Extengen\Administrator\Diagram\EntityRelationshipUml;
 use Yepr\Component\Extengen\Administrator\Helper\ExtengenHelper;
 use Joomla\CMS\Pagination\Pagination;
 use Joomla\CMS\MVC\View\GenericDataException;
@@ -58,104 +59,10 @@ class HtmlView extends BaseHtmlView
 		// Open the test-uml-file for writing
 		$umlfile = fopen('test.puml', "w") or die("Unable to open file!"); // todo: cache this file
 
-        $component = $project->extensions->component;
-
-		// Loop over the entities to make a map of entity_id to name.
-		// Plus indicate if it is a value object in embeddableMap.
-		$entityNameMap = [];
-		$embeddableMap = [];
-		foreach ($project->datamodel as $entity) {
-			$entityNameMap[$entity->entity_id] = ucfirst($entity->entity_name);
-			$embeddableMap[$entity->entity_id] = property_exists($entity, 'isvalueobject') ? true : false;
-		}
-
-		// Initiate the uml-file.
-		$umlCreate = [];
-		$umlCreate[] = "@startuml
-' hide the spot
-' hide circle
-
-' avoid problems with angled crows feet
-skinparam linetype ortho
-
-skinparam class{
-            BackgroundColor BlanchedAlmond
-        }
-skinparam ClassBackgroundColor<<value object>> LightCyan
-";
-		$umlRef = [];
-
-		// Loop over the entities to create the uml-file
-		foreach ($project->datamodel as $entity) {
-			$entityName = $entity->entity_name;
-
-			// value object
-			$valueObject = '';
-			$id = '';
-			if (property_exists($entity, 'isvalueobject')) {
-$valueObject = ' <<(V,DeepSkyBlue)value object>> ';
-            }
-			if (!property_exists($entity, 'isvalueobject')) {
-$id = '
-  *id : number <<generated>>
-  --';
-            }
-			$umlCreate[] = '			
-			entity "' . $entityName . '" ' . $valueObject . ' {' . $id . '
-  ';
-			$references = [];
-			// Add fields
-			foreach ($entity->field as $field) {
-				switch ($field->field_type) {
-					case "property":
-						$type = $field->property->type;
-						break;
-					case "reference":
-						$type = $entityNameMap[$field->reference->reference] . '  <<FK>>';
-						$isMultiple = property_exists($field->reference, 'ismultiple') ? $field->reference->ismultiple : false;
-						$isRequired = property_exists($field->reference, 'isrequired') ? $field->reference->isrequired : false;
-						$references[] = [
-							'name' => $entityNameMap[$field->reference->reference],
-							'ismultiple' => $isMultiple,
-							'isrequired' => $isRequired,
-							'referencesValueobject' => $embeddableMap[$field->reference->reference]
-						];
-						break;
-					default:
-						$type = "";
-				}
-				$umlCreate[] = ' *' . strtolower($field->field_name) . ' : ' . $type;
-			}
-			// Add reference(s)
-			foreach ($references as $reference) {
-				if ($reference['referencesValueobject']) {
-					// It refers to an embeddable, a value object
-					$multipleSymbol = $reference['ismultiple'] ? 'n' : '1';
-					$requiredSymbol = $reference['isrequired'] ? '1' : '0';
-					$multiplicity = $requiredSymbol . '..' . $multipleSymbol;
-					$umlRef[] =  $entityName . ' *-- "' . $multiplicity . '" ' . $reference['name'];
-				} else {
-					// Only use this when this entity owns the reference, so many2one, but not one2many! (except with embeddables)
-					// todo: better model the relation from both sides
-					$multipleSymbol = $reference['ismultiple'] ? '}' : '|';
-					$requiredSymbol = $reference['isrequired'] ? '|' : 'o';
-					// todo: BUG: doesn't work for NOT multiple AND required: || works online in PlantUML, but not here???
-					$referenceSide = $multipleSymbol . $requiredSymbol;
-					$umlRef[] =  $reference['name'] . ' ' . $referenceSide . '..o{ ' . $entityName;
-				}
-			}
-			$umlCreate[] = "}
-			
-			";
-		}
-
-		// Add the relationships
-		$umlCreate[] = implode("\n", $umlRef);
-		$umlCreate[] = "'hide <<embedded object>> circle";
-		$umlCreate[] = '@enduml';
-
-		// Compact all lines to one file
-		$uml = implode("\n", $umlCreate);
+		// Built elsewhere so it can be tested, and so a field's kind is asked
+		// of FieldKind like everywhere else - this view used to ask it itself,
+		// in the spelling 3.5 retired.
+		$uml = EntityRelationshipUml::of($project);
 
 		fwrite($umlfile, $uml);
 		// Close the uml-file

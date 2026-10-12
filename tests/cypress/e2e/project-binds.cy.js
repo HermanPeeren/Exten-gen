@@ -54,6 +54,33 @@ beforeEach(() => {
   cy.exec('php tools/seed-project.php conference --saved');
 });
 
+/**
+ * The PlantUML text an ERD image's address carries.
+ *
+ * PlantUML's encoding is raw deflate written in its own base64 alphabet, so
+ * this is the view's `encodep()` run backwards, in the browser.
+ */
+const plantUmlSource = (encoded) => {
+  const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
+  const bytes = [];
+
+  for (let i = 0; i < encoded.length; i += 4) {
+    const [c1, c2, c3, c4] = [0, 1, 2, 3].map((n) => alphabet.indexOf(encoded[i + n] || '0'));
+
+    bytes.push((c1 << 2) | (c2 >> 4), ((c2 & 0xf) << 4) | (c3 >> 2), ((c3 & 0x3) << 6) | c4);
+  }
+
+  const inflate = (data) => new Response(
+    new Blob([new Uint8Array(data)]).stream().pipeThrough(new DecompressionStream('deflate-raw')),
+  ).text();
+
+  // The last group of three is padded with up to two zero bytes, which the
+  // decompressor reads as junk after the end; so try without them as well.
+  return inflate(bytes)
+    .catch(() => inflate(bytes.slice(0, -1)))
+    .catch(() => inflate(bytes.slice(0, -2)));
+};
+
 const openTheProject = () => {
   cy.visitExtengen('projects');
   cy.shouldHaveRendered();
@@ -147,8 +174,21 @@ describe('a saved project opens with its model', () => {
     });
 
     cy.get('body').should('contain.text', `Entity Relationship Diagram for ${PROJECT}`);
-    cy.get('img[src*="plantuml.com/plantuml/png/"]').should('exist');
     cy.get('body').should('not.contain', 'Fatal error');
+
+    // An image that exists is not a diagram with lines in it: the project is
+    // seeded `--saved`, the spelling the view could not read, and it drew
+    // boxes with blank types and no relations while this still passed. So
+    // the diagram's text is read back out of the image's address.
+    cy.get('img[src*="plantuml.com/plantuml/png/"]')
+      .invoke('attr', 'src')
+      .then((src) => cy.wrap(plantUmlSource(src.split('/png/').pop())))
+      .then((uml) => {
+        ['Speaker |o..o{ Talk', 'Talk |o..o{ Program', 'Room |o..o{ Program'].forEach((line) => {
+          expect(uml, 'a relation is drawn').to.contain(line);
+        });
+        expect(uml, 'a reference says what it points at').to.contain(' *speaker : Speaker  <<FK>>');
+      });
   });
 
   /**

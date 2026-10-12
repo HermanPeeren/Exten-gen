@@ -1958,6 +1958,24 @@ test can reach - what the *installed* form is named, read out of the row templat
 and whether a project stored that way still generates its relations - and asserts the seeded
 project is there instead of skipping when it is not.
 
+*And one place `FieldKind` did not reach, found on 10 Oct 2026 while preparing the JWC demo.* The
+ERD view read a field's kind itself, in the old spelling, so every project saved through the
+screens drew as boxes with blank types and no lines. BalloonPlanning, the one project on the
+development site still stored the pre-3.5 way, drew perfectly, and that is the project anybody
+opens to check the ERD. The claim above, that no file outside `FieldKind` reads `field_type`, was
+true of the generators and not of the component. The diagram's text is now built by
+`Diagram\EntityRelationshipUml`, through `FieldKind`, and is byte-identical to the old view's
+for all four golden models. `EntityRelationshipUmlTest` draws each one in both spellings, and it
+checks the claim over every PHP file under `src/` instead of stating it.
+
+That fix sat on a branch and did not reach `main` until 12 Oct 2026 (1.6.4), when BalloonLedger's
+ERD showed six entities and no lines. Of the five projects on the development site, MyConference,
+VisitorConference and BalloonLedger were affected - every one stored in the screens' spelling,
+in ER1 and in the derived LedgerLang alike - BalloonPlanning was not, and VisitorProject has no
+entities. The test now also draws BalloonLedger's five references, and the browser check in
+`project-binds.cy.js` reads the diagram's text back out of the image's address and looks for
+MyConference's three relations, where it used to see only that an image was there.
+
 *And adding that browser check found two more, in the screen it had to use.*
 
 ### The empty subform defect
