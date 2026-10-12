@@ -2758,6 +2758,21 @@ copied unchanged.
 - **Money as floats**, rounded to cents. Good enough to show. An accounting component needs
   decimals.
 
+## Stage 6 — large models
+
+Found while recording the JWC demo, 12 October 2026: JCB's "Demo J6" blueprint, imported
+through LionWeb, is 2088 nodes and puts about 24,100 inputs on one edit screen. Loading it
+takes 45 seconds and saving it three minutes. The round trip had been proved through
+`getForm()`, `filter()` and `save()` in code. A browser save goes through more than that, and
+that is where these came from.
+
+**6.2 The import names a project its own form accepts.** Done. The project name is letters
+only (`LetterRule`), and the import named projects after the root node's id, such as
+`MDE demo`, so the form refused to save the project it had just opened.
+`Project::letterName()` capitalises the words and drops everything else: `hello-world`
+becomes `HelloWorld` and `MDE-demo` becomes `MDEDemo`. A GUID is skipped. `ImportedNameTest`
+checks each result against `LetterRule`'s own pattern.
+
 ---
 
 ## Decisions outstanding

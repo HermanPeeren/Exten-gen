@@ -109,6 +109,45 @@ final class Project implements ModelInterface
     }
 
     /**
+     * A name the project form will accept, made out of whatever is at hand.
+     *
+     * The form says letters and nothing else - `LetterRule`, and its copy in
+     * the browser - because the name becomes the component name, a namespace
+     * segment and every class name generated. The LionWeb import named a
+     * project after its root node's id, `MDE demo` for `MDE-demo`, and the
+     * form then refused to save the project it had just opened: the first
+     * thing anybody had to do with an imported model was rename it.
+     *
+     * Each word gets a capital and everything else goes, so `hello-world`
+     * becomes `HelloWorld` and `MDE-demo` becomes `MDEDemo`. Digits too, which
+     * the rule refuses as well: `Demo J6` is `DemoJ`. The first candidate that
+     * leaves any letters is the answer.
+     *
+     * @param  string  ...$candidates  In order of preference.
+     *
+     * @since  1.6.5
+     */
+    public static function letterName(string ...$candidates): string
+    {
+        foreach ($candidates as $candidate) {
+            // A node id that is a GUID has letters in it, and none of them
+            // are a name.
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-/i', $candidate) === 1) {
+                continue;
+            }
+
+            $words = preg_split('/[^A-Za-z]+/', $candidate, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $name  = implode('', array_map('ucfirst', $words));
+
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return 'Imported';
+    }
+
+    /**
      * The format version this project was stored in.
      *
      * @since  0.9.0

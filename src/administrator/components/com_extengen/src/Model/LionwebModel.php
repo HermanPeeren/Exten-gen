@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Yepr\Component\Extengen\Administrator\Model;
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
+use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
 use Yepr\Component\Extengen\Administrator\Metalanguage\Metalanguages;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareInterface;
 use Yepr\Component\Extengen\Administrator\Repository\ProjectRepositoryAwareTrait;
@@ -394,12 +395,14 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
      * that name. A model carries no opinion about what the thing editing it
      * should be called, so this is a starting point rather than an answer, and
      * renaming it is the first thing the edit screen offers.
+     *
+     * Letters only, because that is all the form accepts: `MDE demo` came out
+     * of here once and the project could not be saved in its own form until
+     * somebody renamed it.
      */
     private function nameFor(?string $root, string $language): string
     {
-        $name = trim((string) preg_replace('/[^A-Za-z0-9]+/', ' ', (string) $root));
-
-        return $name === '' ? $language . ' model' : $name;
+        return Project::letterName((string) $root, $language . ' model');
     }
 
     /**
