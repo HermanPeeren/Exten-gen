@@ -2795,8 +2795,12 @@ post without the sentinel and says how many inputs there were, how many arrived 
 `max_input_vars` is. Tests: `PostLimitTest` and `post-limit.cy.js`, which posts a truncated
 form.
 
-**6.4 What a browser save still changes.** Open. `lionweb-round-trip.cy.js` counts two kinds
-of difference after a browser save of Hello World, besides the edited value:
+**6.4 What a browser save still changes.** Done in the Extension Generator, on branch
+`feature/line-endings-on-save`, not yet merged or released. The textarea half is the
+Metalanguage Generator's (its branch `feature/multiline-strings`) and JcbInOut's (its branch
+`feature/editor-annotations`), and lands with them. What was found first:
+`lionweb-round-trip.cy.js` counts two kinds of difference after a browser save of Hello World,
+besides the edited value:
 
 - *A property the chunk did not have comes back with a value.* An empty text box posts `''`
   and a list posts its first option, so absent becomes empty (16 in Hello World) or a list
@@ -2810,6 +2814,83 @@ of difference after a browser save of Hello World, besides the edited value:
 Both need the form to know more about the model than a text box can: whether a property was
 present, and which line endings a value used. The generated forms are the Metalanguage
 Generator's, so the textarea half of the fix is there.
+
+*That last sentence turned out to be half wrong.* The form does not need to know either thing:
+the stored model the save replaces already does, and a form marker would be one more key in
+the stored model that `Form::filter()` drops unless declared and the export must know is not a
+feature (6.1). So both are put back on save, against the stored model.
+
+**Done.** `Helper\BrowserSave`, called from `ProjectModel::save()` after `Project::modelOf()`,
+on the model and not on the row's columns. A posted node finds its stored one by `LIonWeb_id`,
+or, where it has none (ER1, whose nodes carry no ids), by its path of keys from the root. A
+subform posts its rows under the keys it rendered them with (`field0`, `field1`), so the path
+holds for existing rows. A path only matches a stored node without an id, so a new row in a
+LionWeb model, whose hidden id is empty, is new.
+
+*Line endings*, `BrowserSave::lineEndings()`, for every posted string except the `LIonWeb_*`
+keys:
+
+1. Posted without `\r\n`: kept. A text box, a one-line value, or LF from a save made in code.
+2. Stored with `\r\n`: kept as posted, CRLF.
+3. Otherwise (stored LF only, stored without a line break, a new property, node or project):
+   every `\r\n` becomes `\n`. LF is what JCB writes.
+4. Joomla's textarea layout drops one newline straight after `<textarea>`. When the stored
+   value is the result of 1-3 with `\n` or `\r\n` in front, the stored value is kept. A guard:
+   none of the demo blueprint's values begins with a line break.
+
+Limits: a value that mixed CRLF and LF comes back all CRLF (none of the blueprint's do). A
+copy made with Save as Copy has no stored model, so rule 3 makes all its line breaks LF. An ER1
+project's textareas stored CRLF before this and keep it, matched by path.
+
+*Absent stays absent*, `BrowserSave::absentKept()`. On a node matched by `LIonWeb_id`, a
+property the stored node did not have that comes back holding exactly what the form shows for
+an absent one stays absent: `''`, a field's `default`, or a list's first option (a `<select>`
+with nothing selected selects the first). `Metalanguages::shownWhenAbsent()` reads the
+non-empty ones off the language's forms, per concept. A form names its concept by the
+`LIonWeb_key` hidden field, and that holds the concept's *name* (`Field`) while a stored node
+holds its LionWeb *key* (`field`), so each is listed under both from the entry's concepts. The
+first run on screen missed exactly that: the 16 empties went, the 7 list defaults stayed.
+
+Only for nodes matched by id, deliberately. LionWeb tells absent from `''` and the export
+writes them differently; an ER1 model never had the distinction. Worse, a project made on
+screen is saved once with no model at all, so on its first real save *every* property was
+absent, and keeping them absent would store nothing.
+
+The limit, recorded: on screen absent and `''` (or the first option) look the same, so somebody
+who wants `''` or the first option on a property that was absent does not get it; it stays
+absent. Typing something, saving, and clearing it again does get it, because the property is
+then present. Exporting a value nobody chose is the worse of the two, and for JCB it is not
+even the same value: an absent property takes JCB's own default, which need not be the first
+option.
+
+*Tests.* `BrowserSaveTest`: each rule on its own, a node found by id after a move, a new row
+with an empty id, ER1-style matching by path, the reserved keys untouched, the absent rule
+(left empty, filled in, present and emptied, ER1 and new nodes excluded),
+`shownWhenAbsent()` over a small form set, and Hello World from the sibling JcbInOut clone
+posted the way a browser posts it (every line break CRLF, the newline after `<textarea>`
+dropped, every property its concept has elsewhere posted as `''`): saved, it equals the stored
+model, and its 5 LF-only values are LF.
+
+`lionweb-round-trip.cy.js` now expects no difference but the edited value, except values a
+text box lost the line breaks of, which it still counts on a language without editor
+annotations. Where the form has textareas it also checks that the LF-only values come back
+LF. `--env helloWorld=<path>` reads the chunk from elsewhere, for a worktree.
+
+*The browser check*, on the development site, 12 October 2026. The JCB language rebuilt with
+118 editor annotations (JcbInOut `feature/editor-annotations`) was converted with the
+Metalanguage Generator branch's `LionCoreLanguage` and `EditorAnnotation`, made into a package
+with its `tools/export-language.php` (no Metalanguage Generator on this site: it does not
+normally carry one, and does not need to; only the forms differ, 206 textareas) and imported
+over JCB 6.2.0. Hello World imported, edited, saved, exported: 202 textareas on screen, one
+difference (the edited value), the 5 LF-only values LF. The same spec against `main`'s build
+on the same language: 16 absent became empty, 7 absent became a list default, 5 line endings
+changed. Against the JCB package without annotations on this branch: no absent kind, and 30
+values that lost their line breaks in text boxes, which is the language's half. The original
+JCB package was imported back afterwards and its files compared identical.
+
+*Left open:* a value somebody empties in a textarea that held only line breaks, and the
+mixed-line-ending case, both theoretical so far. The demo blueprint (2088 nodes) was not saved
+through the browser here: it needs 6.5, or `max_input_vars` raised past 24,100.
 
 **6.5 Edit a large model in parts.** Plan. One form for the whole model is too big for PHP and
 for the person using it: nobody works through 24,000 fields. The direction is to split large

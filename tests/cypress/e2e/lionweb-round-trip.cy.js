@@ -20,9 +20,20 @@
  * neither, and that says nothing about this code. ER1 cannot stand in: its
  * package predates manifest format 5 and does not know its own LionWeb key, so
  * it has no export to round-trip through yet.
+ *
+ * `--env helloWorld=<path>` reads the chunk from somewhere else, which a
+ * worktree under `.claude/` needs: the sibling clone is not beside it.
+ *
+ * **What a save may still change depends on the language on the site.** Since
+ * step 6.4 nothing the browser does on its own survives the save: line endings
+ * go back to what was stored, and a property the chunk did not have stays
+ * absent. A JCB language whose multi-line properties carry Meta-gen's editor
+ * annotation renders them as textareas, and then the round trip is exact. One
+ * without renders them as text boxes, which cannot hold a line break at all;
+ * that loss is the language's and is counted, not failed.
  */
 
-const SOURCE = '../jcbinout/data/hello-world.instance.lionweb.json';
+const SOURCE = Cypress.env('helloWorld') || '../jcbinout/data/hello-world.instance.lionweb.json';
 const chunkPath = 'media/cypress-round-trip.json';
 
 const messages = () => cy.get('#system-message-container', { timeout: 30000 }).invoke('text');
@@ -164,6 +175,9 @@ describe('a LionWeb model, saved in the browser and exported again', () => {
           .then(($input) => {
             const edited = `${$input.val()} edited`;
 
+            // Whether this language edits multi-line values over lines.
+            const textareas = Cypress.$('#project-form textarea').length;
+
             cy.wrap($input).clear().type(edited);
 
             cy.window().then((win) => {
@@ -211,14 +225,15 @@ describe('a LionWeb model, saved in the browser and exported again', () => {
                 });
               });
 
-              // Two kinds of difference a browser save still makes, both known
-              // and both in the plan (step 6.4). A property the chunk did not
-              // have comes back with a value, because every control posts one:
-              // an empty text box an empty string, a list its first option.
-              // And a value with line breaks comes back without them, because
-              // an `<input type="text">` cannot hold a line break and the
-              // browser drops it. Counted rather than allowed silently, so a
-              // third kind - or the edit not arriving - fails.
+              // The kinds of difference a browser save made before step 6.4,
+              // named so that a failure says which came back. A property the
+              // chunk did not have came back with a value, because every
+              // control posts one: an empty text box an empty string, a list
+              // its first option. A value posted from a textarea came back
+              // with CRLF where it had LF. Both are put back on save now. And
+              // a value with line breaks comes back without them from an
+              // `<input type="text">`, which cannot hold one - the only kind
+              // left, and only on a language without editor annotations.
               const kind = (c) => {
                 const before = was[c.id].properties[c.key];
 
@@ -226,8 +241,16 @@ describe('a LionWeb model, saved in the browser and exported again', () => {
                   return c.value === '' ? 'absent became empty' : 'absent became a list default';
                 }
 
+                if (c.value === undefined) {
+                  return 'present became absent';
+                }
+
                 if (typeof before === 'string' && before.replace(/[\r\n]/g, '') === c.value) {
                   return 'line breaks lost';
+                }
+
+                if (typeof before === 'string' && before.replace(/\r\n/g, '\n') === String(c.value).replace(/\r\n/g, '\n')) {
+                  return 'line endings changed';
                 }
 
                 return c.value === edited ? 'edited' : 'unexplained';
@@ -241,8 +264,27 @@ describe('a LionWeb model, saved in the browser and exported again', () => {
               ).then(() => {
                 const kinds = changed.map(kind);
 
+                const lost = kinds.filter((k) => k === 'line breaks lost').length;
+
+                cy.task('log', `${textareas} textareas on screen; line breaks lost in ${lost} values`);
+
                 expect(kinds.filter((k) => k === 'edited'), 'the edited value, once').to.have.length(1);
-                expect(kinds.filter((k) => k === 'unexplained'), 'no other difference').to.deep.equal([]);
+                expect(
+                  kinds.filter((k) => k !== 'edited' && (k !== 'line breaks lost' || textareas > 0)),
+                  textareas > 0 ? 'no other difference' : 'no other difference than text boxes losing line breaks',
+                ).to.deep.equal([]);
+
+                // Over lines, the values JCB wrote with LF only come back so.
+                if (textareas > 0) {
+                  const lfOnly = (chunk) => chunk.nodes
+                    .flatMap((node) => node.properties.map((p) => p.value))
+                    .filter((v) => typeof v === 'string' && v.includes('\n') && !v.includes('\r\n'))
+                    .sort();
+
+                  cy.task('log', `${lfOnly(before).length} values with LF only`);
+
+                  expect(lfOnly(after), 'the LF-only values, still LF').to.deep.equal(lfOnly(before));
+                }
               });
             });
           });

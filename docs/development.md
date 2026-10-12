@@ -100,6 +100,18 @@ storage tables: the modal project picker, the associations helper and the
 administrator HTML service all query `#__extengen_projects` for a name or an id,
 which is an ordinary query and not a second copy of how a model is loaded.
 
+**What a browser save may not change.** `ProjectModel::save()` hands the
+filtered post and the stored model it replaces to `Helper\BrowserSave` before
+encoding. Line endings go back to what was stored: CRLF stays CRLF, anything
+else that a textarea posted as CRLF becomes LF, and a leading newline the
+textarea layout dropped is kept. A property absent from a node matched by
+`LIonWeb_id` stays absent when it comes back as what the form shows for absent:
+`''`, a field's `default`, or a list's first option
+(`Metalanguages::shownWhenAbsent()`, read off the forms). Nodes are matched by
+`LIonWeb_id`, or by path where there is none. The rules and their limits are in
+the class and in the plan, step 6.4. The form carries no marker for any of it:
+the stored model already holds the answer.
+
 ## Services
 
 `services/provider.php` is the composition root. The component's own services

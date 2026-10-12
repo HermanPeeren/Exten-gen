@@ -113,6 +113,78 @@ final class Metalanguages
     }
 
     /**
+     * What a language's forms show for a property that is not there, where
+     * that is not an empty box.
+     *
+     * A field with a `default` shows it, and a list without one shows its
+     * first option, because a `<select>` with nothing selected selects the
+     * first. Either is what the browser posts back for a property the model
+     * did not have, which is what `BrowserSave::absentKept()` needs to tell
+     * "left alone" from "filled in". Every other field shows `''` and is not
+     * listed.
+     *
+     * Per concept, by the `LIonWeb_key` hidden field every generated form
+     * carries, which holds the concept's *name*. A stored node carries the
+     * concept's LionWeb *key* - JCB's `Field` is `field` in a chunk - so with
+     * the language's concepts given, each is listed under its key as well. A
+     * form without the hidden field is skipped.
+     *
+     * @param   string  $directory  Where the language's forms are.
+     * @param   array<int, array{key: string, name: string}>  $concepts  The language's concepts, as `MetalanguageEntry` holds them.
+     *
+     * @return  array<string, array<string, string>>  Concept key => property name => value.
+     *
+     * @since   1.6.6
+     */
+    public static function shownWhenAbsent(string $directory, array $concepts = []): array
+    {
+        $shown = [];
+
+        foreach (glob(rtrim($directory, '/\\') . '/*.xml') ?: [] as $file) {
+            $form = simplexml_load_string((string) file_get_contents($file));
+
+            if ($form === false) {
+                continue;
+            }
+
+            $marker  = $form->xpath('//field[@name="LIonWeb_key"]') ?: [];
+            $concept = $marker === [] ? '' : (string) $marker[0]['value'];
+
+            if ($concept === '') {
+                continue;
+            }
+
+            foreach ($form->xpath('//field') ?: [] as $field) {
+                $name = (string) $field['name'];
+
+                if ($name === '' || str_starts_with($name, 'LIonWeb_') || (string) $field['multiple'] === 'true') {
+                    continue;
+                }
+
+                if (isset($field['default'])) {
+                    $value = (string) $field['default'];
+                } elseif ((string) $field['type'] === 'list' && isset($field->option[0])) {
+                    $value = (string) $field->option[0]['value'];
+                } else {
+                    continue;
+                }
+
+                if ($value !== '') {
+                    $shown[$concept][$name] = $value;
+                }
+            }
+        }
+
+        foreach ($concepts as $concept) {
+            if (isset($shown[$concept['name']]) && $concept['key'] !== $concept['name']) {
+                $shown[$concept['key']] = $shown[$concept['name']];
+            }
+        }
+
+        return $shown;
+    }
+
+    /**
      * What a language says can be pointed at, as `ReferenceIndex` reads it.
      *
      * Two screens need this and they need the same answer. The edit screen has

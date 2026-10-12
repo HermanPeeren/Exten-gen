@@ -48,6 +48,7 @@ use Yepr\Gen\Core\Reference\ReferenceIndex;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Yepr\Component\Extengen\Administrator\Generator\Model\Project;
+use Yepr\Component\Extengen\Administrator\Helper\BrowserSave;
 use Yepr\Component\Extengen\Administrator\Helper\PostLimit;
 
 /**
@@ -579,6 +580,19 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 
         unset($model['id']);
 
+        // What the browser changed that nobody changed: line endings, and
+        // properties the model did not have coming back as '' or a list's
+        // first option. Put back against the model this save replaces, which
+        // is the only place the answer is - see `BrowserSave`. On the model
+        // and not on `$data`, whose chrome fills columns and was never in the
+        // stored model to compare with.
+        $stored = $this->storedModel((int) ($data['id'] ?? 0));
+        $model  = BrowserSave::lineEndings($model, $stored);
+
+        if ($stored !== []) {
+            $model = BrowserSave::absentKept($model, $stored, $this->shownWhenAbsent());
+        }
+
         $data['form_data'] = json_encode($model);
 
         // Only on a new project. The field renders read-only once a project
@@ -595,5 +609,57 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
         }
 
         return parent::save($data);
+    }
+
+    /**
+     * The model a save is about to replace, as arrays, or none.
+     *
+     * None for a project that does not exist yet - a new one, or a copy made
+     * with Save as Copy, which posts without an id - and for a stored model
+     * that will not decode, which `loadFormData()` has already said.
+     *
+     * @param   int  $id  The record being saved.
+     *
+     * @return  array<array-key, mixed>
+     *
+     * @since   1.6.6
+     */
+    private function storedModel(int $id): array
+    {
+        if ($id <= 0) {
+            return [];
+        }
+
+        $json = (string) ($this->getItem($id)->form_data ?? '');
+
+        if ($json === '') {
+            return [];
+        }
+
+        try {
+            $stored = json_decode(json_encode(Project::fromJson($json)->raw(), JSON_THROW_ON_ERROR), true);
+        } catch (\JsonException | \InvalidArgumentException $e) {
+            return [];
+        }
+
+        return \is_array($stored) ? $stored : [];
+    }
+
+    /**
+     * What this project's forms show for an absent property, where that is
+     * not an empty box. See `Metalanguages::shownWhenAbsent()`.
+     *
+     * @return  array<string, array<string, string>>
+     *
+     * @since   1.6.6
+     */
+    private function shownWhenAbsent(): array
+    {
+        $entry = $this->metalanguage();
+
+        return $entry === null ? [] : Metalanguages::shownWhenAbsent(
+            \dirname(JPATH_ROOT . '/' . $entry->rootFormPath()),
+            $entry->concepts
+        );
     }
 }
