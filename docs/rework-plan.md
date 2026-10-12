@@ -570,7 +570,7 @@ the real differences are three derivations, each now carrying a docblock that sa
 differs. And `siteIndexEntity` reproduces a bug: the front-end generator reused `$entity`
 as its filter loop's variable, so an index model's field lists came from the *last
 filter's* entity rather than the page's. Preserved, not fixed - fixing it here would bury
-a behaviour change inside a diff whose whole claim is that it has none.
+a behaviour change inside a diff whose whole claim is that it has none. (Fixed in 6.8.)
 
 *Done:* byte-identical output across all three golden models, 205 unit tests and the 17
 browser specs green, including generating a component through the UI, installing it and
@@ -2828,6 +2828,27 @@ models, and large metalanguages, into parts that are each edited and saved on th
   concepts on one screen.
 
 The sentinel from 6.3 stays as the safety net.
+
+**6.8 A front-end list reads its own entity.** Done. Preserved since 2.1: the imperative
+front-end generator reused `$entity` as its filter loop's variable, so a front-end list model
+took its selected columns (`siteIndexPropertyFieldNames`) and its joins (`siteIndexForeign`)
+from the *last filter's* entity instead of the page's. Step 1.4 reproduced it on purpose in
+`Joomla6Derivations::siteIndexEntity()`. That method is gone; both derivations read
+`pageEntity()`, as the back end always did.
+
+No golden file changes: no fixture has a filter on another entity's field, which is how it
+stayed hidden. `SiteIndexEntityTest` gives the LedgerLang fixture's Accounts list a filter on
+an entry line's debit. On main the list then selected the entry line's columns as
+`account.*` and joined four tables on columns Account does not have; now it selects
+Account's columns and joins nothing. The test fails on main.
+
+*Open*: the filter itself. `filters()` turns a filter on another entity's field into a
+`WHERE` on a column of the page's own table (`account.debit`), in the back end and the front
+end alike. The model gives no join path from the page's entity to the filter's, so the
+honest fixes are to refuse such a filter in the model (the filter's entity must be the
+page's, or reachable through one of its references) or to join through a reference when
+there is exactly one. Either is a decision about the language, not a one-line fix, so it is
+written down here rather than made.
 
 ---
 

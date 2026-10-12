@@ -135,7 +135,7 @@ final class Joomla6Derivations
             // Front-end pages.
             ->register('siteIndexFilters', fn (object $n, object $m): array => $this->filters($n, $m, false))
             ->register('siteIndexPropertyFieldNames', fn (object $n, object $m): array
-                => $this->propertyFieldNames($this->siteIndexEntity($n, $m)))
+                => $this->propertyFieldNames($this->pageEntity($n, $m)))
             ->register('siteIndexForeign', fn (object $n, object $m): array => $this->siteIndexForeign($n, $m))
             ->register('siteDetailsForeign', fn (object $n, object $m): array => $this->siteDetailsForeign($n, $m))
             ->register('siteRouterViews', fn (mixed $n, object $m): array => $this->routerViews($m))
@@ -311,38 +311,6 @@ final class Joomla6Derivations
         $reference = $page->entity_ref->entity_ref0->reference ?? null;
 
         return $reference === null ? null : ($this->entities($model)[$reference] ?? null);
-    }
-
-    /**
-     * The entity the front-end index templates actually see.
-     *
-     * Not the page's entity, when the page has filters. The imperative version
-     * reused the name `$entity` as the loop variable of its filter walk, so by
-     * the time it built `propertyFieldNames` and `foreign` the name held the
-     * *last filter's* entity. The back end escaped this only because it built
-     * those two lists before the filter walk rather than after.
-     *
-     * Reproduced rather than fixed: it is what the approved output contains, so
-     * fixing it here would bury a behaviour change inside a refactoring. It is
-     * a one-line change in this method once somebody looks at the diff.
-     *
-     * @param   object  $page   The page.
-     * @param   object  $model  The decoded project.
-     *
-     * @return  ?object
-     *
-     * @since   1.1.0
-     */
-    private function siteIndexEntity(object $page, object $model): ?object
-    {
-        $entity   = $this->pageEntity($page, $model);
-        $entities = $this->entities($model);
-
-        foreach ((array) ($page->filters ?? []) as $filter) {
-            $entity = $entities[$filter->entity_reference] ?? $entity;
-        }
-
-        return $entity;
     }
 
     /**
@@ -618,7 +586,10 @@ final class Joomla6Derivations
         $entities = $this->entities($model);
         $foreign  = [];
 
-        foreach ((array) ($this->siteIndexEntity($page, $model)->field ?? []) as $field) {
+        // The page's own entity. Until 6.8 this was the *last filter's*: the
+        // imperative generator reused `$entity` as its filter loop's variable,
+        // and 1.4 reproduced that rather than bury a fix in a refactoring.
+        foreach ((array) ($this->pageEntity($page, $model)->field ?? []) as $field) {
             if (!FieldKind::isReference($field) || property_exists(FieldKind::reference($field), 'ismultiple')) {
                 continue;
             }
