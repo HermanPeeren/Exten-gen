@@ -38,7 +38,7 @@ class ProjectController extends FormController
 	  */
 	public function __construct($config = array(), MVCFactoryInterface $factory = null, $app = null, $input = null)
 	{
-		$this->view_list = '';
+		$this->view_list = 'projects';
 		parent::__construct($config, $factory, $app, $input);
 	}
 
@@ -58,7 +58,7 @@ class ProjectController extends FormController
 		$model = $this->getModel('Project', 'Administrator', []);
 
 		// Preset the redirect
-		$this->setRedirect(Route::_('index.php?option=com_extengen&view=' . $this->getRedirectToListAppend(), false));
+		$this->setRedirect(Route::_('index.php?option=com_extengen&view=projects' . $this->getRedirectToListAppend(), false));
 
 		return parent::batch($model);
 	}

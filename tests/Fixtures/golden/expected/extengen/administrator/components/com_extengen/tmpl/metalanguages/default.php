@@ -104,7 +104,7 @@ if ($saveOrder && !empty($this->items)) {
 
                                 <td>
                                 <a class="hasTooltip" href="<?php
-                                    echo Route::_('index.php?option=com_extengen&task=.edit&id=' . (int) $item->id); ?>"
+                                    echo Route::_('index.php?option=com_extengen&task=metalanguage.edit&id=' . (int) $item->id); ?>"
                                     title="<?php echo Text::_('JACTION_EDIT'); ?> <?php echo $this->escape(addslashes($item->lang_key)); ?>">
 		                            <?php //echo $editIcon; ?><?php echo $this->escape($item->lang_key); ?></a>
                                 </td>

@@ -38,7 +38,7 @@ class MetalanguageController extends FormController
 	  */
 	public function __construct($config = array(), MVCFactoryInterface $factory = null, $app = null, $input = null)
 	{
-		$this->view_list = '';
+		$this->view_list = 'metalanguages';
 		parent::__construct($config, $factory, $app, $input);
 	}
 
@@ -58,7 +58,7 @@ class MetalanguageController extends FormController
 		$model = $this->getModel('Metalanguage', 'Administrator', []);
 
 		// Preset the redirect
-		$this->setRedirect(Route::_('index.php?option=com_extengen&view=' . $this->getRedirectToListAppend(), false));
+		$this->setRedirect(Route::_('index.php?option=com_extengen&view=metalanguages' . $this->getRedirectToListAppend(), false));
 
 		return parent::batch($model);
 	}

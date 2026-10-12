@@ -123,7 +123,7 @@ final class Joomla6Derivations
             ->register('pageEntityArray', fn (object $n, object $m): ?array
                 => $this->deepArray($this->pageEntity($n, $m)))
             ->register('pageSlots', fn (object $n): array => $this->slots($n, 'Page', (string) $n->page_type))
-            ->register('adminLinkPageName', fn (object $n, object $m): string => $this->linkPageName($n, $m, false))
+            ->register('adminLinkPageName', fn (object $n, object $m): string => $this->adminLinkPageName($n, $m))
             ->register('siteLinkPageName', fn (object $n, object $m): string => $this->linkPageName($n, $m, true))
 
             // Back-end pages.
@@ -391,6 +391,61 @@ final class Joomla6Derivations
         }
 
         return $fallback ? $own : '';
+    }
+
+    /**
+     * The page a back-end page links to, or its counterpart when it links nowhere.
+     *
+     * The back end has no page of its own to fall back to the way the front
+     * end does: the name ends up in `addNew('<name>.add')`, in the list's
+     * `task=<name>.edit` and in a form controller's `view_list`, and a list
+     * page that is its own form opens nothing. Before this a list page without
+     * links got `''`, so New pressed `.add`, Joomla looked for a controller
+     * with no name and answered *404*; the Extension Generator's own model had
+     * it on both its lists, and a Period list in the talk demo hit it.
+     *
+     * So when a page links nowhere, or to a page the model does not have, it
+     * falls back to the page of the other kind for the same entity in the
+     * back-end section: a list to its details page, a details page to its
+     * list. A list whose entity has no details page falls back to the
+     * entity's name, which is what that form would be called; Joomla then
+     * says plainly which controller is missing. A details page with no list
+     * keeps `''`, and its redirect lands on the component's default view.
+     *
+     * @param   object  $page   The page.
+     * @param   object  $model  The decoded project.
+     *
+     * @return  string
+     *
+     * @since   1.6.6
+     */
+    private function adminLinkPageName(object $page, object $model): string
+    {
+        $linked = $this->linkPageName($page, $model, false);
+
+        if ($linked !== '') {
+            return $linked;
+        }
+
+        $entity = $this->pageEntity($page, $model);
+
+        if ($entity === null) {
+            return '';
+        }
+
+        $wanted = $page->page_type === 'indexpage' ? 'detailspage' : 'indexpage';
+
+        foreach (Joomla6Selectors::pages($model, 'backendsection') as $candidate) {
+            if (
+                $candidate->page_type === $wanted
+                && $this->pageEntity($candidate, $model) === $entity
+                && (string) $candidate->page_name !== ''
+            ) {
+                return ucfirst((string) $candidate->page_name);
+            }
+        }
+
+        return $wanted === 'detailspage' ? ucfirst((string) ($entity->entity_name ?? '')) : '';
     }
 
     /**

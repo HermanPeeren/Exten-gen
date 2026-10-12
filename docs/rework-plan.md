@@ -2829,6 +2829,31 @@ models, and large metalanguages, into parts that are each edited and saved on th
 
 The sentinel from 6.3 stays as the safety net.
 
+**6.6 New on a list page without links.** Done. Found in the JWC demo: BalloonLedger with a
+Period entity, a list page "Periods" and a details page "Period", neither with a link. New on
+the generated Periods list pressed `.add` and the list answered *404*. `adminLinkPageName`
+returned `''` for a back-end page that links nowhere, and that name goes into
+`addNew('<name>.add')`, the list's `task=<name>.edit` and the form controller's `view_list`
+and redirect. The front end never had it: there a page without links falls back to itself.
+
+The back end now falls back to the page of the other kind for the same entity in the back-end
+section (`Joomla6Derivations::adminLinkPageName()`): a list to its details page, a details
+page to its list. Decisions:
+
+- *A list whose entity has no details page* falls back to the entity's name, which is what
+  that form would be called. It still has no controller, but the 404 then names the missing
+  one instead of a nameless one.
+- *A details page with no list* keeps `''`; its redirect lands on the component's default view.
+- *A link to a page the model does not have* falls back the same way as no link.
+- *The front end and the router are unchanged*: they still use `linkPageName()` as before.
+
+The Extension Generator's own fixture had it on both its lists, so the `extengen` golden
+files change in six places (two controllers, two toolbars, two lists), all from `''` to the
+right view: an intended change, regenerated with `tools/capture-golden.php`. No other fixture
+changes. `ListPageWithoutLinksTest` builds the demo's model on the LedgerLang fixture,
+generates it with the LedgerLang generator, and checks the toolbar, the edit links, the
+controller and the fallback to the entity name; it fails on main.
+
 ---
 
 ## Decisions outstanding
