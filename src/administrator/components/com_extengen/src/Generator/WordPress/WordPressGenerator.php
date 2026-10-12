@@ -50,8 +50,9 @@ abstract class WordPressGenerator extends Generator
         'Integer'    => 'bigint(20) NOT NULL DEFAULT 0',
         'Boolean'    => 'tinyint(1) NOT NULL DEFAULT 0',
         'Text'       => 'longtext',
-        'Decimal'    => 'decimal(10,2) NOT NULL DEFAULT 0',
-        'Currency'   => 'decimal(10,2) NOT NULL DEFAULT 0',
+        // The same precision as the Joomla target's: 6.9.
+        'Decimal'    => 'decimal(18,4) NOT NULL DEFAULT 0',
+        'Currency'   => 'decimal(15,2) NOT NULL DEFAULT 0',
         'Float'      => 'float NOT NULL DEFAULT 0',
         'Short_Text' => "varchar(255) NOT NULL DEFAULT ''",
         'Time'       => 'time DEFAULT NULL',

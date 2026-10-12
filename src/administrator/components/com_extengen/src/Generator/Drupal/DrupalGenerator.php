@@ -53,8 +53,9 @@ abstract class DrupalGenerator extends Generator
         'Text'       => ['type' => "'text'", 'size' => "'big'", 'not null' => 'FALSE'],
         'Integer'    => ['type' => "'int'", 'not null' => 'TRUE', 'default' => '0'],
         'Boolean'    => ['type' => "'int'", 'size' => "'tiny'", 'not null' => 'TRUE', 'default' => '0'],
-        'Decimal'    => ['type' => "'numeric'", 'precision' => '10', 'scale' => '2', 'not null' => 'FALSE'],
-        'Currency'   => ['type' => "'numeric'", 'precision' => '10', 'scale' => '2', 'not null' => 'FALSE'],
+        // The same precision as the Joomla target's: 6.9.
+        'Decimal'    => ['type' => "'numeric'", 'precision' => '18', 'scale' => '4', 'not null' => 'FALSE'],
+        'Currency'   => ['type' => "'numeric'", 'precision' => '15', 'scale' => '2', 'not null' => 'FALSE'],
         'Float'      => ['type' => "'float'", 'not null' => 'FALSE'],
         // Dates are stored as the ISO strings the forms produce. Drupal's own
         // entities use an integer timestamp, which is right for something with

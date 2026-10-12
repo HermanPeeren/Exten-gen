@@ -43,8 +43,12 @@ class AdminEntities extends RuleDrivenGenerator
 		'Integer'    => 'int NOT NULL DEFAULT 0',
 		'Boolean'    => 'tinyint unsigned NOT NULL DEFAULT 0',
 		'Text'       => 'text',
-		'Decimal'    => 'decimal(10,2)',
-		'Currency'   => 'decimal(10,2)',
+		// Exact, never float: 6.9. Money in cents to below a ten-trillion,
+		// and a Decimal - a rate, a quantity - with four places, so a 9% rate
+		// is 0.0900 and survives being multiplied. The same two in every
+		// target's schema.
+		'Decimal'    => 'decimal(18,4)',
+		'Currency'   => 'decimal(15,2)',
 		'Float'      => 'float',
 		'Short_Text' => 'varchar(255)',
 		'Time'       => 'time',

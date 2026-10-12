@@ -22,8 +22,9 @@ namespace Yepr\Component\Extengen\Administrator\Generator\Rules;
  * names `ledgerAccountRoles` and `ledgerPostingRules`.
  *
  * A posting line's amount is an expression over the event's data, such as
- * `amount - vat`. It becomes PHP here, at generation time, so the generated
- * class reads like a hand-written one. That is also why it is parsed rather
+ * `amount - vat`. It becomes PHP here, at generation time, as calls to the
+ * generated class's exact arithmetic (6.9), so the generated class needs no
+ * interpreter. That is also why it is parsed rather
  * than pasted: only names, numbers, `+ - * /` and brackets get through, in an
  * order that makes an arithmetic expression. Anything else becomes a line that
  * throws when it is posted, plus a warning in the generation log. A model never
@@ -132,6 +133,9 @@ final class LedgerDerivations
                         . '", amount "' . (string) ($line->amount ?? '') . '". Posting this event throws.');
 
                     $amount = '$this->unreadable(' . var_export($event, true) . ')';
+                } else {
+                    // Rounded to cents once, after the exact arithmetic: 6.9.
+                    $amount = '$this->cents(' . $amount . ')';
                 }
 
                 $lines[] = [
@@ -154,7 +158,16 @@ final class LedgerDerivations
     /**
      * An amount expression as PHP, or null when it is not arithmetic over names and numbers.
      *
-     * `amount - vat` becomes `$this->value($data, 'amount') - $this->value($data, 'vat')`.
+     * `amount - vat` becomes
+     * `$this->minus($this->value($data, 'amount'), $this->value($data, 'vat'))`.
+     *
+     * Calls rather than PHP's own operators since 6.9: the generated class does
+     * its arithmetic on exact fractions of integers, and rounds a line to cents
+     * once, at the end. PHP's `-` on floats had `0.1 + 0.2` come out as
+     * `0.30000000000000004`, rounded every line on its own and compared the
+     * balance with a tolerance. So the expression is parsed with the usual
+     * precedence here, `*` and `/` before `+` and `-`, a leading minus
+     * binding tightest, and written as the calls that precedence means.
      *
      * @param   string  $expression  As the model writes it.
      *
@@ -179,49 +192,110 @@ final class LedgerDerivations
             return null;
         }
 
-        $php           = '';
-        $expectOperand = true;
-        $depth         = 0;
+        $tokens = array_map(
+            static fn (array $token): array => [
+                'name'     => $token[1] ?? '',
+                'number'   => $token[2] ?? '',
+                'operator' => $token[3] ?? '',
+            ],
+            $tokens
+        );
 
-        foreach ($tokens as $token) {
-            $name     = $token[1] ?? '';
-            $number   = $token[2] ?? '';
-            $operator = $token[3] ?? '';
+        $position = 0;
+        $php      = $this->sum($tokens, $position);
 
-            if ($expectOperand) {
-                if ($name !== '') {
-                    $php .= '$this->value($data, ' . var_export($name, true) . ')';
-                    $expectOperand = false;
-                } elseif ($number !== '') {
-                    $php .= $number;
-                    $expectOperand = false;
-                } elseif ($operator === '(') {
-                    $php .= '(';
-                    $depth++;
-                } elseif ($operator === '-') {
-                    $php .= '-';
-                } else {
-                    return null;
-                }
+        return $php !== null && $position === \count($tokens) ? $php : null;
+    }
 
-                continue;
-            }
+    /**
+     * Terms joined by `+` and `-`, left to right.
+     *
+     * @param   array<int, array{name: string, number: string, operator: string}>  $tokens    The expression.
+     * @param   int                                                                 $position  Where to read, moved past what is read.
+     *
+     * @return  ?string
+     *
+     * @since   1.6.6
+     */
+    private function sum(array $tokens, int &$position): ?string
+    {
+        $php = $this->product($tokens, $position);
 
-            if ($operator === ')') {
-                if (--$depth < 0) {
-                    return null;
-                }
-
-                $php .= ')';
-            } elseif (\in_array($operator, ['+', '-', '*', '/'], true)) {
-                $php .= ' ' . $operator . ' ';
-                $expectOperand = true;
-            } else {
-                return null;
-            }
+        while ($php !== null && \in_array($tokens[$position]['operator'] ?? '', ['+', '-'], true)) {
+            $method = $tokens[$position++]['operator'] === '+' ? 'plus' : 'minus';
+            $right  = $this->product($tokens, $position);
+            $php    = $right === null ? null : '$this->' . $method . '(' . $php . ', ' . $right . ')';
         }
 
-        return !$expectOperand && $depth === 0 ? $php : null;
+        return $php;
+    }
+
+    /**
+     * Factors joined by `*` and `/`, left to right.
+     *
+     * @param   array<int, array{name: string, number: string, operator: string}>  $tokens    The expression.
+     * @param   int                                                                 $position  Where to read, moved past what is read.
+     *
+     * @return  ?string
+     *
+     * @since   1.6.6
+     */
+    private function product(array $tokens, int &$position): ?string
+    {
+        $php = $this->factor($tokens, $position);
+
+        while ($php !== null && \in_array($tokens[$position]['operator'] ?? '', ['*', '/'], true)) {
+            $method = $tokens[$position++]['operator'] === '*' ? 'times' : 'dividedBy';
+            $right  = $this->factor($tokens, $position);
+            $php    = $right === null ? null : '$this->' . $method . '(' . $php . ', ' . $right . ')';
+        }
+
+        return $php;
+    }
+
+    /**
+     * A name, a number, a bracketed sum, or any of those after a minus.
+     *
+     * @param   array<int, array{name: string, number: string, operator: string}>  $tokens    The expression.
+     * @param   int                                                                 $position  Where to read, moved past what is read.
+     *
+     * @return  ?string
+     *
+     * @since   1.6.6
+     */
+    private function factor(array $tokens, int &$position): ?string
+    {
+        $token = $tokens[$position++] ?? null;
+
+        if ($token === null) {
+            return null;
+        }
+
+        if ($token['name'] !== '') {
+            return '$this->value($data, ' . var_export($token['name'], true) . ')';
+        }
+
+        if ($token['number'] !== '') {
+            return '$this->number(' . var_export($token['number'], true) . ')';
+        }
+
+        if ($token['operator'] === '-') {
+            $operand = $this->factor($tokens, $position);
+
+            return $operand === null ? null : '$this->negated(' . $operand . ')';
+        }
+
+        if ($token['operator'] === '(') {
+            $inner = $this->sum($tokens, $position);
+
+            if ($inner === null || ($tokens[$position++]['operator'] ?? '') !== ')') {
+                return null;
+            }
+
+            return $inner;
+        }
+
+        return null;
     }
 
     /**

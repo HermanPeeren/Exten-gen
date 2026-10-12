@@ -2829,6 +2829,51 @@ models, and large metalanguages, into parts that are each edited and saved on th
 
 The sentinel from 6.3 stays as the safety net.
 
+**6.9 Exact money in the LedgerLang generator.** Done. The generated `PostingRules` computed
+amounts as floats, rounded every line with `round($x, 2)` and accepted an entry whose balance
+rounded to zero. `0.1 + 0.2` was `0.30000000000000004` on the way, and `decimal(10,2)` capped an
+amount at 99,999,999.99.
+
+Decisions:
+
+- *Exact fractions of integers, not bcmath.* Joomla 6 does not require bcmath (only some of
+  its libraries suggest it), and a generated component has to install wherever Joomla does.
+  Integer cents alone cannot divide (`amount * 9 / 109`, the VAT in a gross amount). So an
+  amount is a reduced fraction `[numerator, denominator]` of PHP integers, `+ - * /` stay
+  exact, and a line is rounded to cents once, at the end, half away from zero. A result too
+  large for a 64-bit integer is refused with a `DomainException`, never turned into a float;
+  so is a division by zero.
+- *The expression compiler emits calls.* `LedgerDerivations::amount()` is now a small
+  recursive-descent parser with the usual precedence (`*` and `/` before `+` and `-`, left to
+  right, a leading minus binding tightest) and writes `amount - vat` as
+  `$this->minus($this->value($data, 'amount'), $this->value($data, 'vat'))`, wrapped in
+  `$this->cents(...)`. It accepts and refuses exactly what it did before; the private
+  arithmetic lives at the bottom of the generated `PostingRules`, so the generator still
+  writes three files and the rule files do not change.
+- *Input.* An integer, or a decimal string such as `'218.00'`. A float is read as the
+  shortest decimal that spells it (`var_export`), so `0.1` means one tenth.
+- *`JournalLine`* holds `int $cents` and `string $amount` (`'218.00'`), the string being what a
+  DECIMAL column stores with no float in between. Its constructor takes cents.
+- *Balanced means equal.* `assertBalanced()` sums cents as integers and refuses any
+  difference. Three lines of `amount / 3` for 1.00 are 0.99 together and are refused, by
+  0.01: rounding per line is visible rather than tolerated. A model that splits an amount
+  should write the last part as the remainder (`amount - amount * 9 / 109`), and 100.00 then
+  posts as 91.74 + 8.26.
+- *Columns.* `Currency` is `DECIMAL(15,2)` and `Decimal` is `DECIMAL(18,4)` (a rate such as
+  0.0900 keeps four places), in all three targets: the Joomla install SQL, the WordPress
+  `dbDelta()` statement and Drupal's `hook_schema()`. Only BalloonLedger has such columns among
+  the fixtures, so only its golden SQL changes.
+
+Golden files regenerated on purpose: BalloonLedger's install SQL, `JournalLine.php` and
+`PostingRules.php`. Tests: `LedgerLangGeneratorTest` runs the generated classes, the
+fixture's rules and a model of exactness cases (gross VAT, thirds, `0.1 + 0.2`, half a cent
+both ways, division by zero, overflow); its expression cases now expect the calls. On the dev
+site the generated component installed with `decimal(15,2)` and `decimal(18,4)` columns.
+
+*Open*: nothing generated stores a journal entry from `PostingRules` yet; when something does,
+it should bind `JournalLine::$amount`, the string. A currency with other than two decimals
+(the yen, the Bahraini dinar) would need the scale from the model rather than fixed cents.
+
 ---
 
 ## Decisions outstanding
