@@ -135,6 +135,61 @@ final class FieldKind
     }
 
     /**
+     * Whether a property's value must be unique among the entity's rows: step 6.7.
+     *
+     * `isprimary` counts too. Every table keeps its own `id` as the primary
+     * key, so a property marked primary is the entity's natural key - the
+     * account code - and a natural key that repeats is no key.
+     *
+     * @since  1.6.6
+     */
+    public static function isUnique(?object $field): bool
+    {
+        $property = self::property($field);
+
+        return self::flag($property, 'isunique') || self::flag($property, 'isprimary');
+    }
+
+    /**
+     * Whether the form must refuse to save this field empty: step 6.7.
+     *
+     * A reference marked `isrequired`, and a property marked `isprimary`. ER1
+     * gives a property no `isrequired` of its own; a natural key left empty is
+     * no key either, so primary implies it.
+     *
+     * @since  1.6.6
+     */
+    public static function isRequired(?object $field): bool
+    {
+        return self::flag(self::reference($field), 'isrequired') || self::flag(self::property($field), 'isprimary');
+    }
+
+    /**
+     * Whether a checkbox in the model is ticked.
+     *
+     * A form stores a ticked checkbox as `"1"` and leaves an unticked one out,
+     * which is why the generators have always asked `property_exists`. A model
+     * that came in through LionWeb can carry the box unticked, as `"false"` or
+     * `"0"`, and `property_exists` reads that as ticked; this does not.
+     *
+     * @since  1.6.6
+     */
+    public static function flag(?object $node, string $name): bool
+    {
+        if ($node === null || !property_exists($node, $name)) {
+            return false;
+        }
+
+        $value = $node->{$name};
+
+        if (\is_bool($value)) {
+            return $value;
+        }
+
+        return \is_scalar($value) && !\in_array(strtolower(trim((string) $value)), ['', '0', 'false'], true);
+    }
+
+    /**
      * Whether the field's discriminator names this subtype.
      *
      * Compared without case, because the only difference between what a

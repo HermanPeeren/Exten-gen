@@ -32,7 +32,8 @@
         "siteIndexForeign",
         "siteIndexPropertyFieldNames",
         "siteLinkPageName",
-        "siteRouterViews"
+        "siteRouterViews",
+        "uniqueFields"
     ],
     "templates": [
         "LICENSE",

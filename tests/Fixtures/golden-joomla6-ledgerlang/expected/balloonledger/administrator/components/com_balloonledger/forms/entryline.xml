@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
   <fieldset addruleprefix="Yepr\Component\BalloonLedger\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonLedger\Administrator\Field">
-    <field name="entry" type="sql" query="SELECT id, `number` FROM `#__balloonledger_journalentry`" header="&amp;nbsp;" key_field="id" value_field="number" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ENTRY_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ENTRY_DESC"/>
-    <field name="account" type="sql" query="SELECT id, `code` FROM `#__balloonledger_account`" header="&amp;nbsp;" key_field="id" value_field="code" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ACCOUNT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ACCOUNT_DESC"/>
-    <field name="description" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DESCRIPTION_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DESCRIPTION_DESC"/>
-    <field name="debit" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DEBIT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DEBIT_DESC"/>
-    <field name="credit" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_CREDIT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_CREDIT_DESC"/>
+    <field name="entry" type="sql" query="SELECT id, `number` FROM `#__balloonledger_journalentry`" header="&amp;nbsp;" key_field="id" value_field="number" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ENTRY_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ENTRY_DESC" required="true"/>
+    <field name="account" type="sql" query="SELECT id, `code` FROM `#__balloonledger_account`" header="&amp;nbsp;" key_field="id" value_field="code" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ACCOUNT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_ACCOUNT_DESC" required="true"/>
+    <field name="description" type="text" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DESCRIPTION_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DESCRIPTION_DESC"/>
+    <field name="debit" type="text" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DEBIT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_DEBIT_DESC"/>
+    <field name="credit" type="text" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_CREDIT_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_CREDIT_DESC"/>
     <field name="tax_code" type="sql" query="SELECT id, `code` FROM `#__balloonledger_taxcode`" header="&amp;nbsp;" key_field="id" value_field="code" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_TAX_CODE_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_TAX_CODE_DESC"/>
     <field name="party" type="sql" query="SELECT id, `name` FROM `#__balloonledger_party`" header="&amp;nbsp;" key_field="id" value_field="name" label="COM_BALLOONLEDGER_ENTRYLINE_FIELD_PARTY_LABEL" description="COM_BALLOONLEDGER_ENTRYLINE_FIELD_PARTY_DESC"/>
     <field name="id" type="hidden"/>

@@ -122,10 +122,74 @@ class JournalTable extends Table implements TaggableTableInterface
 			}
 		}
 
+		// What the model marks unique, which the install sql keys unique too:
+		// refused here first, so the person gets a sentence rather than a
+		// database error. An empty value is no value - stored as NULL where the
+		// column allows it, and NULLs never collide. A natural key (isprimary)
+		// may not be empty at all.
+		//
+		// Column => [the message when it is empty, or '' when it may be; the
+		// message when another row has it]. By name rather than as properties,
+		// because a column name may hold a character a PHP name cannot.
+		$unique  = [
+			'code' => [
+				'COM_BALLOONLEDGER_JOURNAL_CODE_REQUIRED',
+				'COM_BALLOONLEDGER_JOURNAL_CODE_NOT_UNIQUE',
+			],
+		];
+		$columns = $this->getFields();
+
+		foreach ($unique as $column => [$required, $taken]) {
+			if (($this->$column ?? null) === '' && ($columns[$column]->Null ?? '') === 'YES') {
+				$this->$column = null;
+			}
+
+			$value = $this->$column ?? null;
+
+			if ($value === null || $value === '') {
+				if ($required !== '') {
+					$this->setError(Text::_($required));
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (!$this->isUnique($column)) {
+				$this->setError(Text::sprintf($taken, htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8')));
+
+				return false;
+			}
+		}
+
 		// <extengen id="table.check">
 		// </extengen>
 
 		return true;
+	}
+
+	/**
+	 * Whether no other row has this one's value in a column.
+	 *
+	 * @param   string  $column  The column, one the model marks unique.
+	 *
+	 * @return  boolean
+	 */
+	private function isUnique(string $column): bool
+	{
+		$db    = $this->getDatabase();
+		$id    = (int) $this->id;
+		$value = (string) $this->$column;
+		$query = $db->createQuery()
+			->select('COUNT(*)')
+			->from($db->quoteName($this->_tbl))
+			->where($db->quoteName($column) . ' = :value')
+			->where($db->quoteName('id') . ' != :id')
+			->bind(':value', $value)
+			->bind(':id', $id, ParameterType::INTEGER);
+
+		return (int) $db->setQuery($query)->loadResult() === 0;
 	}
 
 	/**

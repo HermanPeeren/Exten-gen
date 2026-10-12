@@ -35,6 +35,13 @@ function {{ machine }}_schema(): array {
 {% endfor %}
     ],
     'primary key' => ['id'],
+{% if entity.unique %}
+    'unique keys' => [
+{% for key in entity.unique %}
+      '{{ key.name }}' => [{{ key.column|raw }}],
+{% endfor %}
+    ],
+{% endif %}
   ];
 
 {% endfor %}

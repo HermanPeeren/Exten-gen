@@ -30,7 +30,9 @@ class {{ prefix }}_Activator
 {% for column in entity.columns %}
                 {{ column.name }} {{ column.type }},
 {% endfor %}
-                PRIMARY KEY  (id)
+                PRIMARY KEY  (id){% for column in entity.columns|filter(c => c.unique) %},
+                UNIQUE KEY {{ column.name }} ({{ column.name }}{{ column.prefix }}){% endfor %}
+
             ) {$charset};"
         );
 

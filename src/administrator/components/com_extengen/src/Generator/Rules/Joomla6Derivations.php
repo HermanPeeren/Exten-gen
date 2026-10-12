@@ -115,6 +115,7 @@ final class Joomla6Derivations
             ->register('entityNameUcfirst', static fn (object $n): string => ucfirst((string) $n->entity_name))
             ->register('entitySlots', fn (object $n): array => $this->slots($n, 'Entity'))
             ->register('manyToMany', fn (object $n, object $m): array => $this->manyToMany($n, $m))
+            ->register('uniqueFields', fn (object $n): array => $this->uniqueFields($n))
 
             // Pages, either section.
             ->register('pageName', static fn (object $n): string => ucfirst((string) $n->page_name))
@@ -480,6 +481,35 @@ final class Joomla6Derivations
         }
 
         return $names;
+    }
+
+    /**
+     * The properties whose values the Table keeps unique: step 6.7.
+     *
+     * Each with whether it is the entity's natural key (`isprimary`), which
+     * may not be empty either. A value object has no table, so its entity is
+     * never asked.
+     *
+     * @param   object  $entity  The entity.
+     *
+     * @return  array<int, array{name: string, primary: bool}>
+     *
+     * @since   1.6.6
+     */
+    private function uniqueFields(object $entity): array
+    {
+        $unique = [];
+
+        foreach ((array) ($entity->field ?? []) as $field) {
+            if (FieldKind::isUnique($field)) {
+                $unique[] = [
+                    'name'    => (string) $field->field_name,
+                    'primary' => FieldKind::flag(FieldKind::property($field), 'isprimary'),
+                ];
+            }
+        }
+
+        return $unique;
     }
 
     /**

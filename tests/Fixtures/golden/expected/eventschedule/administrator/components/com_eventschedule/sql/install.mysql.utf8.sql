@@ -1,13 +1,15 @@
 CREATE TABLE IF NOT EXISTS `#__eventschedule_dayschedule` (
 `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
 `name` varchar(255),
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_name` (`name`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__eventschedule_track` (
 `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
 `name` varchar(255),
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_name` (`name`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__eventschedule_speaker` (
@@ -33,7 +35,8 @@ CREATE TABLE IF NOT EXISTS `#__eventschedule_presentation_type` (
 `presentation_type_name` text,
 `css_class` text,
 `background_color` text,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_presentation_type_name` (`presentation_type_name`(255))
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__eventschedule_dayschedule_track` (

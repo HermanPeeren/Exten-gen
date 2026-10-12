@@ -182,9 +182,18 @@ abstract class WordPressGenerator extends Generator
                     continue;
                 }
 
+                $type = (string) (FieldKind::property($field)->type ?? '');
+
                 $columns[] = [
-                    'name' => self::slugify((string) $field->field_name),
-                    'type' => self::COLUMN_TYPES[(string) (FieldKind::property($field)->type ?? '')] ?? 'longtext',
+                    'name'   => self::slugify((string) $field->field_name),
+                    'type'   => self::COLUMN_TYPES[$type] ?? 'longtext',
+                    // Step 6.7: a unique key for what the model marks unique or
+                    // primary. A longtext column is keyed on its first 255
+                    // characters, the most MySQL will key on. The save handler
+                    // does not check first yet, so a duplicate is refused by the
+                    // database rather than with a sentence.
+                    'unique' => FieldKind::isUnique($field),
+                    'prefix' => isset(self::COLUMN_TYPES[$type]) && $type !== 'Text' ? '' : '(255)',
                 ];
             }
 

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
   <fieldset addruleprefix="Yepr\Component\BalloonLedger\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonLedger\Administrator\Field">
-    <field name="code" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_CODE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_CODE_DESC"/>
-    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_NAME_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_NAME_DESC"/>
-    <field name="rate" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_RATE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_RATE_DESC"/>
-    <field name="tax_type" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_TAX_TYPE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_TAX_TYPE_DESC"/>
-    <field name="valid_from" type="calendar" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_FROM_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_FROM_DESC"/>
-    <field name="valid_until" type="calendar" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_UNTIL_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_UNTIL_DESC"/>
+    <field name="code" type="text" label="COM_BALLOONLEDGER_TAXCODE_FIELD_CODE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_CODE_DESC" required="true"/>
+    <field name="name" type="text" label="COM_BALLOONLEDGER_TAXCODE_FIELD_NAME_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_NAME_DESC"/>
+    <field name="rate" type="text" label="COM_BALLOONLEDGER_TAXCODE_FIELD_RATE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_RATE_DESC"/>
+    <field name="tax_type" type="text" label="COM_BALLOONLEDGER_TAXCODE_FIELD_TAX_TYPE_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_TAX_TYPE_DESC"/>
+    <field name="valid_from" type="calendar" label="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_FROM_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_FROM_DESC"/>
+    <field name="valid_until" type="calendar" label="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_UNTIL_LABEL" description="COM_BALLOONLEDGER_TAXCODE_FIELD_VALID_UNTIL_DESC"/>
     <field name="id" type="hidden"/>
   </fieldset>
 </form>

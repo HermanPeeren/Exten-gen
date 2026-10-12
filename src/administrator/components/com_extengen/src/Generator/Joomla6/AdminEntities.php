@@ -123,6 +123,19 @@ class AdminEntities extends RuleDrivenGenerator
 
 			$columns[] = 'PRIMARY KEY (`id`)';
 
+			// A property the model marks unique, or primary, gets a unique key:
+			// step 6.7. The generated Table refuses a duplicate first, with a
+			// sentence; this is what holds when something writes the table
+			// without going through it. A text column can only be keyed on a
+			// prefix, and 255 characters is the prefix: wide enough for anything
+			// a person would expect to be unique, and inside InnoDB's limit.
+			foreach ($entity->field as $field) {
+				if (FieldKind::isUnique($field)) {
+					$prefixLength = (FieldKind::property($field)->type ?? '') === 'Text' ? '(255)' : '';
+					$columns[]    = 'UNIQUE KEY `idx_' . $field->field_name . '` (`' . $field->field_name . '`' . $prefixLength . ')';
+				}
+			}
+
 			$create[] = "CREATE TABLE IF NOT EXISTS `$tableName` (\n"
 				. implode(",\n", $columns)
 				. "\n)  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;";

@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonledger_account` (
 `postable` tinyint unsigned NOT NULL DEFAULT 0,
 `reconcilable` tinyint unsigned NOT NULL DEFAULT 0,
 `active` tinyint unsigned NOT NULL DEFAULT 0,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_code` (`code`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonledger_journal` (
@@ -16,7 +17,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonledger_journal` (
 `name` varchar(255),
 `journal_type` varchar(255),
 `gapless` tinyint unsigned NOT NULL DEFAULT 0,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_code` (`code`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonledger_party` (
@@ -35,7 +37,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonledger_taxcode` (
 `tax_type` varchar(255),
 `valid_from` date,
 `valid_until` date,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_code` (`code`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonledger_journalentry` (

@@ -178,12 +178,24 @@ abstract class DrupalGenerator extends Generator
 
         foreach ($this->project->entities() as $entity) {
             $columns = [];
+            $unique  = [];
 
             foreach ((array) ($entity->field ?? []) as $field) {
                 if (!FieldKind::isProperty($field)) {
                     // A reference is a column of its own shape and belongs with
                     // the join it implies, which this target does not do yet.
                     continue;
+                }
+
+                // Step 6.7: a unique key for what the model marks unique or
+                // primary, as `hook_schema()` spells it. A big text column is
+                // keyed on its first 255 characters. The form does not check
+                // first yet, so a duplicate is refused by the database.
+                if (FieldKind::isUnique($field)) {
+                    $name     = self::machinify((string) $field->field_name);
+                    $isText   = !isset(self::COLUMN_TYPES[(string) (FieldKind::property($field)->type ?? '')])
+                        || (FieldKind::property($field)->type ?? '') === 'Text';
+                    $unique[] = ['name' => $name, 'column' => $isText ? "['" . $name . "', 255]" : "'" . $name . "'"];
                 }
 
                 $columns[] = [
@@ -199,6 +211,7 @@ abstract class DrupalGenerator extends Generator
                 'label'   => ucfirst((string) $entity->entity_name),
                 'table'   => $this->tableName((string) $entity->entity_name),
                 'columns' => $columns,
+                'unique'  => $unique,
             ];
         }
 

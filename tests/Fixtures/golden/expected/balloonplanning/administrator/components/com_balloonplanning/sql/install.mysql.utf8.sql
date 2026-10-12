@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonplanning_balloon` (
 `capacity` int NOT NULL DEFAULT 0,
 `license` varchar(255),
 `planning_color` int NOT NULL DEFAULT 0,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_call-sign` (`call-sign`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonplanning_plannedflight` (
@@ -14,7 +15,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonplanning_plannedflight` (
 `morning_evening` varchar(255),
 `flight_number` int NOT NULL DEFAULT 0,
 `departureplace_id` bigint(20) UNSIGNED,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_flight_number` (`flight_number`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonplanning_passenger` (
@@ -46,7 +48,8 @@ CREATE TABLE IF NOT EXISTS `#__balloonplanning_ticket` (
 `ticket_type` varchar(255),
 `number_of_kids` int NOT NULL DEFAULT 0,
 `total_weight` int NOT NULL DEFAULT 0,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_ticket_number` (`ticket_number`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__balloonplanning_reservation` (
@@ -55,5 +58,6 @@ CREATE TABLE IF NOT EXISTS `#__balloonplanning_reservation` (
 `actual` tinyint unsigned NOT NULL DEFAULT 0,
 `ticket_id` bigint(20) UNSIGNED,
 `plannedflight_id` bigint(20) UNSIGNED,
-PRIMARY KEY (`id`)
+PRIMARY KEY (`id`),
+UNIQUE KEY `idx_reservation_number` (`reservation_number`)
 )  ENGINE=InnoDB DEFAULT COLLATE utf8mb4_unicode_ci;

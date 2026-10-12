@@ -2829,6 +2829,50 @@ models, and large metalanguages, into parts that are each edited and saved on th
 
 The sentinel from 6.3 stays as the safety net.
 
+**6.7 Unique and required values.** Done. ER1 has `isunique` and `isprimary` on a property
+and `isrequired` on a reference, and no generator read any of them: an account code could be
+entered twice or left empty. Talk doc 07, 3a item 3. What each now does in the Joomla 6 target:
+
+- *`isunique`*: a `UNIQUE KEY idx_<field>` in `install.mysql.utf8.sql`, and the generated
+  Table's `check()` refuses a duplicate first, with a translatable message
+  (`COM_<C>_<ENTITY>_<FIELD>_NOT_UNIQUE`, "Another account already has code 1000."), in the
+  administrator and the site language files, because the site saves through the same Table.
+  An empty value is no value: stored as NULL where the column allows it, and NULLs never
+  collide. A Text column is keyed on its first 255 characters, the most MySQL keys on.
+- *`isprimary`*: decided to mean the entity's natural key. Every table keeps its own `id` as
+  the primary key, so `isprimary` implies unique (the same key and check) and required
+  (`required="true"` on the form, and `check()` refuses it empty with
+  `COM_<C>_<ENTITY>_<FIELD>_REQUIRED`). No `NOT NULL` in the SQL: the columns keep their
+  definitions, so nothing changes for a row written without the Table.
+- *`isrequired`* on a reference: `required="true"` on its form field. The foreign key column
+  stays nullable, for the same reason.
+- *The stray `format`*: every property field carried `format="%Y-%m-%d %H:%M"`, text boxes and
+  yes/no switches included. Only a DateTime shown as a calendar gets it now, with
+  `showtime="true"`, and only when the page's edit field did not set a format of its own (it
+  used to overwrite one). A Date keeps Joomla's default format.
+
+`FieldKind::isUnique()`, `isRequired()` and `flag()` read the flags. `flag()` treats `"false"`,
+`"0"` and `""` as unticked, which `property_exists`, what the generators asked until now,
+does not: a LionWeb import can carry an unticked box. The Table gets the list through a new
+derivation, `uniqueFields`, bound in the `admin.entity.table` rule; the vocabulary is
+regenerated.
+
+WordPress and Drupal get the unique key in their schema (`UNIQUE KEY code (code)` in the
+`dbDelta()` statement, `'unique keys'` in `hook_schema()`). *Open*: their save handlers do not
+check first, so a duplicate there is refused by the database rather than with a sentence, and
+neither marks a field required.
+
+Golden files regenerated on purpose: every fixture's forms lose the stray `format`, and those
+with a unique or primary property gain the key, the Table check and the strings. Tests:
+`RequiredUniqueTest`. On the dev site the generated BalloonLedger refused a second account
+with code 1000 with that message.
+
+*Follow-up in Gen-gen*: the new bind changes `joomla6.rules.json`, so Gen-gen's
+`AcceptanceTest` fails against this branch until Gen-gen runs `composer import-vocabularies`
+and `composer import-generator` and commits the result, after this lands (target first).
+*Also open*: a generated component has no update SQL, so a component already installed does
+not get the new keys on an update.
+
 ---
 
 ## Decisions outstanding

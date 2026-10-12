@@ -261,10 +261,22 @@ $log = array_merge($log, $append);
 						$type = new \DOMAttr('type', $type);
 						$formField->setAttributeNode($type);
 
-						// DateTime: add time to date.  format = "%Y-%m-%d %H:%M"
-						// todo: if specified in editfields, then use that, not this!
-						$type = new \DOMAttr('format', '%Y-%m-%d %H:%M');
-						$formField->setAttributeNode($type);
+						// DateTime: a calendar that shows and keeps the time. This
+						// went on every property, a text box and a yes/no switch
+						// included, where it meant nothing: step 6.7. Only on a
+						// DateTime now, and only when the page's edit field did
+						// not set a format of its own, which used to be overwritten.
+						if (
+							($property->type ?? '') === 'DateTime'
+							&& $formField->getAttribute('type') === 'calendar'
+							&& !$formField->hasAttribute('format')
+						) {
+							$formField->setAttributeNode(new \DOMAttr('format', '%Y-%m-%d %H:%M'));
+
+							if (!$formField->hasAttribute('showtime')) {
+								$formField->setAttributeNode(new \DOMAttr('showtime', 'true'));
+							}
+						}
 					}
 
 					//    - Reference
@@ -370,6 +382,13 @@ $log = array_merge($log, $append);
 						$addLanguageString($componentName, $formName, $field->field_name, "pageName_FIELD_fieldName_DESC", 'Input %fieldName% here.')
                     );
 					$formField->setAttributeNode($description);
+
+					// A field the model says may not be empty: step 6.7. A reference
+					// marked isrequired, or a property marked isprimary - the
+					// entity's natural key, which the Table also keeps unique.
+					if (FieldKind::isRequired($field) && !$formField->hasAttribute('required')) {
+						$formField->setAttributeNode(new \DOMAttr('required', 'true'));
+					}
 
 					// What the model can now say about the field itself: step 4.2.
 					//

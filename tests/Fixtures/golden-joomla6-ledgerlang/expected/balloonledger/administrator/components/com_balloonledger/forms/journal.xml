@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
   <fieldset addruleprefix="Yepr\Component\BalloonLedger\Administrator\Rule" addfieldprefix="Yepr\Component\BalloonLedger\Administrator\Field">
-    <field name="code" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNAL_FIELD_CODE_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_CODE_DESC"/>
-    <field name="name" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNAL_FIELD_NAME_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_NAME_DESC"/>
-    <field name="journal_type" type="text" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNAL_FIELD_JOURNAL_TYPE_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_JOURNAL_TYPE_DESC"/>
-    <field name="gapless" type="yes_no_buttons" format="%Y-%m-%d %H:%M" label="COM_BALLOONLEDGER_JOURNAL_FIELD_GAPLESS_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_GAPLESS_DESC"/>
+    <field name="code" type="text" label="COM_BALLOONLEDGER_JOURNAL_FIELD_CODE_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_CODE_DESC" required="true"/>
+    <field name="name" type="text" label="COM_BALLOONLEDGER_JOURNAL_FIELD_NAME_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_NAME_DESC"/>
+    <field name="journal_type" type="text" label="COM_BALLOONLEDGER_JOURNAL_FIELD_JOURNAL_TYPE_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_JOURNAL_TYPE_DESC"/>
+    <field name="gapless" type="yes_no_buttons" label="COM_BALLOONLEDGER_JOURNAL_FIELD_GAPLESS_LABEL" description="COM_BALLOONLEDGER_JOURNAL_FIELD_GAPLESS_DESC"/>
     <field name="id" type="hidden"/>
   </fieldset>
 </form>
