@@ -2766,12 +2766,41 @@ takes 45 seconds and saving it three minutes. The round trip had been proved thr
 `getForm()`, `filter()` and `save()` in code. A browser save goes through more than that, and
 that is where these came from.
 
+**6.1 A browser save stores the model and not the row.** Done. `FormController::save()` adds
+`tags => []` to every post whose form has no tags field, and `ProjectModel::save()` stored
+everything it was handed except `id`. So every browser-saved project carried `"tags": []`,
+ER1 and LedgerLang ones too, and the LionWeb export refused it: "root.tags is not a feature of
+Blueprint in this language". `Project::modelOf()` now leaves out the chrome's keys (read off
+`project_chrome.xml` by `Metalanguages::chromeKeys()`) and Joomla's (`tags`,
+`associations`), keeping `name`. The export runs it too, so a project saved before this
+exports without being saved again. `StoredModelKeysTest` follows the steps of a browser save
+and an export. `lionweb-round-trip.cy.js` imports Hello World (53 nodes), saves it on screen
+and exports it again. It skips where the JCB metalanguage or the sibling `jcbinout` clone is
+missing, which includes CI. ER1 cannot stand in: its package is manifest format 3 and does not
+know its own LionWeb key, so an ER1 project has no export yet.
+
 **6.2 The import names a project its own form accepts.** Done. The project name is letters
 only (`LetterRule`), and the import named projects after the root node's id, such as
 `MDE demo`, so the form refused to save the project it had just opened.
 `Project::letterName()` capitalises the words and drops everything else: `hello-world`
 becomes `HelloWorld` and `MDE-demo` becomes `MDEDemo`. A GUID is skipped. `ImportedNameTest`
 checks each result against `LetterRule`'s own pattern.
+
+**6.4 What a browser save still changes.** Open. `lionweb-round-trip.cy.js` counts two kinds
+of difference after a browser save of Hello World, besides the edited value:
+
+- *A property the chunk did not have comes back with a value.* An empty text box posts `''`
+  and a list posts its first option, so absent becomes empty (16 in Hello World) or a list
+  default (7). LionWeb tells absent from empty, and the chunk uses both: 91 of Hello World's
+  595 values are `''`.
+- *Line breaks are lost.* The generated forms render every string property as
+  `<input type="text">`, which cannot hold a line break, so the browser drops them: 30 values
+  in Hello World and 860 in the demo blueprint, PHP code among them. A textarea keeps them, but
+  a form post turns every line ending into CRLF, and 28 of the demo's values use LF only.
+
+Both need the form to know more about the model than a text box can: whether a property was
+present, and which line endings a value used. The generated forms are the Metalanguage
+Generator's, so the textarea half of the fix is there.
 
 ---
 

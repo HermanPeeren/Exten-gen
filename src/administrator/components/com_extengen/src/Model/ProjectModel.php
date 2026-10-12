@@ -518,10 +518,17 @@ class ProjectModel extends AdminModel implements MetalanguageCatalogueAwareInter
 
         unset($data['metalanguage']);
 
-        // Everything except the row's own number, for the reason
-        // `loadFormData()` sets out: a model carrying an `id` is a model that
-        // disagrees with the row holding it as soon as either moves.
-        $model = $data;
+        // The model half and nothing else. Not the row's own number, for the
+        // reason `loadFormData()` sets out: a model carrying an `id` is a model
+        // that disagrees with the row holding it as soon as either moves. And
+        // not the rest of the row either - the chrome's fields have columns,
+        // and `tags` is Joomla's: `FormController::save()` adds it to every
+        // browser save, and a model carrying it was one the LionWeb export
+        // refused as claiming a feature its language does not have.
+        //
+        // `$data` itself keeps all of it, because the columns are filled
+        // from it below.
+        $model = Project::modelOf($data, Metalanguages::chromeKeys());
 
         unset($model['id']);
 

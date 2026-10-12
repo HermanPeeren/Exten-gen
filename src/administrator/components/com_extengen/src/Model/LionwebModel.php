@@ -274,6 +274,13 @@ class LionwebModel extends BaseDatabaseModel implements ProjectRepositoryAwareIn
         // there by `ProjectModel::save()`. Left in, they came back out of a
         // saved project as two warnings about features the root concept does
         // not have - true, and about nothing the model said.
+        //
+        // And the rest of the row, `tags` above all: every browser save put
+        // `"tags": []` there until 1.6.5, and a model saved before that still
+        // carries it. Taken off here as well as no longer written, so such a
+        // project exports without having to be saved again first.
+        $stored = Project::modelOf($stored, Metalanguages::chromeKeys());
+
         unset($stored['name'], $stored['id'], $stored['modelVersion']);
 
         $manifest = $this->manifestFor($binding['key'], $binding['version']);

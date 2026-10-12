@@ -72,6 +72,47 @@ final class Metalanguages
     public const SHIPPED = 'ER1';
 
     /**
+     * The top-level keys the chrome puts in a post: the row's, not the model's.
+     *
+     * A field outside any `<fields>` group posts under its own name, and a
+     * group - `params` - posts as one key holding the rest, so those are the
+     * names a save has to recognise. `name` among them, because the chrome
+     * asks for it; whether it is also kept in the model is the caller's
+     * business, and `Project::modelOf()` keeps it.
+     *
+     * Read off the file rather than listed, for the reason the edit view reads
+     * it: a list here is a list that stops matching the form without anything
+     * saying so.
+     *
+     * @param   ?string  $xml  The chrome form, or null to read the installed one.
+     *
+     * @return  string[]
+     *
+     * @since   1.6.5
+     */
+    public static function chromeKeys(?string $xml = null): array
+    {
+        if ($xml === null) {
+            $file = JPATH_ROOT . '/' . self::CHROME_FORM;
+            $xml  = is_file($file) ? (string) file_get_contents($file) : '';
+        }
+
+        $form = $xml === '' ? false : simplexml_load_string($xml);
+
+        if ($form === false) {
+            return [];
+        }
+
+        $keys = [];
+
+        foreach ($form->xpath('//field[not(ancestor::fields)] | //fields[not(ancestor::fields)]') ?: [] as $node) {
+            $keys[] = (string) $node['name'];
+        }
+
+        return array_values(array_unique(array_filter($keys, static fn (string $key): bool => $key !== '')));
+    }
+
+    /**
      * What a language says can be pointed at, as `ReferenceIndex` reads it.
      *
      * Two screens need this and they need the same answer. The edit screen has

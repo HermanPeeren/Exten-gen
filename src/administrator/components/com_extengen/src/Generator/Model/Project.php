@@ -51,6 +51,23 @@ final class Project implements ModelInterface
     public const CURRENT_VERSION = '1.0';
 
     /**
+     * Keys Joomla adds to a save that no form on the screen declares.
+     *
+     * `tags`, because `FormController::save()` sets it to an empty list on
+     * every post whose form has no tags field - so each browser save of a
+     * project put `"tags": []` at the top of its model, and the LionWeb export
+     * then refused the lot: "root.tags is not a feature of Blueprint in this
+     * language". Saves made in code never went through the controller, which
+     * is why proving the round trip that way did not see it.
+     *
+     * `associations`, because `ProjectModel::preprocessForm()` adds that group
+     * on a multilingual site. It describes the row as much as the chrome does.
+     *
+     * @since  1.6.5
+     */
+    public const JOOMLA_KEYS = ['tags', 'associations'];
+
+    /**
      * @param  object  $data          The project as stored, decoded.
      * @param  string  $modelVersion  The format version it was stored in.
      *
@@ -106,6 +123,40 @@ final class Project implements ModelInterface
         $encoded = json_encode($data, JSON_THROW_ON_ERROR);
 
         return self::fromJson($encoded);
+    }
+
+    /**
+     * What of a save belongs in the stored model.
+     *
+     * A save carries the row as well as the model: the chrome's fields, which
+     * have columns of their own, and whatever Joomla adds on the way. None of
+     * that is the model, and all of it used to be serialised into it because
+     * `ProjectModel::save()` stored everything it was handed except `id`. A
+     * language that does not have those features then had a model claiming
+     * them, and the LionWeb export - the one reader that checks - refused it.
+     *
+     * `name` stays. It is the chrome's, but the edit screen reads it out of the
+     * model, and the import puts it there; the export takes it off again.
+     *
+     * Also the way a model already stored with them is read cleanly, which is
+     * what lets a project saved before this export without being saved again.
+     *
+     * @param  array<string, mixed>  $data        A save, or a stored model.
+     * @param  string[]              $chromeKeys  `Metalanguages::chromeKeys()`.
+     *
+     * @return array<string, mixed>
+     *
+     * @since  1.6.5
+     */
+    public static function modelOf(array $data, array $chromeKeys): array
+    {
+        foreach ([...$chromeKeys, ...self::JOOMLA_KEYS] as $key) {
+            if ($key !== 'name') {
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
     }
 
     /**

@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig } from 'cypress';
 
 /**
@@ -40,6 +41,14 @@ export default defineConfig({
           console.log(message);
 
           return null;
+        },
+
+        // A file that may or may not be there, as text or null. `cy.readFile`
+        // fails a test on a missing file, and some specs read fixtures from a
+        // sibling clone that a CI checkout does not have - so they ask first
+        // and skip, rather than failing over something that is not this repo.
+        readIfExists(path) {
+          return existsSync(path) ? readFileSync(path, 'utf8') : null;
         },
       });
 
