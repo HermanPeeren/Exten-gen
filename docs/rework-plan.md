@@ -2829,6 +2829,66 @@ models, and large metalanguages, into parts that are each edited and saved on th
 
 The sentinel from 6.3 stays as the safety net.
 
+**6.10 A LionWeb export for ER1 projects.** Stopped: bigger than a package change, and its
+core half needs a library release. 6.1 found that an ER1 project has no export because the
+shipped `packages/ER1-1.3.zip` is manifest format 3 and does not say its LionWeb key. Giving
+it one is the easy part; it turns out to be the first of four gaps, and the other three are
+in `lib_yepr_gen`.
+
+*What format 5 needs, and how the others get it.* A format 5 manifest carries
+`lionwebKey`, what the language calls itself in a metapointer. Meta-gen writes it from the
+language model's top-level `key` (`PackageFiles::manifest()`, `$model->key()`). JCB has one
+because its language came in from a LionWeb chunk that said `jcb`; on the dev site its row is
+format 5 with `lionwebKey: jcb`. LedgerLang is format 5 too but its model has no `key`, so its
+manifest says nothing either, and a LedgerLang project cannot be exported for the same reason.
+ER1's model (`Meta-gen/tests/Fixtures/languages/er1-full.json`) has none.
+
+*Tried, not committed.* A copy of `er1-full.json` with `"key": "er1"` added after `name`, run
+through `php tools/export-language.php <copy> --out=<scratch>` in Meta-gen, gives an
+`ER1-1.3.zip` of format 5 with `lionwebKey: er1`, and a `model.json` identical to the
+shipped one apart from the key. Its forms are what Meta-gen writes today and differ from the
+shipped ones: `filter="raw"` on the value fields, and hidden `LIonWeb_id` fields (plus
+`LIonWeb_language` and `LIonWeb_languageVersion` on the root) for the round trip. The
+importer deletes and re-inserts a language row, so a site would pick it up on update. `er1`
+is the key decided on: the case convention JCB uses, and the spelling
+`LionwebModel::manifestFor()` already guesses for a format 3 ER1 row.
+
+*Why the package alone exports nothing.* Exporting the balloonplanning fixture with that
+package and `InstanceChunk::of($manifest, 'er1', '1.3')` writes zero nodes: "The group at
+root does not say which concept it is". Three things stand between an ER1 model and a valid
+chunk, all in `Yepr\Gen\Core\Lionweb`:
+
+1. *Concept markers.* The writer classifies each group by its `LIonWeb_key`. None of the ER1
+   projects on the dev site nor any golden fixture has one: they were seeded or saved before
+   the forms carried that hidden field. And where a form does write it, it writes the
+   concept's *name* (`Project`, `Field.Property`) while the manifest and the chunk use its
+   *key* (`c-project`, `c-property`). Inferring the concept of an unmarked group needs each
+   containment's target concept, which the manifest does not record (a feature has `key`,
+   `name` and `multiple`). So either the writer reads the language's `model.json`, or the
+   manifest gains the target type of a link (a format 6).
+2. *Subtypes.* ER1 stores a Field as a group with a radio discriminator and one subform per
+   subtype: `{field_name, field_id, field_type: "Property", property: {type, isunique, ...}}`.
+   In LionWeb that is one node classified by `Property`, carrying the inherited `field_name`
+   and `field_id` beside its own features. Neither `InstanceChunk` nor `InstanceModel` knows
+   this encoding (no code in either reads a discriminator), so the writer would report
+   `property` as an unknown feature of Field and the reader could not rebuild it.
+3. *Identity.* ER1 refers by its own id properties (`entity_id`, `field_id`, `page_id`, all
+   GUIDs) inside small reference groups (`entity_ref0.reference`), not by `LIonWeb_id`. A
+   faithful chunk uses those GUIDs as node ids, or the writer has to map them, or every
+   reference ends up a dangling hint.
+
+*What it would take.* A `lib_yepr_gen` minor release (0.20.0) with the three changes above,
+each with a round-trip test, then in Exten-gen: the regenerated ER1 package, the composer
+constraint and `LIBRARY_MINIMUM` raised together, and an `Er1LionwebRoundTripTest` that
+exports the balloonplanning fixture, re-imports it with `InstanceModel` and compares. That
+is several days across three repositories and needs a version bump and a tag, which this
+pass was not to make.
+
+*The Meta-gen change, for whoever does it.* Add `"key": "er1"` to ER1's language model
+(the fixture and the stored language Meta-gen exports ER1 from), and `"key": "ledgerlang"` to
+LedgerLang's, then re-export both packages into Exten-gen. Neither is useful before the
+library can write the result.
+
 ---
 
 ## Decisions outstanding
