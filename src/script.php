@@ -45,7 +45,11 @@ class Com_ExtengenInstallerScript
     /**
      * The oldest library release that has everything this version calls.
      *
-     * 0.18.0 for `PackageManifest::$lionwebKey`, which this version reads to
+     * 0.19.1 for the uninstall guard: the library refuses to be uninstalled
+     * while this component is installed, so a site cannot lose it from under
+     * this one and fail on the next page with a missing class.
+     *
+     * Before that, 0.18.0 for `PackageManifest::$lionwebKey`, which this version reads to
      * match a chunk's language against an imported one by the key the language
      * calls itself by rather than by ignoring case on its name.
      *
@@ -54,7 +58,7 @@ class Com_ExtengenInstallerScript
      * was this component's own until Meta-gen turned out to need the same
      * twelve lines.
      */
-    private const LIBRARY_MINIMUM = '0.18.0';
+    private const LIBRARY_MINIMUM = '0.19.1';
 
     /**
      * The oldest Joomla this runs on.
